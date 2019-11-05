@@ -7,7 +7,7 @@
 // tables used to accelerate operations.
 // +build ignore
 
-package main
+package btcec
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ import (
 	"github.com/hacash/core/crypto/btcec"
 )
 
-func main() {
+func main_test() {
 	fi, err := os.Create("secp256k1.go")
 	if err != nil {
 		log.Fatal(err)

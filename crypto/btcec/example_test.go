@@ -2,14 +2,12 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package btcec_test
+package btcec
 
 import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-
-	"github.com/hacash/core/crypto/btcec"
 )
 
 // This example demonstrates signing a message with a secp256k1 private key that
@@ -22,7 +20,7 @@ func Example_signMessage() {
 		fmt.Println(err)
 		return
 	}
-	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
+	privKey, pubKey := PrivKeyFromBytes(S256(), pkBytes)
 
 	// Sign a message using the private key.
 	message := "test message"
@@ -56,7 +54,7 @@ func Example_verifySignature() {
 		fmt.Println(err)
 		return
 	}
-	pubKey, err := btcec.ParsePubKey(pubKeyBytes, btcec.S256())
+	pubKey, err := ParsePubKey(pubKeyBytes, S256())
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -71,7 +69,7 @@ func Example_verifySignature() {
 		fmt.Println(err)
 		return
 	}
-	signature, err := btcec.ParseSignature(sigBytes, btcec.S256())
+	signature, err := ParseSignature(sigBytes, S256())
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -98,7 +96,7 @@ func Example_encryptMessage() {
 		fmt.Println(err)
 		return
 	}
-	pubKey, err := btcec.ParsePubKey(pubKeyBytes, btcec.S256())
+	pubKey, err := ParsePubKey(pubKeyBytes, S256())
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -106,7 +104,7 @@ func Example_encryptMessage() {
 
 	// Encrypt a message decryptable by the private key corresponding to pubKey
 	message := "test message"
-	ciphertext, err := btcec.Encrypt(pubKey, []byte(message))
+	ciphertext, err := Encrypt(pubKey, []byte(message))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -120,10 +118,10 @@ func Example_encryptMessage() {
 		return
 	}
 	// note that we already have corresponding pubKey
-	privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
+	privKey, _ := PrivKeyFromBytes(S256(), pkBytes)
 
 	// Try decrypting and verify if it's the same message.
-	plaintext, err := btcec.Decrypt(privKey, ciphertext)
+	plaintext, err := Decrypt(privKey, ciphertext)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -146,7 +144,7 @@ func Example_decryptMessage() {
 		return
 	}
 
-	privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
+	privKey, _ := PrivKeyFromBytes(S256(), pkBytes)
 
 	ciphertext, err := hex.DecodeString("35f644fbfb208bc71e57684c3c8b437402ca" +
 		"002047a2f1b38aa1a8f1d5121778378414f708fe13ebf7b4a7bb74407288c1958969" +
@@ -155,7 +153,7 @@ func Example_decryptMessage() {
 		"d14174f8b83354fac3ff56075162")
 
 	// Try decrypting the message.
-	plaintext, err := btcec.Decrypt(privKey, ciphertext)
+	plaintext, err := Decrypt(privKey, ciphertext)
 	if err != nil {
 		fmt.Println(err)
 		return
