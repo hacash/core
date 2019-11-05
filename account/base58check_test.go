@@ -7,7 +7,7 @@ import (
 )
 
 func TestEncode(t *testing.T) {
-	encoded, err := EncodeHexString("00", "44D00F6EB2E5491CD7AB7E7185D81B67A23C4980F62B2ED0914D32B7EB1C5581")
+	encoded, err := Base58CheckEncodeHexString("00", "44D00F6EB2E5491CD7AB7E7185D81B67A23C4980F62B2ED0914D32B7EB1C5581")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -18,7 +18,7 @@ func TestEncode(t *testing.T) {
 }
 
 func TestDecode(t *testing.T) {
-	decoded, err := Decode("5JLbJxi9koHHvyFEAERHLYwG7VxYATnf8YdA9fiC6kXMghkYXpk")
+	decoded, err := Base58CheckDecode("5JLbJxi9koHHvyFEAERHLYwG7VxYATnf8YdA9fiC6kXMghkYXpk")
 	if err != nil {
 		t.Error(err.Error())
 	}

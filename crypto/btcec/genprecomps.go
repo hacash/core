@@ -17,7 +17,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/hacash/btcoin/address/btcec"
+	"github.com/hacash/core/crypto/btcec"
 )
 
 func main() {

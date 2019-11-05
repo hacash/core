@@ -13,7 +13,7 @@ func CheckReadableAddress(readable string) (*Address, error) {
 	if len(readable) > 34 {
 		return nil, fmt.Errorf("Address format error")
 	}
-	hashhex, e1 := base58check.Decode(readable)
+	hashhex, e1 := base58check.Base58CheckDecode(readable)
 	if e1 != nil {
 		return nil, fmt.Errorf("Address format error")
 	}
@@ -26,7 +26,7 @@ func CheckReadableAddress(readable string) (*Address, error) {
 }
 
 func (this *Address) ToReadable() string {
-	return base58check.Encode([]byte(*this))
+	return base58check.Base58CheckEncode([]byte(*this))
 }
 
 // check valid

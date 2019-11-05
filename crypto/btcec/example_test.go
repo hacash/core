@@ -9,7 +9,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/hacash/bitcoin/address/btcec"
+	"github.com/hacash/core/crypto/btcec"
 )
 
 // This example demonstrates signing a message with a secp256k1 private key that
@@ -37,7 +37,7 @@ func Example_signMessage() {
 	fmt.Printf("Serialized Signature: %x\n", signature.Serialize())
 
 	// Verify the signature for the message using the public key.
-	verified := signature.Verify(messageHash, pubKey)
+	verified := signature.Verify(messageHash[:], pubKey)
 	fmt.Printf("Signature Verified? %v\n", verified)
 
 	// Output:

@@ -17,13 +17,13 @@ type Transaction interface {
 	HashNoFee() fields.Hash // 无手续费的哈希
 
 	// Addresses that need to verify signatures
-	RequestSignAddresses([][]byte) ([][]byte, error)
+	RequestSignAddresses([]fields.Address) ([]fields.Address, error)
 
 	// fill signatures
-	FillNeedSigns(map[string][]byte, [][]byte) error
+	FillNeedSigns(map[string][]byte, []fields.Address) error
 
 	// verify signatures
-	VerifyNeedSigns([][]byte) (bool, error)
+	VerifyNeedSigns([]fields.Address) (bool, error)
 
 	// change chain state
 	WriteinChainState(ChainStateOperation) error

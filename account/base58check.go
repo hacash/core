@@ -5,15 +5,15 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math/big"
 	"reflect"
-	"fmt"
 )
 
 const alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
-// EncodeHexString encodes the given version and data to a base58check encoded string
-func EncodeHexString(version, data string) (string, error) {
+// Base58CheckEncodeHexString encodes the given version and data to a base58check encoded string
+func Base58CheckEncodeHexString(version, data string) (string, error) {
 	verbytes, e1 := hex.DecodeString(version)
 	if e1 != nil {
 		return "", e1
@@ -22,18 +22,18 @@ func EncodeHexString(version, data string) (string, error) {
 	if e2 != nil {
 		return "", e2
 	}
-	return EncodeWithVersion(verbytes, databytes), nil
+	return Base58CheckEncodeWithVersion(verbytes, databytes), nil
 }
 
-func EncodeWithVersion(version []byte, data []byte) (string) {
+func Base58CheckEncodeWithVersion(version []byte, data []byte) string {
 	prefix := make([]byte, len(version))
 	copy(prefix, version)
 	dataBytes := make([]byte, 0)
 	dataBytes = append(prefix, data...)
-	return Encode(dataBytes)
+	return Base58CheckEncode(dataBytes)
 }
 
-func Encode(dataBytes []byte) (string) {
+func Base58CheckEncode(dataBytes []byte) string {
 
 	// Performing SHA256 twice
 	sha256hash := sha256.New()
@@ -47,7 +47,6 @@ func Encode(dataBytes []byte) (string) {
 	//fmt.Println("checksum", checksum)
 	stuff := append([]byte{}, dataBytes...)
 	stuff = append(stuff, checksum...)
-
 
 	// For all the "00" versions or any prepended zeros as base58 removes them
 	zeroCount := 0
@@ -69,10 +68,8 @@ func Encode(dataBytes []byte) (string) {
 	return encoded
 }
 
-
-
 // DecodeHexString decodes the given base58check encoded string and returns the version prepended decoded string
-func Decode(encoded string) ([]byte, error) {
+func Base58CheckDecode(encoded string) ([]byte, error) {
 	zeroCount := 0
 	for i := 0; i < len(encoded); i++ {
 		if encoded[i] == 49 {
@@ -113,9 +110,8 @@ func Decode(encoded string) ([]byte, error) {
 	return data, nil
 }
 
-
 // DecodeHexString decodes the given base58check encoded string and returns the version prepended decoded string
-func DecodeTestPrint(encoded string) ([]byte, error) {
+func Base58CheckDecodeTestPrint(encoded string) ([]byte, error) {
 	zeroCount := 0
 	for i := 0; i < len(encoded); i++ {
 		if encoded[i] == 49 {
@@ -152,7 +148,7 @@ func DecodeTestPrint(encoded string) ([]byte, error) {
 	if !reflect.DeepEqual(checksum, hash[:4]) {
 
 		fmt.Println("----data----", hex.EncodeToString(data), data)
-		fmt.Println("right addr =", Encode(data))
+		fmt.Println("right addr =", Base58CheckEncode(data))
 
 		return nil, errors.New("Data and checksum don't match")
 	}
@@ -161,9 +157,6 @@ func DecodeTestPrint(encoded string) ([]byte, error) {
 
 	return data, nil
 }
-
-
-
 
 func b58encode(data []byte) string {
 	var encoded string

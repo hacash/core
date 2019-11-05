@@ -20,21 +20,17 @@ import (
 type Action_4_DiamondCreate struct {
 	Diamond  fields.Bytes6  // 钻石字面量 WTYUIAHXVMEKBSZN
 	Number   fields.VarInt3 // 钻石序号，用于难度检查
-	PrevHash fields.Hash // 上一个包含钻石的区块hash
+	PrevHash fields.Hash    // 上一个包含钻石的区块hash
 	Nonce    fields.Bytes8  // 随机数
 	Address  fields.Address // 所属账户
 
 	// 数据指针
 	// 所属交易
-	trs interfaces.Transaction
+	belone_trs interfaces.Transaction
 }
 
 func (elm *Action_4_DiamondCreate) Kind() uint16 {
 	return 4
-}
-
-func (elm *Action_4_DiamondCreate) SetBelongTrs(t interfaces.Transaction) {
-
 }
 
 func (elm *Action_4_DiamondCreate) Size() uint32 {
@@ -73,11 +69,11 @@ func (elm *Action_4_DiamondCreate) Parse(buf []byte, seek uint32) (uint32, error
 	return moveseek5, nil
 }
 
-func (elm *Action_4_DiamondCreate) RequestSignAddrs() [][]byte {
-	return make([][]byte, 0) // 无需签名
+func (elm *Action_4_DiamondCreate) RequestSignAddresses() []fields.Address {
+	return []fields.Address{} // no sign
 }
 
-func (act *Action_4_DiamondCreate) ChangeChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainStateOperation) error {
 	// 检查钻石挖矿计算
 	diamond_resbytes, diamond_str := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address)
 	diamondstrval, isdia := x16rs.IsDiamondHashResultString(diamond_str)
@@ -164,6 +160,10 @@ func (act *Action_4_DiamondCreate) RecoverChainState(state interfaces.ChainState
 
 }
 
+func (elm *Action_4_DiamondCreate) SetBelongTransaction(t interfaces.Transaction) {
+	elm.belone_trs = t
+}
+
 ///////////////////////////////////////////////////////////////
 
 // 转移钻石
@@ -243,27 +243,7 @@ func (elm *Action_5_DiamondTransfer) SetBelongTransaction(t interfaces.Transacti
 	elm.trs = t
 }
 
-
-
-
-
-
-
-
-
-
 ///////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-
-
 
 // 批量转移钻石
 type Action_6_OutfeeQuantityDiamondTransfer struct {
@@ -373,7 +353,6 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) RecoverChainState(state inter
 	}
 	return nil
 }
-
 
 func (elm *Action_6_OutfeeQuantityDiamondTransfer) SetBelongTransaction(t interfaces.Transaction) {
 	elm.trs = t
