@@ -89,13 +89,16 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		return fmt.Errorf("Diamond difficulty not meet the requirements.")
 	}
 	// 检查矿工状态
-	miner := state.Miner()
-	if miner == nil {
+	chainstate := state.ChainState()
+	if chainstate == nil {
 		//panic("Action get state.Miner() cannot be nil !")
 		return nil
 	}
-	dmnumber, minerprevhash := miner.GetPrevDiamondHash()
-	if uint32(act.Number) != dmnumber+1 {
+	dmnumber, minerprevhash, e1 := chainstate.ReadLastestDiamondStatus()
+	if e1 != nil {
+		return e1
+	}
+	if uint32(act.Number) != uint32(dmnumber)+1 {
 		return fmt.Errorf("This block diamond number must be %d but got %d.", dmnumber+1, uint32(act.Number))
 	}
 	// 检查区块状态
@@ -148,8 +151,8 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 }
 
 func (act *Action_4_DiamondCreate) RecoverChainState(state interfaces.ChainStateOperation) error {
-	miner := state.Miner()
-	if miner == nil {
+	chainstate := state.ChainState()
+	if chainstate == nil {
 		panic("Action get state.Miner() cannot be nil !")
 	}
 	// 删除钻石

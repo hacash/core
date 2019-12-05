@@ -13,8 +13,10 @@ type ChainStateOperation interface {
 
 	Block() Block
 	SetBlock(Block)
-	Miner() Miner
-	SetMiner(Miner)
+	//Miner() Miner
+	//SetMiner(Miner)
+	ChainState() ChainState
+	SetChainState(ChainState)
 
 	// state
 
@@ -38,5 +40,4 @@ type ChainStateOperation interface {
 	DiamondSet(fields.Bytes6, *stores.Diamond)
 	DiamondMove(fields.Bytes6, fields.Address)
 	DiamondDel(fields.Bytes6)
-
 }
