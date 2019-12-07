@@ -174,27 +174,27 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Size() uint32 {
 }
 
 // 交易唯一哈希值
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Hash() fields.Hash {
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) HashWithFee() fields.Hash {
 	if trs.hash == nil {
-		return trs.HashFresh()
+		return trs.HashWithFeeFresh()
 	}
 	return trs.hash
 }
 
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) HashFresh() fields.Hash {
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) HashWithFeeFresh() fields.Hash {
 	stuff, _ := trs.SerializeNoSign()
 	digest := sha3.Sum256(stuff)
 	trs.hash = digest[:]
 	return trs.hash
 }
 
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) HashNoFee() fields.Hash {
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Hash() fields.Hash {
 	if trs.hashnofee == nil {
-		return trs.HashNoFeeFresh()
+		return trs.HashFresh()
 	}
 	return trs.hashnofee
 }
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) HashNoFeeFresh() fields.Hash {
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) HashFresh() fields.Hash {
 	notFee := true
 	stuff, _ := trs.SerializeNoSignEx(notFee)
 	digest := sha3.Sum256(stuff)
@@ -237,8 +237,8 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RequestSignAddresses([]fields.Addr
 
 // 填充签名
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) FillNeedSigns(addrPrivates map[string][]byte, reqs []fields.Address) error {
-	// hash := trs.HashFresh()
-	hashNoFee := trs.HashNoFee()
+	// hash := trs.HashWithFeeFresh()
+	hashNoFee := trs.Hash()
 	requests, e0 := trs.RequestSignAddresses(nil)
 	if e0 != nil {
 		return e0
@@ -283,8 +283,8 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) addOneSign(hash []byte, addrPrivat
 
 // 验证需要的签名
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyNeedSigns(requests []fields.Address) (bool, error) {
-	//hash := trs.HashFresh()
-	hashNoFee := trs.HashNoFee()
+	//hash := trs.HashWithFeeFresh()
+	hashNoFee := trs.Hash()
 	if requests == nil {
 		reqs, e0 := trs.RequestSignAddresses(nil)
 		if e0 != nil {
@@ -347,12 +347,8 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteinChainState(state interfaces
 	/******* 在区块37000 以上不能接受 trs_type==1 的交易 ********/
 	/******* 从而解决第一种交易类型的签名验证的BUG问题     ********/
 	/*********************************************************/
-	blkptr := state.Block()
-	if blkptr != nil {
-		blk := blkptr
-		if blk.GetHeight() > 37000 {
-			return fmt.Errorf("Transaction type<1> be discard DO_NOT_USE_WITH_BUG")
-		}
+	if state.GetPendingBlockHeight() > 37000 {
+		return fmt.Errorf("Transaction type<1> be discard DO_NOT_USE_WITH_BUG")
 	}
 	// actions
 	for i := 0; i < len(trs.Actions); i++ {

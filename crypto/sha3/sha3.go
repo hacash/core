@@ -36,7 +36,7 @@ type state struct {
 	// a final "1" bit. We merge the first "1" bit from the padding into dsbyte,
 	// giving 00000110b (0x06) and 00011111b (0x1f).
 	// [1] http://csrc.nist.gov/publications/drafts/fips-202/fips_202_draft.pdf
-	//     "Draft FIPS 202: SHA-3 Standard: Permutation-Based Hash and
+	//     "Draft FIPS 202: SHA-3 Standard: Permutation-Based HashWithFee and
 	//      Extendable-Output Functions (May 2014)"
 	dsbyte  byte
 	storage [maxRate]byte

@@ -85,20 +85,23 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 		return fmt.Errorf("Payment Channel create error: left or right Amount is not positive.")
 	}
 	// 检查余额是否充足
-	amt1 := state.Balance(act.LeftAddress)
+	bls1 := state.Balance(act.LeftAddress)
+	if bls1 == nil {
+		return fmt.Errorf("Address %s Balance is not enough.", act.LeftAddress.ToReadable())
+	}
+	amt1 := bls1.Amount
 	if amt1.LessThan(&act.LeftAmount) {
 		return fmt.Errorf("Address %s Balance is not enough.", act.LeftAddress.ToReadable())
 	}
-	amt2 := state.Balance(act.RightAddress)
+	bls2 := state.Balance(act.RightAddress)
+	if bls2 == nil {
+		return fmt.Errorf("Address %s Balance is not enough.", act.RightAddress.ToReadable())
+	}
+	amt2 := bls2.Amount
 	if amt2.LessThan(&act.RightAmount) {
 		return fmt.Errorf("Address %s Balance is not enough.", act.RightAddress.ToReadable())
 	}
-	curheight := uint64(1)
-	curblkptr := state.Block()
-	if curblkptr != nil {
-		curblk := curblkptr.(interfaces.Block)
-		curheight = curblk.GetHeight()
-	}
+	curheight := state.GetPendingBlockHeight()
 	// 创建 channel
 	var storeItem stores.Channel
 	storeItem.BelongHeight = fields.VarInt5(curheight)
@@ -126,20 +129,11 @@ func (act *Action_2_OpenPaymentChannel) RecoverChainState(state interfaces.Chain
 	return nil
 }
 
-
 func (elm *Action_2_OpenPaymentChannel) SetBelongTransaction(t interfaces.Transaction) {
 	elm.belong_trs = t
 }
 
-
-
-
-
 /////////////////////////////////////////////////////////////////
-
-
-
-
 
 // 关闭、结算 支付通道（资金分配不变的情况）
 type Action_3_ClosePaymentChannel struct {
@@ -192,7 +186,7 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 		return fmt.Errorf("Payment Channel <%s> is be closed.", hex.EncodeToString(act.ChannelId))
 	}
 	// 检查两个账户的签名
-	signok, e1 := act.belone_trs.VerifyNeedSigns([][]byte{paychan.LeftAddress, paychan.RightAddress})
+	signok, e1 := act.belone_trs.VerifyNeedSigns([]fields.Address{paychan.LeftAddress, paychan.RightAddress})
 	if e1 != nil {
 		return e1
 	}
@@ -204,15 +198,12 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 	rightAmount := paychan.RightAmount
 	// 计算获得当前的区块高度
 	//var curheight uint64 = 1
-	blkptr := state.Block()
-	if blkptr != nil {
-		curheight := blkptr.GetHeight()
-		// 增加利息计算，复利次数：约 8.68 天增加一次万分之一的复利，少于8天忽略不计
-		insnum := (curheight - uint64(paychan.BelongHeight)) / 2500
-		if insnum > 0 {
-			a1, a2 := DoAppendCompoundInterest1Of10000By2500Height(&leftAmount, &rightAmount, insnum)
-			leftAmount, rightAmount = *a1, *a2
-		}
+	curheight := state.GetPendingBlockHeight()
+	// 增加利息计算，复利次数：约 8.68 天增加一次万分之一的复利，少于8天忽略不计
+	insnum := (curheight - uint64(paychan.BelongHeight)) / 2500
+	if insnum > 0 {
+		a1, a2 := DoAppendCompoundInterest1Of10000By2500Height(&leftAmount, &rightAmount, insnum)
+		leftAmount, rightAmount = *a1, *a2
 	}
 	// 增加余额（将锁定的金额和利息从通道中提取出来）
 	DoAddBalanceFromChainState(state, paychan.LeftAddress, leftAmount)
@@ -239,16 +230,14 @@ func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.Chai
 	leftAmount := paychan.LeftAmount
 	rightAmount := paychan.RightAmount
 	// 计算差额
-	blkptr := state.Block()
-	if blkptr != nil {
-		curheight := blkptr.GetHeight()
-		// 增加利息计算，复利次数：约 8.68 天增加一次万分之一的复利，少于8天忽略不计
-		insnum := (curheight - uint64(paychan.BelongHeight)) / 2500
-		if insnum > 0 {
-			a1, a2 := DoAppendCompoundInterest1Of10000By2500Height(&leftAmount, &rightAmount, insnum)
-			leftAmount, rightAmount = *a1, *a2
-		}
+	curheight := state.GetPendingBlockHeight()
+	// 增加利息计算，复利次数：约 8.68 天增加一次万分之一的复利，少于8天忽略不计
+	insnum := (curheight - uint64(paychan.BelongHeight)) / 2500
+	if insnum > 0 {
+		a1, a2 := DoAppendCompoundInterest1Of10000By2500Height(&leftAmount, &rightAmount, insnum)
+		leftAmount, rightAmount = *a1, *a2
 	}
+
 	// 减除余额（重新将金额放入通道）
 	DoSubBalanceFromChainState(state, paychan.LeftAddress, leftAmount)
 	DoSubBalanceFromChainState(state, paychan.RightAddress, rightAmount)
@@ -257,7 +246,6 @@ func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.Chai
 	state.ChannelCreate(act.ChannelId, paychan)
 	return nil
 }
-
 
 func (elm *Action_3_ClosePaymentChannel) SetBelongTransaction(t interfaces.Transaction) {
 	elm.belone_trs = t

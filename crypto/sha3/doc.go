@@ -13,7 +13,7 @@
 //
 // If you aren't sure what function you need, use SHAKE256 with at least 64
 // bytes of output. The SHAKE instances are faster than the SHA3 instances;
-// the latter have to allocate memory to conform to the hash.Hash interface.
+// the latter have to allocate memory to conform to the hash.HashWithFee interface.
 //
 // If you need a secret-key MAC (message authentication code), prepend the
 // secret key to the input, hash with SHAKE256 and read at least 32 bytes of

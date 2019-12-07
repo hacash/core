@@ -19,6 +19,8 @@ type Transaction_0_Coinbase struct {
 	WitnessSigs  []uint8        // 见证人指定哈希尾数
 	Witnesses    []fields.Sign  // 对prev区块hash的签名，投票分叉
 
+	/* -------- -------- */
+
 	// cache data
 	TotalFee fields.Amount // 区块总交易手续费
 }
@@ -126,14 +128,14 @@ func (trs *Transaction_0_Coinbase) Size() uint32 {
 }
 
 // 交易唯一哈希值
-func (trs *Transaction_0_Coinbase) Hash() fields.Hash {
+func (trs *Transaction_0_Coinbase) HashWithFee() fields.Hash {
 	stuff, _ := trs.Serialize()
 	digest := sha3.Sum256(stuff)
 	return digest[:]
 }
 
-func (trs *Transaction_0_Coinbase) HashNoFee() fields.Hash {
-	return trs.Hash()
+func (trs *Transaction_0_Coinbase) Hash() fields.Hash {
+	return trs.HashWithFee()
 }
 
 // 从 actions 拿出需要签名的地址

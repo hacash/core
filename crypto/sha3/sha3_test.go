@@ -35,7 +35,7 @@ func newHashShake256() hash.Hash {
 	return &state{rate: 136, dsbyte: 0x1f, outputLen: 512}
 }
 
-// testDigests contains functions returning hash.Hash instances
+// testDigests contains functions returning hash.HashWithFee instances
 // with output-length equal to the KAT length for SHA-3, Keccak
 // and SHAKE instances.
 var testDigests = map[string]func() hash.Hash{

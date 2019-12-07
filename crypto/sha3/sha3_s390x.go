@@ -115,7 +115,7 @@ func (s *asmState) Write(b []byte) (int, error) {
 	length := len(b)
 	for len(b) > 0 {
 		if len(s.buf) == 0 && len(b) >= cap(s.buf) {
-			// Hash the data directly and push any remaining bytes
+			// HashWithFee the data directly and push any remaining bytes
 			// into the buffer.
 			remainder := len(s.buf) % s.rate
 			kimd(s.function, &s.a, b[:len(b)-remainder])
@@ -201,13 +201,13 @@ func (s *asmState) Sum(b []byte) []byte {
 	// Copy the state to preserve the original.
 	a := s.a
 
-	// Hash the buffer. Note that we don't clear it because we
+	// HashWithFee the buffer. Note that we don't clear it because we
 	// aren't updating the state.
 	klmd(s.function, &a, nil, s.buf)
 	return append(b, a[:s.outputLen]...)
 }
 
-// Reset resets the Hash to its initial state.
+// Reset resets the HashWithFee to its initial state.
 func (s *asmState) Reset() {
 	for i := range s.a {
 		s.a[i] = 0

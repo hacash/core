@@ -11,33 +11,46 @@ type ChainStateOperation interface {
 
 	// status
 
-	Block() Block
-	SetBlock(Block)
+	GetPendingBlockHeight() uint64
+	SetPendingBlockHeight(uint64)
+	GetPendingBlockHash() fields.Hash
+	SetPendingBlockHash(fields.Hash)
+
+	GetPendingSubmitStoreDiamond() *stores.DiamondSmelt
+	SetPendingSubmitStoreDiamond(*stores.DiamondSmelt) error
+
+	// status
+	SetLastestBlockHead(Block) error
+	ReadLastestBlockHead() (Block, error)
+	SetLastestDiamond(*stores.DiamondSmelt) error
+	ReadLastestDiamond() (*stores.DiamondSmelt, error)
+
+	//Block() Block
+	//SetBlock(Block)
 	//Miner() Miner
 	//SetMiner(Miner)
-	ChainState() ChainState
-	SetChainState(ChainState)
+	ChainStore() ChainStore
+	SetChainState(ChainStore)
 
 	// state
 
-	GetPrevDiamondHash() (uint32, fields.Hash)
-	SetPrevDiamondHash(uint32, fields.Hash)
+	//GetPrevDiamondHash() (uint32, fields.Hash)
+	//SetPrevDiamondHash(uint32, fields.Hash) error
 
 	// query
 
-	Balance(fields.Address) fields.Amount
+	Balance(fields.Address) *stores.Balance
 	Channel(fields.Bytes16) *stores.Channel
 	Diamond(fields.Bytes6) *stores.Diamond
 
 	// operate
 
-	BalanceSet(fields.Address, fields.Amount)
-	BalanceDel(fields.Address)
+	BalanceSet(fields.Address, *stores.Balance) error
+	BalanceDel(fields.Address) error
 
-	ChannelCreate(fields.Bytes16, *stores.Channel)
-	ChannelDelete(fields.Bytes16)
+	ChannelCreate(fields.Bytes16, *stores.Channel) error
+	ChannelDelete(fields.Bytes16) error
 
-	DiamondSet(fields.Bytes6, *stores.Diamond)
-	DiamondMove(fields.Bytes6, fields.Address)
-	DiamondDel(fields.Bytes6)
+	DiamondSet(fields.Bytes6, *stores.Diamond) error
+	DiamondDel(fields.Bytes6) error
 }

@@ -74,6 +74,28 @@ func (elm *Action_4_DiamondCreate) RequestSignAddresses() []fields.Address {
 }
 
 func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainStateOperation) error {
+	// 检查区块高度
+	blkhei := state.GetPendingBlockHeight()
+	// 检查区块高度值是否为5的倍数
+	// {BACKTOPOOL} 表示扔回交易池等待下个区块再次处理
+	if blkhei%5 != 0 {
+		return fmt.Errorf("{BACKTOPOOL} Diamond must be in block height multiple of 5.")
+	}
+	// 矿工状态检查
+	lastdiamond, err := state.ReadLastestDiamond()
+	if err != nil {
+		return err
+	}
+	if lastdiamond != nil {
+		prevdiamondnum, prevdiamondhash := uint32(lastdiamond.Number), lastdiamond.ContainBlockHash
+		// 检查钻石是否是从上一个区块得来
+		if bytes.Compare(act.PrevHash, prevdiamondhash) != 0 {
+			return fmt.Errorf("Diamond prev hash must be <%s> but got <%s>.", hex.EncodeToString(prevdiamondhash), hex.EncodeToString(act.PrevHash))
+		}
+		if prevdiamondnum+1 != uint32(act.Number) {
+			return fmt.Errorf("Diamond number must be <%d> but got <%d>.", prevdiamondnum+1, act.Number)
+		}
+	}
 	// 检查钻石挖矿计算
 	diamond_resbytes, diamond_str := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address)
 	diamondstrval, isdia := x16rs.IsDiamondHashResultString(diamond_str)
@@ -88,77 +110,68 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	if !difok {
 		return fmt.Errorf("Diamond difficulty not meet the requirements.")
 	}
-	// 检查矿工状态
-	chainstate := state.ChainState()
-	if chainstate == nil {
-		//panic("Action get state.Miner() cannot be nil !")
-		return nil
-	}
-	dmnumber, minerprevhash, e1 := chainstate.ReadLastestDiamondStatus()
-	if e1 != nil {
-		return e1
-	}
-	if uint32(act.Number) != uint32(dmnumber)+1 {
-		return fmt.Errorf("This block diamond number must be %d but got %d.", dmnumber+1, uint32(act.Number))
-	}
-	// 检查区块状态
-	blkptr := state.Block()
-	if blkptr == nil {
-		// 再交易池内临时性检查，直接返回正确
-		return nil
-	}
-	blk := blkptr.(interfaces.Block) // 强制类型转换
-	if blk == nil {
-		panic("Action get state.Block() cannot be nil !")
-	}
-	blkhei := blk.GetHeight()
-	// 检查区块高度值是否为5的倍数
-	// {BACKTOPOOL} 表示扔回交易池等待下个区块再次处理
-	if blkhei%5 != 0 {
-		return fmt.Errorf("{BACKTOPOOL} Diamond must be in block height multiple of 5.")
-	}
 	// 查询钻石是否已经存在
 	hasaddr := state.Diamond(act.Diamond)
 	if hasaddr != nil {
 		return fmt.Errorf("Diamond <%s> already exist.", string(act.Diamond))
 	}
 	// 检查一个区块只能包含一枚钻石
-	if blk.CheckHasHaveDiamond(diamondstrval) {
+	pendingdiamond := state.GetPendingSubmitStoreDiamond()
+	if pendingdiamond != nil {
 		return fmt.Errorf("This block height:%d has already exist diamond:<%s> .", blkhei, diamondstrval)
-	}
-	//statedmnumber, stateprevhash := state.GetPrevDiamondHash()
-	//if statedmnumber > 0 || stateprevhash != nil {
-	//	return fmt.Errorf("This block height:%d has already exist diamond.", blkhei)
-	//}
-	// 矿工状态检查
-	blkhash := blk.HashFresh()
-	// 检查钻石是否是从上一个区块得来
-	if bytes.Compare(act.PrevHash, minerprevhash) != 0 {
-		return fmt.Errorf("Diamond prev hash must be <%s> but got <%s>.", hex.EncodeToString(minerprevhash), hex.EncodeToString(act.PrevHash))
 	}
 	// 存入钻石
 	//fmt.Println(act.Address.ToReadable())
 	var diastore stores.Diamond
-	diastore.BlockHeight = fields.VarInt5(blkhei)
-	diastore.Number = act.Number
 	diastore.Address = act.Address
-	state.DiamondSet(act.Diamond, &diastore) // 保存
+	e3 := state.DiamondSet(act.Diamond, &diastore) // 保存
+	if e3 != nil {
+		return e3
+	}
 	// 设置矿工状态
-	state.SetPrevDiamondHash(uint32(act.Number), blkhash)
+	//state.SetPrevDiamondHash(act.Number, )
 	//标记本区块已经包含钻石
-	blk.DoMarkHaveDiamond(diamondstrval)
+	var diamondstore = &stores.DiamondSmelt{
+		Diamond:              act.Diamond,
+		Number:               act.Number,
+		ContainBlockHeight:   fields.VarInt5(blkhei),
+		ContainBlockHash:     nil, // current block not exist !!!
+		PrevContainBlockHash: act.PrevHash,
+		MinerAddress:         act.Address,
+		Nonce:                act.Nonce,
+	}
+	e4 := state.SetPendingSubmitStoreDiamond(diamondstore)
+	if e4 != nil {
+		return e4
+	}
 	return nil
 }
 
 func (act *Action_4_DiamondCreate) RecoverChainState(state interfaces.ChainStateOperation) error {
-	chainstate := state.ChainState()
-	if chainstate == nil {
-		panic("Action get state.Miner() cannot be nil !")
-	}
+	//chainstate := state.ChainStore()
+	//if chainstate == nil {
+	//	panic("Action get state.Miner() cannot be nil !")
+	//}
 	// 删除钻石
-	state.DiamondDel(act.Diamond)
+	e1 := state.DiamondDel(act.Diamond)
+	if e1 != nil {
+		return e1
+	}
 	// 回退矿工状态
-	state.SetPrevDiamondHash(uint32(act.Number)-1, act.PrevHash)
+	chainstore := state.ChainStore()
+	if chainstore == nil {
+		return fmt.Errorf("not find ChainStore object.")
+
+	}
+	prevDiamond, e2 := chainstore.ReadDiamondByNumber(uint32(act.Number) - 1)
+	if e2 != nil {
+		return e1
+	}
+	// setPrev
+	e3 := state.SetLastestDiamond(prevDiamond)
+	if e3 != nil {
+		return e3
+	}
 	return nil
 
 }
@@ -229,7 +242,10 @@ func (act *Action_5_DiamondTransfer) WriteinChainState(state interfaces.ChainSta
 	}
 	// 转移钻石
 	item.Address = act.Address
-	state.DiamondSet(act.Diamond, item)
+	err := state.DiamondSet(act.Diamond, item)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -237,8 +253,18 @@ func (act *Action_5_DiamondTransfer) RecoverChainState(state interfaces.ChainSta
 	if act.trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
+	// get diamond
+	diaitem := state.Diamond(act.Diamond)
+	if diaitem == nil {
+		return fmt.Errorf("Diamond <%s> not exist.", string(act.Diamond))
+	}
+	item := diaitem
 	// 回退钻石
-	state.DiamondMove(act.Diamond, act.trs.GetAddress())
+	item.Address = act.trs.GetAddress()
+	err := state.DiamondSet(act.Diamond, item)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -352,7 +378,18 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) RecoverChainState(state inter
 	// 批量回退钻石
 	for i := 0; i < len(act.Diamonds); i++ {
 		diamond := act.Diamonds[i]
-		state.DiamondMove(diamond, act.FromAddress)
+		// get diamond
+		diaitem := state.Diamond(diamond)
+		if diaitem == nil {
+			return fmt.Errorf("Diamond <%s> not exist.", string(diamond))
+		}
+		item := diaitem
+		// 回退钻石
+		item.Address = act.FromAddress
+		err := state.DiamondSet(diamond, item)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

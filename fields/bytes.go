@@ -11,6 +11,8 @@ var EmptyZeroBytes32 = bytes.Repeat([]byte{0}, 32)
 var EmptyZeroBytes512 = bytes.Repeat([]byte{0}, 512)
 
 type Bytes3 []byte
+type Bytes4 []byte
+type Bytes5 []byte
 type Bytes6 []byte
 type Bytes8 []byte
 type Bytes16 []byte
@@ -22,6 +24,8 @@ type Bytes64 []byte
 ////////////////////////////////////////////////////////
 
 func (elm *Bytes3) Serialize() ([]byte, error)  { return bytesSerialize(string(*elm), 3) }
+func (elm *Bytes4) Serialize() ([]byte, error)  { return bytesSerialize(string(*elm), 4) }
+func (elm *Bytes5) Serialize() ([]byte, error)  { return bytesSerialize(string(*elm), 5) }
 func (elm *Bytes6) Serialize() ([]byte, error)  { return bytesSerialize(string(*elm), 6) }
 func (elm *Bytes8) Serialize() ([]byte, error)  { return bytesSerialize(string(*elm), 8) }
 func (elm *Bytes16) Serialize() ([]byte, error) { return bytesSerialize(string(*elm), 16) }
@@ -32,6 +36,12 @@ func (elm *Bytes64) Serialize() ([]byte, error) { return bytesSerialize(string(*
 
 func (elm *Bytes3) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 3)
+}
+func (elm *Bytes4) Parse(buf []byte, seek uint32) (uint32, error) {
+	return bytesParse(elm, buf, seek, 4)
+}
+func (elm *Bytes5) Parse(buf []byte, seek uint32) (uint32, error) {
+	return bytesParse(elm, buf, seek, 5)
 }
 func (elm *Bytes6) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 6)
@@ -56,6 +66,8 @@ func (elm *Bytes64) Parse(buf []byte, seek uint32) (uint32, error) {
 }
 
 func (elm *Bytes3) Size() uint32  { return 3 }
+func (elm *Bytes4) Size() uint32  { return 4 }
+func (elm *Bytes5) Size() uint32  { return 5 }
 func (elm *Bytes6) Size() uint32  { return 6 }
 func (elm *Bytes8) Size() uint32  { return 8 }
 func (elm *Bytes16) Size() uint32 { return 16 }
@@ -78,6 +90,10 @@ func bytesParse(elm interface{}, buf []byte, seek uint32, maxlen uint32) (uint32
 	switch a := elm.(type) {
 	case *Bytes3:
 		*a = (Bytes3(addrbytes))
+	case *Bytes4:
+		*a = (Bytes4(addrbytes))
+	case *Bytes5:
+		*a = (Bytes5(addrbytes))
 	case *Bytes6:
 		*a = (Bytes6(addrbytes))
 	case *Bytes8:

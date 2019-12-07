@@ -50,7 +50,7 @@ func (d *digest) Reset() {
 	d.tc = 0
 }
 
-// New returns a new hash.Hash computing the checksum.
+// New returns a new hash.HashWithFee computing the checksum.
 func New() hash.Hash {
 	result := new(digest)
 	result.Reset()

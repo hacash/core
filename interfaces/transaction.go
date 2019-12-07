@@ -13,8 +13,8 @@ type Transaction interface {
 	Size() uint32
 
 	// hash data
-	Hash() fields.Hash
-	HashNoFee() fields.Hash // 无手续费的哈希
+	Hash() fields.Hash        // 无手续费的哈希
+	HashWithFee() fields.Hash // inclued fee amount
 
 	// Addresses that need to verify signatures
 	RequestSignAddresses([]fields.Address) ([]fields.Address, error)

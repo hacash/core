@@ -5,6 +5,10 @@ import (
 	base58check "github.com/hacash/core/account"
 )
 
+const (
+	AddressSize = 21
+)
+
 type AddressReadable = TrimString34
 type Address = Bytes21
 
@@ -34,7 +38,7 @@ func (this *Address) IsValid() bool {
 	if this == nil {
 		return false
 	}
-	if len(*this) != 21 {
+	if len(*this) != AddressSize {
 		return false
 	}
 	// ok

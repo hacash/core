@@ -16,10 +16,10 @@ type Action_1_SimpleTransfer struct {
 	belong_trs interfaces.Transaction
 }
 
-func NewAction_1_SimpleTransfer(addr fields.Address, amt fields.Amount) *Action_1_SimpleTransfer {
+func NewAction_1_SimpleTransfer(addr fields.Address, amt *fields.Amount) *Action_1_SimpleTransfer {
 	return &Action_1_SimpleTransfer{
 		Address: addr,
-		Amount:  amt,
+		Amount:  *amt,
 	}
 }
 
@@ -59,7 +59,7 @@ func (act *Action_1_SimpleTransfer) WriteinChainState(state interfaces.ChainStat
 	}
 
 	// check amount value
-	if ! act.Amount.IsPositive() {
+	if !act.Amount.IsPositive() {
 		return fmt.Errorf("Amount is not positive.")
 	}
 	// 转移

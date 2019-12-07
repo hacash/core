@@ -20,7 +20,7 @@ type ShakeHash interface {
 	io.Writer
 
 	// Read reads more output from the hash; reading affects the hash's
-	// state. (ShakeHash.Read is thus very different from Hash.Sum)
+	// state. (ShakeHash.Read is thus very different from HashWithFee.Sum)
 	// It never returns an error.
 	io.Reader
 

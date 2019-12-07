@@ -10,6 +10,12 @@ import (
 	"github.com/hacash/x16rs"
 )
 
+const (
+	BlockHeadSize = 1 + 5 + 5 + 32 + 32 + 4 // = 79
+)
+
+////////////////////////////////////////////////////////////
+
 func NewBlockByVersion(ty uint8) (interfaces.Block, error) {
 	switch ty {
 	////////////////////  TRANSATION  ////////////////////

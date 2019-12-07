@@ -81,11 +81,15 @@ func NewAmountByBigInt(bignum *big.Int) (*Amount, error) {
 	if dist > 127 {
 		return nil, fmt.Errorf("Amount too big")
 	}
-	return &Amount{
+	new_amount := &Amount{
 		Unit:    uint8(unit),
 		Dist:    int8(dist),
 		Numeral: numeralbytes,
-	}, nil
+	}
+	if bignum.Sign() == -1 {
+		new_amount.Dist *= -1 // amount is negative
+	}
+	return new_amount, nil
 }
 
 func NewAmount(unit uint8, num []byte) *Amount {
@@ -257,6 +261,43 @@ func (bill *Amount) ToFinString() string {
 	return "ㄜ" + sig + numStr + ":" + unitStr
 }
 
+// 省略小数部分 为了存进 20 位空间里面
+func (bill *Amount) EllipsisDecimalFor20SizeStore() (*Amount, bool, error) {
+	maxnumlen := 20 - 1 - 1
+	if len(bill.Numeral) <= maxnumlen {
+		return bill, false, nil // 数据没变
+	}
+	// 省略小数部分
+	new_unit := int(bill.Unit)
+	new_dist := int(bill.Dist)
+	new_numeral := append([]byte{}, bill.Numeral...)
+	biglongnum := new(big.Int).SetBytes(bill.Numeral)
+	bignum10 := big.NewInt(10)
+	for {
+		biglongnum = biglongnum.Div(biglongnum, bignum10)
+		new_numeral = biglongnum.Bytes()
+		new_unit += 1
+		new_dist = len(new_numeral)
+		if new_unit > 255 || new_dist > 127 {
+			return nil, true, fmt.Errorf("Amount is too big.")
+		}
+		if new_dist <= maxnumlen {
+			new_amount := &Amount{
+				uint8(new_unit),
+				int8(new_dist),
+				new_numeral,
+			}
+			if bill.Dist < 0 {
+				new_amount.Dist *= -1 // amount is negative
+			}
+			return new_amount, true, nil // amount is change
+		}
+		// continue next
+	}
+}
+
+/*
+
 // 省略小数部分 为了存进 23 位空间里面
 func (bill *Amount) EllipsisDecimalFor23SizeStore() (*Amount, bool) {
 	maxnumlen := 23 - 1 - 1
@@ -302,6 +343,10 @@ func (bill *Amount) EllipsisDecimalFor23SizeStore() (*Amount, bool) {
 	panic("Amount Ellipsis Decimal Error")
 	return nil, false
 }
+
+
+
+*/
 
 // add
 func (bill *Amount) Add(amt *Amount) (*Amount, error) {

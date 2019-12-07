@@ -26,6 +26,8 @@ type Block_v1 struct {
 	// body
 	Transactions []interfaces.Transaction
 
+	/* -------- -------- */
+
 	// cache data
 	hash fields.Hash
 
@@ -154,6 +156,9 @@ func (block *Block_v1) Serialize() ([]byte, error) {
 }
 
 func (block *Block_v1) ParseHead(buf []byte, seek uint32) (uint32, error) {
+	if len(buf) < seek+5+5+32+32+4 {
+		return 0, fmt.Errorf("buf length error.")
+	}
 	//fmt.Println(*buf)
 	//fmt.Println(seek)
 	//fmt.Println((*buf)[seek:])

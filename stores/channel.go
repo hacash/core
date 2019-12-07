@@ -5,12 +5,16 @@ import (
 	"github.com/hacash/core/fields"
 )
 
+const (
+	ChannelSize = 5 + 2 + (21+6)*2 + 1 + 2 + 16 // 80 = 16 × 5
+)
+
 //
 type Channel struct {
 	BelongHeight fields.VarInt5 // 通道开启时的区块高度
 	LockBlock    fields.VarInt2 // 单方面结束通道要锁定的区块数量
 	LeftAddress  fields.Address
-	LeftAmount   fields.Amount  // 抵押数额1  【6位定宽】
+	LeftAmount   fields.Amount // 抵押数额1  【6位定宽】
 	RightAddress fields.Address
 	RightAmount  fields.Amount  // 抵押数额2  【6位定宽】
 	IsClosed     fields.VarInt1 // 已经关闭并结算
@@ -21,9 +25,8 @@ type Channel struct {
 }
 
 func (this *Channel) Size() uint32 {
-	return uint32(5 + 2 + (21+6)*2 + 1 + 2 + 16) // 80 = 16 × 5
+	return uint32(ChannelSize)
 }
-
 
 func (this *Channel) Parse(buf []byte, seek uint32) (uint32, error) {
 	seek, _ = this.BelongHeight.Parse(buf, seek)
@@ -47,12 +50,12 @@ func (this *Channel) Serialize() ([]byte, error) {
 	b3, _ := this.LeftAddress.Serialize()
 	b4, _ := this.LeftAmount.Serialize()
 	if len(b4) < 6 { // 6位定宽，补全6位
-		b4 = append(b4, bytes.Repeat([]byte{0}, len(b4) - 6)...)
+		b4 = append(b4, bytes.Repeat([]byte{0}, len(b4)-6)...)
 	}
 	b5, _ := this.RightAddress.Serialize()
 	b6, _ := this.RightAmount.Serialize()
 	if len(b6) < 6 { // 6位定宽，补全6位
-		b6 = append(b6, bytes.Repeat([]byte{0}, len(b6) - 6)...)
+		b6 = append(b6, bytes.Repeat([]byte{0}, len(b6)-6)...)
 	}
 	b7, _ := this.IsClosed.Serialize()
 	b8, _ := this.ConfigMark.Serialize()

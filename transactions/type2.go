@@ -171,28 +171,28 @@ func (trs *Transaction_2_Simple) Size() uint32 {
 }
 
 // 交易唯一哈希值
-func (trs *Transaction_2_Simple) Hash() fields.Hash {
+func (trs *Transaction_2_Simple) HashWithFee() fields.Hash {
 	if trs.hash == nil {
-		return trs.HashFresh()
+		return trs.HashWithFeeFresh()
 	}
 	return trs.hash
 }
 
-func (trs *Transaction_2_Simple) HashFresh() fields.Hash {
+func (trs *Transaction_2_Simple) HashWithFeeFresh() fields.Hash {
 	stuff, _ := trs.SerializeNoSign()
 	digest := sha3.Sum256(stuff)
 	trs.hash = digest[:]
 	return trs.hash
 }
 
-func (trs *Transaction_2_Simple) HashNoFee() fields.Hash {
+func (trs *Transaction_2_Simple) Hash() fields.Hash {
 	if trs.hashnofee == nil {
-		return trs.HashNoFeeFresh()
+		return trs.HashFresh()
 	}
 	return trs.hashnofee
 }
 
-func (trs *Transaction_2_Simple) HashNoFeeFresh() fields.Hash {
+func (trs *Transaction_2_Simple) HashFresh() fields.Hash {
 	is_has_fee := false
 	stuff, _ := trs.SerializeNoSignEx(is_has_fee)
 	digest := sha3.Sum256(stuff)
@@ -243,8 +243,8 @@ func (trs *Transaction_2_Simple) RequestSignAddresses(reqs []fields.Address) ([]
 
 // 填充签名
 func (trs *Transaction_2_Simple) FillNeedSigns(addrPrivates map[string][]byte, appendReqs []fields.Address) error {
-	hash := trs.HashFresh()
-	hashNoFee := trs.HashNoFee()
+	hash := trs.HashWithFeeFresh()
+	hashNoFee := trs.Hash()
 	requests, e0 := trs.RequestSignAddresses(appendReqs)
 	if e0 != nil {
 		return e0
@@ -312,8 +312,8 @@ func (trs *Transaction_2_Simple) addOneSign(hash []byte, addrPrivates map[string
 
 // 验证需要的签名
 func (trs *Transaction_2_Simple) VerifyNeedSigns(reqs []fields.Address) (bool, error) {
-	hash := trs.HashFresh()
-	hashNoFee := trs.HashNoFee()
+	hash := trs.HashWithFeeFresh()
+	hashNoFee := trs.Hash()
 	requests, e0 := trs.RequestSignAddresses(reqs)
 	if e0 != nil {
 		return false, e0
