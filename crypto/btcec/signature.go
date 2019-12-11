@@ -71,33 +71,31 @@ func (sig *Signature) Serialize() []byte {
 	return b
 }
 
-
 func (sig *Signature) Serialize64() []byte {
 	// store
 	sigstore := new(bytes.Buffer)
 	sigRb := sig.R.Bytes()
 	if len(sigRb) < 32 {
-		sigstore.Write( bytes.Repeat([]byte{0}, 32-len(sigRb)) )
+		sigstore.Write(bytes.Repeat([]byte{0}, 32-len(sigRb)))
 	}
 	sigstore.Write(sigRb)
 	sigSb := sig.S.Bytes()
 	if len(sigSb) < 32 {
-		sigstore.Write( bytes.Repeat([]byte{0}, 32-len(sigSb)) )
+		sigstore.Write(bytes.Repeat([]byte{0}, 32-len(sigSb)))
 	}
 	sigstore.Write(sigSb)
 	return sigstore.Bytes()
 }
 
-func ParseSignatureByte64(stuff []byte) (*Signature, error)  {
+func ParseSignatureByte64(stuff []byte) (*Signature, error) {
 	if len(stuff) != 64 {
-		return nil,  errors.New("Signature format error")
+		return nil, errors.New("Signature format error")
 	}
 	sig := new(Signature)
 	sig.R = new(big.Int).SetBytes(stuff[0:32])
 	sig.S = new(big.Int).SetBytes(stuff[32:])
 	return sig, nil
 }
-
 
 // Verify calls ecdsa.Verify to verify the signature of hash using the public
 // key.  It returns true if the signature is valid, false otherwise.

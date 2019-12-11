@@ -11,7 +11,6 @@ var (
 	secp256k1halfN = new(big.Int).Div(secp256k1N, big.NewInt(2))
 )
 
-
 // ToECDSA creates a private key with the given D value.
 func ToECDSA(d []byte) (*ecdsa.PrivateKey, error) {
 	return toECDSA(d, true)
@@ -51,4 +50,3 @@ func toECDSA(d []byte, strict bool) (*ecdsa.PrivateKey, error) {
 	}
 	return priv, nil
 }
-

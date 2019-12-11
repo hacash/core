@@ -241,8 +241,8 @@ func TestPubKeys(t *testing.T) {
 		if !bytes.Equal(test.key, pkStr) {
 			t.Errorf("%s pubkey: serialized keys do not match.",
 				test.name)
-			fmt.Println( hex.EncodeToString(test.key) )
-			fmt.Println( hex.EncodeToString(pkStr) )
+			fmt.Println(hex.EncodeToString(test.key))
+			fmt.Println(hex.EncodeToString(pkStr))
 		}
 	}
 }
