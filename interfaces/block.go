@@ -26,6 +26,7 @@ type Block interface {
 	SerializeTransactions(SerializeTransactionsIterator) ([]byte, error)
 	ParseTransactions([]byte, uint32) (uint32, error)
 
+	SerializeExcludeTransactions() ([]byte, error)
 	ParseExcludeTransactions([]byte, uint32) (uint32, error)
 
 	// change chain state
@@ -61,8 +62,6 @@ type Block interface {
 	GetTransactionCount() uint32
 	GetMrklRoot() fields.Hash
 }
-
-
 
 type SerializeTransactionsIterator interface {
 	Init(uint32)

@@ -166,9 +166,21 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Parse(buf []byte, seek uint32) (ui
 }
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Size() uint32 {
-	totalsize := 1 + trs.Timestamp.Size() + trs.Address.Size() + trs.Fee.Size() + trs.ActionCount.Size()
+	totalsize := 1 +
+		trs.Timestamp.Size() +
+		trs.Address.Size() +
+		trs.Fee.Size() +
+		trs.ActionCount.Size()
 	for i := 0; i < int(trs.ActionCount); i++ {
 		totalsize += trs.Actions[i].Size()
+	}
+	totalsize += trs.SignCount.Size()
+	for i := 0; i < int(trs.SignCount); i++ {
+		totalsize += trs.Signs[i].Size()
+	}
+	totalsize += trs.MultisignCount.Size()
+	for i := 0; i < int(trs.MultisignCount); i++ {
+		totalsize += trs.Multisigns[i].Size()
 	}
 	return totalsize
 }
@@ -377,15 +389,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RecoverChainState(state interfaces
 
 // 手续费含量 每byte的含有多少烁代币
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) FeePurity() uint64 {
-
-	bigfee := trs.Fee.GetValue()
-	bigfee = bigfee.Div(bigfee, fields.NewAmountNumOneByUnit(232).GetValue())
-	bigfee = bigfee.Div(bigfee, new(big.Int).SetUint64(uint64(trs.Size())))
-	maxUint64 := uint64(18446744073709551615)
-	if bigfee.Cmp(new(big.Int).SetUint64(maxUint64)) == 1 {
-		return maxUint64
-	}
-	return bigfee.Uint64()
+	return CalculateFeePurity(&trs.Fee, trs.Size())
 }
 
 // 查询

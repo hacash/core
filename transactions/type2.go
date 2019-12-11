@@ -163,9 +163,21 @@ func (trs *Transaction_2_Simple) Parse(buf []byte, seek uint32) (uint32, error) 
 }
 
 func (trs *Transaction_2_Simple) Size() uint32 {
-	totalsize := 1 + trs.Timestamp.Size() + trs.Address.Size() + trs.Fee.Size() + trs.ActionCount.Size()
+	totalsize := 1 +
+		trs.Timestamp.Size() +
+		trs.Address.Size() +
+		trs.Fee.Size() +
+		trs.ActionCount.Size()
 	for i := 0; i < int(trs.ActionCount); i++ {
 		totalsize += trs.Actions[i].Size()
+	}
+	totalsize += trs.SignCount.Size()
+	for i := 0; i < int(trs.SignCount); i++ {
+		totalsize += trs.Signs[i].Size()
+	}
+	totalsize += trs.MultisignCount.Size()
+	for i := 0; i < int(trs.MultisignCount); i++ {
+		totalsize += trs.Multisigns[i].Size()
 	}
 	return totalsize
 }
@@ -242,7 +254,7 @@ func (trs *Transaction_2_Simple) RequestSignAddresses(reqs []fields.Address) ([]
 }
 
 // 填充签名
-func (trs *Transaction_2_Simple) FillNeedSigns(addrPrivates map[string][]byte, appendReqs []fields.Address) error {
+func (trs *Transaction_2_Simple) FillNeedSigns(addrPrivateKeys map[string][]byte, appendReqs []fields.Address) error {
 	hash := trs.HashWithFeeFresh()
 	hashNoFee := trs.Hash()
 	requests, e0 := trs.RequestSignAddresses(appendReqs)
@@ -250,13 +262,13 @@ func (trs *Transaction_2_Simple) FillNeedSigns(addrPrivates map[string][]byte, a
 		return e0
 	}
 	// 主签名（包括手续费）
-	e1 := trs.addOneSign(hash, addrPrivates, trs.Address)
+	e1 := trs.addOneSign(hash, addrPrivateKeys, trs.Address)
 	if e1 != nil {
 		return e1
 	}
 	// 其他签名（不包括手续费字段）
 	for i := 0; i < len(requests); i++ {
-		e1 := trs.addOneSign(hashNoFee, addrPrivates, requests[i])
+		e1 := trs.addOneSign(hashNoFee, addrPrivateKeys, requests[i])
 		if e1 != nil {
 			return e1
 		}
@@ -397,15 +409,7 @@ func (trs *Transaction_2_Simple) RecoverChainState(state interfaces.ChainStateOp
 
 // 手续费含量 每byte的含有多少烁代币
 func (trs *Transaction_2_Simple) FeePurity() uint64 {
-
-	bigfee := trs.Fee.GetValue()
-	bigfee = bigfee.Div(bigfee, fields.NewAmountNumOneByUnit(232).GetValue())
-	bigfee = bigfee.Div(bigfee, new(big.Int).SetUint64(uint64(trs.Size())))
-	maxUint64 := uint64(18446744073709551615)
-	if bigfee.Cmp(new(big.Int).SetUint64(maxUint64)) == 1 {
-		return maxUint64
-	}
-	return bigfee.Uint64()
+	return CalculateFeePurity(&trs.Fee, trs.Size())
 }
 
 // 查询

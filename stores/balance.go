@@ -23,6 +23,14 @@ func NewEmptyBalance() *Balance {
 	}
 }
 
+func NewBalanceWithAmount(amt *fields.Amount) *Balance {
+	return &Balance{
+		Config:      []byte{0, 0, 0, 0},
+		ExtendMarks: []byte{0, 0, 0, 0, 0, 0, 0, 0},
+		Amount:      *amt,
+	}
+}
+
 ///////////////////////////////////////
 
 func (this *Balance) Size() uint32 {

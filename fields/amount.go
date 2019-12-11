@@ -378,8 +378,11 @@ func (bill *Amount) LessThan(amt *Amount) bool {
 
 // compare
 func (bill *Amount) Equal(amt *Amount) bool {
-	if bill.GetValue().Cmp(amt.GetValue()) == 0 {
-		return true
+	//
+	if bill.Unit != amt.Unit ||
+		bill.Dist != amt.Dist ||
+		bytes.Compare(bill.Numeral, amt.Numeral) != 0 {
+		return false
 	}
-	return false
+	return true
 }

@@ -31,7 +31,10 @@ func ParseBlock(buf []byte, seek uint32) (interfaces.Block, uint32, error) {
 		return nil, 0, fmt.Errorf("buf too short")
 	}
 	version := uint8(buf[seek])
-	var blk, _ = NewBlockByVersion(version)
+	var blk, e = NewBlockByVersion(version)
+	if e != nil {
+		return nil, 0, e
+	}
 	var mv, err = blk.Parse(buf, seek+1)
 	return blk, mv, err
 }
@@ -57,7 +60,7 @@ func ParseExcludeTransactions(buf []byte, seek uint32) (interfaces.Block, uint32
 
 //////////////////////////////////
 
-func CalculateBlockHash(block interfaces.Block) []byte {
+func CalculateBlockHash(block interfaces.Block) fields.Hash {
 	stuff := CalculateBlockHashBaseStuff(block)
 	//fmt.Println( hex.EncodeToString( hashbase[:] ) )
 	minerloopnum := int(block.GetHeight()/50000 + 1)
@@ -67,7 +70,7 @@ func CalculateBlockHash(block interfaces.Block) []byte {
 	return CalculateBlockHashByStuff(minerloopnum, stuff)
 }
 
-func CalculateBlockHashByStuff(loopnum int, stuff []byte) []byte {
+func CalculateBlockHashByStuff(loopnum int, stuff []byte) fields.Hash {
 	hashbase := sha3.Sum256(stuff)
 	return x16rs.HashX16RS_Optimize(loopnum, hashbase[:])
 }
@@ -81,14 +84,14 @@ func CalculateBlockHashBaseStuff(block interfaces.Block) []byte {
 	return buffer.Bytes()
 }
 
-func CalculateMrklRoot(transactions []interfaces.Transaction) []byte {
+func CalculateMrklRoot(transactions []interfaces.Transaction) fields.Hash {
 	trslen := len(transactions)
 	if trslen == 0 {
 		return fields.EmptyZeroBytes32
 	}
-	hashs := make([][]byte, trslen)
+	hashs := make([]fields.Hash, trslen)
 	for i := 0; i < trslen; i++ {
-		hashs[i] = transactions[i].Hash()
+		hashs[i] = transactions[i].HashWithFee()
 	}
 	for true {
 		if len(hashs) == 1 {
@@ -99,13 +102,13 @@ func CalculateMrklRoot(transactions []interfaces.Transaction) []byte {
 	return nil
 }
 
-func hashMerge(hashs [][]byte) [][]byte {
+func hashMerge(hashs []fields.Hash) []fields.Hash {
 	length := len(hashs)
 	mgsize := length / 2
 	if length%2 == 1 {
 		mgsize = (length + 1) / 2
 	}
-	var mergehashs = make([][]byte, mgsize)
+	var mergehashs = make([]fields.Hash, mgsize)
 	for m := 0; m < length; m += 2 {
 		var b1 bytes.Buffer
 		b1.Write(hashs[m])

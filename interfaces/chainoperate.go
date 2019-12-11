@@ -16,12 +16,12 @@ type ChainStateOperation interface {
 	GetPendingBlockHash() fields.Hash
 	SetPendingBlockHash(fields.Hash)
 
-	GetPendingSubmitStoreDiamond() *stores.DiamondSmelt
+	GetPendingSubmitStoreDiamond() (*stores.DiamondSmelt, error)
 	SetPendingSubmitStoreDiamond(*stores.DiamondSmelt) error
 
 	// status
-	SetLastestBlockHead(Block) error
-	ReadLastestBlockHead() (Block, error)
+	SetLastestBlockHeadAndMeta(Block) error
+	ReadLastestBlockHeadAndMeta() (Block, error)
 	SetLastestDiamond(*stores.DiamondSmelt) error
 	ReadLastestDiamond() (*stores.DiamondSmelt, error)
 
@@ -30,7 +30,7 @@ type ChainStateOperation interface {
 	//Miner() Miner
 	//SetMiner(Miner)
 	ChainStore() ChainStore
-	SetChainState(ChainStore)
+	SetChainStore(ChainStore) error
 
 	// state
 

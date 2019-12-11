@@ -116,9 +116,12 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		return fmt.Errorf("Diamond <%s> already exist.", string(act.Diamond))
 	}
 	// 检查一个区块只能包含一枚钻石
-	pendingdiamond := state.GetPendingSubmitStoreDiamond()
+	pendingdiamond, e2 := state.GetPendingSubmitStoreDiamond()
+	if e2 != nil {
+		return e2
+	}
 	if pendingdiamond != nil {
-		return fmt.Errorf("This block height:%d has already exist diamond:<%s> .", blkhei, diamondstrval)
+		return fmt.Errorf("This block height:%d has already exist diamond:<%s> .", blkhei, pendingdiamond.Diamond)
 	}
 	// 存入钻石
 	//fmt.Println(act.Address.ToReadable())
@@ -140,10 +143,17 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		MinerAddress:         act.Address,
 		Nonce:                act.Nonce,
 	}
-	e4 := state.SetPendingSubmitStoreDiamond(diamondstore)
+	e4 := state.SetLastestDiamond(diamondstore)
 	if e4 != nil {
 		return e4
 	}
+	e5 := state.SetPendingSubmitStoreDiamond(diamondstore)
+	if e5 != nil {
+		return e5
+	}
+
+	fmt.Println("Action_4_DiamondCreate:", diamondstore.Number, string(diamondstore.Diamond), diamondstore.MinerAddress.ToReadable())
+
 	return nil
 }
 
@@ -173,7 +183,6 @@ func (act *Action_4_DiamondCreate) RecoverChainState(state interfaces.ChainState
 		return e3
 	}
 	return nil
-
 }
 
 func (elm *Action_4_DiamondCreate) SetBelongTransaction(t interfaces.Transaction) {
@@ -223,11 +232,17 @@ func (elm *Action_5_DiamondTransfer) RequestSignAddresses() []fields.Address {
 }
 
 func (act *Action_5_DiamondTransfer) WriteinChainState(state interfaces.ChainStateOperation) error {
+
 	if act.trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
+
+	trsMainAddress := act.trs.GetAddress()
+
+	fmt.Println("Action_5_DiamondTransfer:", trsMainAddress.ToReadable(), act.Address.ToReadable(), string(act.Diamond))
+
 	// 自己不能转给自己
-	if bytes.Compare(act.Address, act.trs.GetAddress()) == 0 {
+	if bytes.Compare(act.Address, trsMainAddress) == 0 {
 		return fmt.Errorf("Cannot transfer to self.")
 	}
 	// 查询钻石是否已经存在
@@ -237,7 +252,7 @@ func (act *Action_5_DiamondTransfer) WriteinChainState(state interfaces.ChainSta
 	}
 	item := diaitem
 	// 检查所属
-	if bytes.Compare(item.Address, act.trs.GetAddress()) != 0 {
+	if bytes.Compare(item.Address, trsMainAddress) != 0 {
 		return fmt.Errorf("Diamond <%s> not belong to belone_trs address.", string(act.Diamond))
 	}
 	// 转移钻石
@@ -352,6 +367,9 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 	// 批量转移钻石
 	for i := 0; i < len(act.Diamonds); i++ {
 		diamond := act.Diamonds[i]
+
+		fmt.Println("Action_6_OutfeeQuantityDiamondTransfer:", act.FromAddress.ToReadable(), act.ToAddress.ToReadable(), string(diamond))
+
 		// fmt.Println("--- " + string(diamond))
 		// 查询钻石是否已经存在
 		diaitem := state.Diamond(diamond)

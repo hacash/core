@@ -11,10 +11,10 @@ type ChainStore interface {
 	SaveBlockUniteTransactions(Block) error
 
 	// block
+	ReadBlockHeadBytesByHeight(uint64) ([]byte, error)
 	ReadBlockHeadBytesByHash(fields.Hash) ([]byte, error)
+	ReadBlockBytesByHeight(uint64) ([]byte, error)
 	ReadBlockBytesByHash(fields.Hash) ([]byte, error)
-	ReadBlockHeadBytesByHeight(fields.VarInt5) ([]byte, error)
-	ReadBlockBytesByHeight(fields.VarInt5) ([]byte, error)
 
 	// tx
 	ReadTransactionDataByHash(fields.Hash) ([]byte, error)

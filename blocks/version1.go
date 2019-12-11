@@ -142,6 +142,17 @@ func (block *Block_v1) SerializeTransactions(itr interfaces.SerializeTransaction
 
 }
 
+func (block *Block_v1) SerializeExcludeTransactions() ([]byte, error) {
+	var buffer = new(bytes.Buffer)
+
+	head, _ := block.SerializeHead()
+	buffer.Write(head)
+	meta, _ := block.SerializeMeta()
+	buffer.Write(meta)
+
+	return buffer.Bytes(), nil
+}
+
 // 序列化 与 反序列化
 func (block *Block_v1) Serialize() ([]byte, error) {
 
@@ -156,7 +167,7 @@ func (block *Block_v1) Serialize() ([]byte, error) {
 }
 
 func (block *Block_v1) ParseHead(buf []byte, seek uint32) (uint32, error) {
-	if len(buf) < seek+5+5+32+32+4 {
+	if len(buf) < int(seek)+BlockHeadSize-1 {
 		return 0, fmt.Errorf("buf length error.")
 	}
 	//fmt.Println(*buf)

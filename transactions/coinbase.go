@@ -11,6 +11,7 @@ import (
 )
 
 type Transaction_0_Coinbase struct {
+	// type
 	Address fields.Address
 	Reward  fields.Amount
 	Message fields.TrimString16
@@ -117,8 +118,7 @@ func (trs *Transaction_0_Coinbase) ParseHead(buf []byte, seek uint32) (uint32, e
 }
 
 func (trs *Transaction_0_Coinbase) Size() uint32 {
-	base := trs.Address.Size() + trs.Reward.Size() + trs.Message.Size()
-	base += 1
+	base := 1 + trs.Address.Size() + trs.Reward.Size() + trs.Message.Size()
 	length := int(trs.WitnessCount)
 	base += uint32(length)
 	for i := 0; i < length; i++ {
@@ -174,7 +174,6 @@ func (trs *Transaction_0_Coinbase) RecoverChainState(state interfaces.ChainState
 	return actions.DoSubBalanceFromChainState(state, trs.Address, *rwd)
 }
 
-// 手续费含量
 func (trs *Transaction_0_Coinbase) FeePurity() uint64 {
 	return 0
 }

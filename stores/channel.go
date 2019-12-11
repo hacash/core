@@ -50,12 +50,16 @@ func (this *Channel) Serialize() ([]byte, error) {
 	b3, _ := this.LeftAddress.Serialize()
 	b4, _ := this.LeftAmount.Serialize()
 	if len(b4) < 6 { // 6位定宽，补全6位
-		b4 = append(b4, bytes.Repeat([]byte{0}, len(b4)-6)...)
+		mb4 := make([]byte, 6)
+		copy(mb4, b4)
+		b4 = mb4
 	}
 	b5, _ := this.RightAddress.Serialize()
 	b6, _ := this.RightAmount.Serialize()
 	if len(b6) < 6 { // 6位定宽，补全6位
-		b6 = append(b6, bytes.Repeat([]byte{0}, len(b6)-6)...)
+		mb6 := make([]byte, 6)
+		copy(mb6, b6)
+		b6 = mb6
 	}
 	b7, _ := this.IsClosed.Serialize()
 	b8, _ := this.ConfigMark.Serialize()

@@ -15,13 +15,15 @@ import (
 
 func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, amt fields.Amount) error {
 
-	//fmt.Println("addr1:", base58check.Encode(addr1), "addr2:", base58check.Encode(addr2), "amt:", amt.ToFinString())
+	fmt.Println("addr1:", addr1.ToReadable(), "addr2:", addr2.ToReadable(), "amt:", amt.ToFinString())
 
 	if bytes.Compare(addr1, addr2) == 0 {
 		return nil // 可以自己转给自己，不改变状态，白费手续费
 	}
 	bls1 := state.Balance(addr1)
 	if bls1 == nil {
+		// test
+		//fmt.Println( addr1.ToReadable(), "Balance ", amt.ToFinString(), " not find." )
 		return fmt.Errorf("Balance not find.")
 	}
 	amt1 := bls1.Amount
@@ -30,7 +32,7 @@ func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 
 		//x, _ := amt.Sub(&amt1)
 		//print_xxxxxxx(addr1, x)
 		//fmt.Println("[balance not enough]", "addr1: ", addr1.ToReadable(), "amt: " + amt.ToFinString(), "amt1: " + amt1.ToFinString())
-		return fmt.Errorf("balance not enough.")
+		return fmt.Errorf("address %s balance %s not enough， need %s.", addr1.ToReadable(), amt1.ToFinString(), amt.ToFinString())
 	}
 	bls2 := state.Balance(addr2)
 	if bls2 == nil {
@@ -85,6 +87,9 @@ func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 
 // 单纯增加余额
 func DoAddBalanceFromChainState(state interfaces.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
 	blssto := state.Balance(addr)
+	if blssto == nil {
+		blssto = stores.NewEmptyBalance() // first create account
+	}
 	baseamt := blssto.Amount
 	//fmt.Println( "baseamt: ", baseamt.ToFinString() )
 	amtnew, e1 := baseamt.Add(&amt)
@@ -99,7 +104,7 @@ func DoAddBalanceFromChainState(state interfaces.ChainStateOperation, addr field
 		return fmt.Errorf("amount can not to store")
 	}
 	//addrrr, _ := base58check.Encode(addr)
-	//fmt.Println( "DoAddBalanceFromChainState: ++++++++++ ", addrrr, amtsave.ToFinString() )
+	//fmt.Println( "DoAddBalanceFromChainState: ++++++++++ ", addr.ToReadable(), amtsave.ToFinString() )
 	blssto.Amount = *amtsave
 	bserr := state.BalanceSet(addr, blssto)
 	if bserr != nil {
@@ -117,7 +122,7 @@ func DoSubBalanceFromChainState(state interfaces.ChainStateOperation, addr field
 		//x, _ := amt.Sub(&baseamt)
 		//print_xxxxxxx(addr, x)
 		//fmt.Println("[balance not enough]", "block height: 0", "addr: ", addr.ToReadable(), "baseamt: " + baseamt.ToFinString(), "amt: " + amt.ToFinString())
-		return fmt.Errorf("balance not enough")
+		return fmt.Errorf("address %s balance %s not enough， need %s.", addr.ToReadable(), baseamt.ToFinString(), amt.ToFinString())
 	}
 	//fmt.Println("amt fee: " + amt.ToFinString())
 	amtnew, e1 := baseamt.Sub(&amt)
