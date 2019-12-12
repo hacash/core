@@ -25,17 +25,10 @@ type ChainStateOperation interface {
 	SetLastestDiamond(*stores.DiamondSmelt) error
 	ReadLastestDiamond() (*stores.DiamondSmelt, error)
 
-	//Block() Block
-	//SetBlock(Block)
-	//Miner() Miner
-	//SetMiner(Miner)
 	BlockStore() BlockStore
 	SetBlockStore(BlockStore) error
 
 	// state
-
-	//GetPrevDiamondHash() (uint32, fields.Hash)
-	//SetPrevDiamondHash(uint32, fields.Hash) error
 
 	// query
 

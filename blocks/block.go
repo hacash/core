@@ -14,6 +14,14 @@ const (
 	BlockHeadSize = 1 + 5 + 5 + 32 + 32 + 4 // = 79
 )
 
+// protocol
+const (
+	BlockVersion    = fields.VarInt1(1) // uint8
+	TransactionType = fields.VarInt1(2) // uint8
+	ActionKind      = fields.VarInt2(6) // uint16
+	RepairVersion   = fields.VarInt2(2) // uint16
+)
+
 ////////////////////////////////////////////////////////////
 
 func NewBlockByVersion(ty uint8) (interfaces.Block, error) {

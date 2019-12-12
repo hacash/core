@@ -13,8 +13,9 @@ type BlockStore interface {
 	// block
 	ReadBlockHeadBytesByHeight(uint64) ([]byte, error)
 	ReadBlockHeadBytesByHash(fields.Hash) ([]byte, error)
-	ReadBlockBytesByHeight(uint64) ([]byte, error)
-	ReadBlockBytesByHash(fields.Hash) ([]byte, error)
+	ReadBlockBytesByHeight(uint64, uint32) ([]byte, error)
+	ReadBlockBytesByHash(fields.Hash, uint32) ([]byte, error)
+	ReadBlockHashByHeight(uint64) (fields.Hash, error)
 
 	// tx
 	ReadTransactionDataByHash(fields.Hash) ([]byte, error)
