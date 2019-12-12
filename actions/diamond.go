@@ -158,7 +158,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 }
 
 func (act *Action_4_DiamondCreate) RecoverChainState(state interfaces.ChainStateOperation) error {
-	//chainstate := state.ChainStore()
+	//chainstate := state.BlockStore()
 	//if chainstate == nil {
 	//	panic("Action get state.Miner() cannot be nil !")
 	//}
@@ -168,9 +168,9 @@ func (act *Action_4_DiamondCreate) RecoverChainState(state interfaces.ChainState
 		return e1
 	}
 	// 回退矿工状态
-	chainstore := state.ChainStore()
+	chainstore := state.BlockStore()
 	if chainstore == nil {
-		return fmt.Errorf("not find ChainStore object.")
+		return fmt.Errorf("not find BlockStore object.")
 
 	}
 	prevDiamond, e2 := chainstore.ReadDiamondByNumber(uint32(act.Number) - 1)

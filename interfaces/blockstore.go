@@ -5,7 +5,7 @@ import (
 	"github.com/hacash/core/stores"
 )
 
-type ChainStore interface {
+type BlockStore interface {
 
 	// save
 	SaveBlockUniteTransactions(Block) error

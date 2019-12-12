@@ -29,8 +29,8 @@ type ChainStateOperation interface {
 	//SetBlock(Block)
 	//Miner() Miner
 	//SetMiner(Miner)
-	ChainStore() ChainStore
-	SetChainStore(ChainStore) error
+	BlockStore() BlockStore
+	SetBlockStore(BlockStore) error
 
 	// state
 
