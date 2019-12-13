@@ -1,6 +1,9 @@
 package fields
 
-import "encoding/hex"
+import (
+	"bytes"
+	"encoding/hex"
+)
 
 type Hash = Bytes32
 
@@ -9,5 +12,5 @@ func (h *Hash) ToHex() string {
 }
 
 func (h *Hash) Equal(tar Hash) bool {
-	return bytes.Compare(h, tar) == 0
+	return bytes.Compare(*h, tar) == 0
 }

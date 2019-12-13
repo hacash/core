@@ -152,7 +152,8 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		return e5
 	}
 
-	fmt.Println("Action_4_DiamondCreate:", diamondstore.Number, string(diamondstore.Diamond), diamondstore.MinerAddress.ToReadable())
+	//fmt.Println("Action_4_DiamondCreate:", diamondstore.Number, string(diamondstore.Diamond), diamondstore.MinerAddress.ToReadable())
+	//fmt.Print(string(diamondstore.Diamond)+",")
 
 	return nil
 }
@@ -239,7 +240,7 @@ func (act *Action_5_DiamondTransfer) WriteinChainState(state interfaces.ChainSta
 
 	trsMainAddress := act.trs.GetAddress()
 
-	fmt.Println("Action_5_DiamondTransfer:", trsMainAddress.ToReadable(), act.Address.ToReadable(), string(act.Diamond))
+	//fmt.Println("Action_5_DiamondTransfer:", trsMainAddress.ToReadable(), act.Address.ToReadable(), string(act.Diamond))
 
 	// 自己不能转给自己
 	if bytes.Compare(act.Address, trsMainAddress) == 0 {
@@ -368,7 +369,7 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 	for i := 0; i < len(act.Diamonds); i++ {
 		diamond := act.Diamonds[i]
 
-		fmt.Println("Action_6_OutfeeQuantityDiamondTransfer:", act.FromAddress.ToReadable(), act.ToAddress.ToReadable(), string(diamond))
+		//fmt.Println("Action_6_OutfeeQuantityDiamondTransfer:", act.FromAddress.ToReadable(), act.ToAddress.ToReadable(), string(diamond))
 
 		// fmt.Println("--- " + string(diamond))
 		// 查询钻石是否已经存在

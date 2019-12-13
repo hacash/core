@@ -15,7 +15,7 @@ import (
 
 func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, amt fields.Amount) error {
 
-	fmt.Println("addr1:", addr1.ToReadable(), "addr2:", addr2.ToReadable(), "amt:", amt.ToFinString())
+	//fmt.Println("addr1:", addr1.ToReadable(), "addr2:", addr2.ToReadable(), "amt:", amt.ToFinString())
 
 	if bytes.Compare(addr1, addr2) == 0 {
 		return nil // 可以自己转给自己，不改变状态，白费手续费
