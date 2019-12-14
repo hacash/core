@@ -6,6 +6,15 @@ import (
 
 type Block interface {
 
+	// origin
+	OriginMark() string
+	SetOriginMark(string)
+
+	// delete cache data
+	Fresh()
+
+	////////////////////////////////////
+
 	// the block type number
 	Version() uint8
 
@@ -37,9 +46,6 @@ type Block interface {
 	Hash() fields.Hash
 	HashFresh() fields.Hash
 
-	// delete cache data
-	Fresh()
-
 	// change struct data
 	AddTransaction(Transaction)
 	SetMrklRoot(fields.Hash)
@@ -47,10 +53,6 @@ type Block interface {
 
 	// verify signatures
 	VerifyNeedSigns() (bool, error)
-
-	// diamond state
-	CheckHasHaveDiamond(string) bool
-	DoMarkHaveDiamond(string)
 
 	// get some datas
 	GetTransactions() []Transaction

@@ -2,9 +2,11 @@ package sys
 
 import (
 	"github.com/hacash/core/sys/inicnf"
+	"math/rand"
 	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type Inicnf struct {
@@ -41,6 +43,7 @@ func (i *Inicnf) MustDataDir() string {
 //////////////////////////////
 
 func LoadInicnf(source_file string) (*Inicnf, error) {
+	rand.Seed(time.Now().Unix())
 	inifile, err := inicnf.Load(source_file)
 	if err != nil {
 		return nil, err

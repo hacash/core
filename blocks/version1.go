@@ -3,7 +3,6 @@ package blocks
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/hacash/core/fields"
@@ -32,7 +31,7 @@ type Block_v1 struct {
 	hash fields.Hash
 
 	// mark data
-	HasHaveDiamond string // 区块内是否已经包含钻石
+	originMark string // 原产地标志: "", "miner", "discover"
 }
 
 func NewEmptyBlock_v1(prevBlockHead interfaces.Block) *Block_v1 {
@@ -46,7 +45,7 @@ func NewEmptyBlock_v1(prevBlockHead interfaces.Block) *Block_v1 {
 		Nonce:            0,
 		Difficulty:       0,
 		WitnessStage:     0,
-		HasHaveDiamond:   "",
+		originMark:       "",
 	}
 	if prevBlockHead != nil {
 		empty.PrevHash = prevBlockHead.Hash()
@@ -56,20 +55,12 @@ func NewEmptyBlock_v1(prevBlockHead interfaces.Block) *Block_v1 {
 	return empty
 }
 
-// 检查和设置钻石
-func (block *Block_v1) CheckHasHaveDiamond(diamond string) bool {
-	if len(block.HasHaveDiamond) == 0 {
-		return false // 不存在
-	}
-	if strings.Compare(block.HasHaveDiamond, diamond) == 0 {
-		return false // 如果相同，则不存在
-	}
-	// 表示已经存在
-	return true
+// origin
+func (block *Block_v1) OriginMark() string {
+	return block.originMark
 }
-
-func (block *Block_v1) DoMarkHaveDiamond(diamond string) {
-	block.HasHaveDiamond = diamond
+func (block *Block_v1) SetOriginMark(mark string) {
+	block.originMark = mark
 }
 
 func (block *Block_v1) Version() uint8 {
@@ -337,6 +328,7 @@ func (block *Block_v1) WriteinChainState(blockstate interfaces.ChainStateOperati
 	return nil
 
 }
+
 func (block *Block_v1) RecoverChainState(blockstate interfaces.ChainStateOperation) error {
 	txlen := len(block.Transactions)
 	totalfee := fields.NewEmptyAmount()
