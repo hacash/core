@@ -7,7 +7,7 @@ import (
 type Block interface {
 
 	// origin
-	OriginMark() string
+	OriginMark() string // "sync", "discover", "mining"
 	SetOriginMark(string)
 
 	// delete cache data

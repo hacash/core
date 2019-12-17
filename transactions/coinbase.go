@@ -194,3 +194,11 @@ func (trs *Transaction_0_Coinbase) GetActions() []interfaces.Action {
 func (trs *Transaction_0_Coinbase) GetTimestamp() uint64 { // 时间戳
 	return 0
 }
+
+func (trs *Transaction_0_Coinbase) SetMessage(msg fields.TrimString16) {
+	trs.Message = msg
+}
+
+func (trs *Transaction_0_Coinbase) GetMessage() fields.TrimString16 {
+	return trs.Message
+}

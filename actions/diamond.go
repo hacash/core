@@ -89,7 +89,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	if lastdiamond != nil {
 		prevdiamondnum, prevdiamondhash := uint32(lastdiamond.Number), lastdiamond.ContainBlockHash
 		// 检查钻石是否是从上一个区块得来
-		if bytes.Compare(act.PrevHash, prevdiamondhash) != 0 {
+		if act.PrevHash.Equal(prevdiamondhash) != true {
 			return fmt.Errorf("Diamond prev hash must be <%s> but got <%s>.", hex.EncodeToString(prevdiamondhash), hex.EncodeToString(act.PrevHash))
 		}
 		if prevdiamondnum+1 != uint32(act.Number) {

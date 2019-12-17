@@ -37,4 +37,6 @@ type Transaction interface {
 	GetFee() fields.Amount
 	GetActions() []Action
 	GetTimestamp() uint64
+	GetMessage() fields.TrimString16
+	SetMessage(fields.TrimString16)
 }

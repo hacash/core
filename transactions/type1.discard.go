@@ -408,3 +408,10 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetActions() []interfaces.Action {
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetTimestamp() uint64 { // 时间戳
 	return uint64(trs.Timestamp)
 }
+
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) SetMessage(fields.TrimString16) {
+}
+
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetMessage() fields.TrimString16 {
+	return fields.TrimString16("")
+}

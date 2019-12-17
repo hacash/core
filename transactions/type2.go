@@ -428,3 +428,10 @@ func (trs *Transaction_2_Simple) GetActions() []interfaces.Action {
 func (trs *Transaction_2_Simple) GetTimestamp() uint64 { // 时间戳
 	return uint64(trs.Timestamp)
 }
+
+func (trs *Transaction_2_Simple) SetMessage(fields.TrimString16) {
+}
+
+func (trs *Transaction_2_Simple) GetMessage() fields.TrimString16 {
+	return fields.TrimString16("")
+}

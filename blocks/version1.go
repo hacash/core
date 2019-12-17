@@ -55,8 +55,11 @@ func NewEmptyBlock_v1(prevBlockHead interfaces.Block) *Block_v1 {
 	return empty
 }
 
-// origin
+// origin: "sync", "discover", "mining"
 func (block *Block_v1) OriginMark() string {
+	if block.originMark == "" {
+		return "sync"
+	}
 	return block.originMark
 }
 func (block *Block_v1) SetOriginMark(mark string) {
@@ -278,6 +281,7 @@ func (block *Block_v1) GetTransactions() []interfaces.Transaction {
 }
 func (block *Block_v1) AddTransaction(trs interfaces.Transaction) {
 	block.Transactions = append(block.Transactions, trs)
+	block.TransactionCount += 1
 }
 
 // 验证需要的签名

@@ -29,16 +29,16 @@ func CheckReadableAddress(readable string) (*Address, error) {
 	return &addr, nil
 }
 
-func (this *Address) ToReadable() string {
-	return base58check.Base58CheckEncode([]byte(*this))
+func (this Address) ToReadable() string {
+	return base58check.Base58CheckEncode([]byte(this))
 }
 
 // check valid
-func (this *Address) IsValid() bool {
+func (this Address) IsValid() bool {
 	if this == nil {
 		return false
 	}
-	if len(*this) != AddressSize {
+	if len(this) != AddressSize {
 		return false
 	}
 	// ok

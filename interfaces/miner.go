@@ -2,9 +2,13 @@ package interfaces
 
 type Miner interface {
 	Start() //
-	Stop()  //
+
+	StartMining() //
+	StopMining()  //
 
 	SetBlockChain(BlockChain)
+	SetTxPool(TxPool)
+	SetPowMaster(PowMaster)
 
 	SubmitTx(Transaction)
 
