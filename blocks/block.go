@@ -70,18 +70,15 @@ func ParseExcludeTransactions(buf []byte, seek uint32) (interfaces.Block, uint32
 
 func CalculateBlockHash(block interfaces.Block) fields.Hash {
 	stuff := CalculateBlockHashBaseStuff(block)
-	//fmt.Println( hex.EncodeToString( hashbase[:] ) )
-	minerloopnum := int(block.GetHeight()/50000 + 1)
-	if minerloopnum > 16 {
-		minerloopnum = 16 // 8年时间上升到16次
-	}
-	return CalculateBlockHashByStuff(minerloopnum, stuff)
+	return x16rs.CalculateBlockHash(block.GetHeight(), stuff)
 }
 
+/*
 func CalculateBlockHashByStuff(loopnum int, stuff []byte) fields.Hash {
 	hashbase := sha3.Sum256(stuff)
 	return x16rs.HashX16RS_Optimize(loopnum, hashbase[:])
 }
+*/
 
 func CalculateBlockHashBaseStuff(block interfaces.Block) []byte {
 	var buffer bytes.Buffer

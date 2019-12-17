@@ -8,7 +8,7 @@ type Miner interface {
 
 	SetBlockChain(BlockChain)
 	SetTxPool(TxPool)
-	SetPowMaster(PowMaster)
+	SetPowServer(PowServer)
 
 	SubmitTx(Transaction)
 
