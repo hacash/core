@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	BlockHeadSize = 1 + 5 + 5 + 32 + 32 + 4 // = 79
+	BlockHeadSize   = 1 + 5 + 5 + 32 + 32 + 4 // = 79
+	BlockMetaSizeV1 = 4 + 4 + 2               // = 10
 )
 
 // protocol

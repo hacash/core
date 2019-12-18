@@ -55,6 +55,27 @@ func NewEmptyBlock_v1(prevBlockHead interfaces.Block) *Block_v1 {
 	return empty
 }
 
+// copy
+func (block *Block_v1) CopyForMining() interfaces.Block {
+	newblock := NewEmptyBlock_v1(nil)
+	newblock.Height = block.Height
+	newblock.Timestamp = block.Timestamp
+	newblock.PrevHash = append([]byte{}, block.PrevHash...)
+	newblock.MrklRoot = append([]byte{}, block.MrklRoot...)
+	newblock.TransactionCount = block.TransactionCount
+	newblock.Nonce = block.Nonce
+	newblock.Difficulty = block.Difficulty
+	newblock.WitnessStage = block.WitnessStage
+	// copy coinbase
+	trs := block.GetTransactions()
+	if len(trs) > 0 {
+		trs[0] = trs[0].Copy()
+	}
+	newblock.SetTransactions(trs)
+	// ok
+	return newblock
+}
+
 // origin: "sync", "discover", "mining"
 func (block *Block_v1) OriginMark() string {
 	if block.originMark == "" {
@@ -274,6 +295,10 @@ func (block *Block_v1) SetMrklRoot(root fields.Hash) {
 }
 func (block *Block_v1) SetNonce(n uint32) {
 	block.Nonce = fields.VarInt4(n)
+}
+
+func (block *Block_v1) SetTransactions(trs []interfaces.Transaction) {
+	block.Transactions = trs
 }
 
 func (block *Block_v1) GetTransactions() []interfaces.Transaction {

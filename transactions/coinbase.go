@@ -32,6 +32,17 @@ func NewTransaction_0_Coinbase() *Transaction_0_Coinbase {
 	}
 }
 
+func (trs *Transaction_0_Coinbase) Copy() interfaces.Transaction {
+	return &Transaction_0_Coinbase{
+		Address:      append([]byte{}, trs.Address...),
+		Reward:       *trs.Reward.Copy(),
+		Message:      fields.TrimString16(string(append([]byte{}, trs.Message...))),
+		WitnessCount: trs.WitnessCount,
+		WitnessSigs:  append([]uint8{}, trs.WitnessSigs...),
+		Witnesses:    append([]fields.Sign{}, trs.Witnesses...),
+	}
+}
+
 func (trs *Transaction_0_Coinbase) GetReward() *fields.Amount {
 	return &trs.Reward
 }

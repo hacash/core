@@ -52,6 +52,10 @@ func (trs *Transaction_2_Simple) Type() uint8 {
 	return 2
 }
 
+func (trs *Transaction_2_Simple) Copy() interfaces.Transaction {
+	return trs
+}
+
 func (trs *Transaction_2_Simple) Serialize() ([]byte, error) {
 	body, e0 := trs.SerializeNoSign()
 	if e0 != nil {

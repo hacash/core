@@ -3,6 +3,7 @@ package interfaces
 import "github.com/hacash/core/fields"
 
 type Transaction interface {
+	Copy() Transaction
 
 	// the transaction type number
 	Type() uint8

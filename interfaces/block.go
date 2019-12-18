@@ -10,6 +10,9 @@ type Block interface {
 	OriginMark() string // "sync", "discover", "mining"
 	SetOriginMark(string)
 
+	// copy
+	CopyForMining() Block
+
 	// delete cache data
 	Fresh()
 
@@ -55,6 +58,9 @@ type Block interface {
 	VerifyNeedSigns() (bool, error)
 
 	// get some datas
+
+	SetTransactions([]Transaction)
+
 	GetTransactions() []Transaction
 	GetHeight() uint64
 	GetDifficulty() uint32

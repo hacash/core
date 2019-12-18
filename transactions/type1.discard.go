@@ -52,6 +52,10 @@ func NewEmptyTransaction_1_Simple(master fields.Address) (*Transaction_1_DO_NOT_
 	}, nil
 }
 
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Copy() interfaces.Transaction {
+	return trs
+}
+
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Type() uint8 {
 	return 1
 }
