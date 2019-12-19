@@ -68,10 +68,12 @@ func (block *Block_v1) CopyForMining() interfaces.Block {
 	newblock.WitnessStage = block.WitnessStage
 	// copy coinbase
 	trs := block.GetTransactions()
+	newtrs := trs
 	if len(trs) > 0 {
-		trs[0] = trs[0].Copy()
+		newtrs = append([]interfaces.Transaction{}, trs[0].Copy())
+		newtrs = append(newtrs, trs[1:]...)
 	}
-	newblock.SetTransactions(trs)
+	newblock.SetTransactions(newtrs)
 	// ok
 	return newblock
 }

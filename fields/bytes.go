@@ -15,6 +15,7 @@ type Bytes4 []byte
 type Bytes5 []byte
 type Bytes6 []byte
 type Bytes8 []byte
+type Bytes12 []byte
 type Bytes16 []byte
 type Bytes21 []byte
 type Bytes32 []byte
@@ -28,6 +29,7 @@ func (elm *Bytes4) Serialize() ([]byte, error)  { return bytesSerialize(string(*
 func (elm *Bytes5) Serialize() ([]byte, error)  { return bytesSerialize(string(*elm), 5) }
 func (elm *Bytes6) Serialize() ([]byte, error)  { return bytesSerialize(string(*elm), 6) }
 func (elm *Bytes8) Serialize() ([]byte, error)  { return bytesSerialize(string(*elm), 8) }
+func (elm *Bytes12) Serialize() ([]byte, error) { return bytesSerialize(string(*elm), 12) }
 func (elm *Bytes16) Serialize() ([]byte, error) { return bytesSerialize(string(*elm), 16) }
 func (elm *Bytes21) Serialize() ([]byte, error) { return bytesSerialize(string(*elm), 21) }
 func (elm *Bytes32) Serialize() ([]byte, error) { return bytesSerialize(string(*elm), 32) }
@@ -48,6 +50,9 @@ func (elm *Bytes6) Parse(buf []byte, seek uint32) (uint32, error) {
 }
 func (elm *Bytes8) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 8)
+}
+func (elm *Bytes12) Parse(buf []byte, seek uint32) (uint32, error) {
+	return bytesParse(elm, buf, seek, 12)
 }
 func (elm *Bytes16) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 16)
@@ -70,6 +75,7 @@ func (elm *Bytes4) Size() uint32  { return 4 }
 func (elm *Bytes5) Size() uint32  { return 5 }
 func (elm *Bytes6) Size() uint32  { return 6 }
 func (elm *Bytes8) Size() uint32  { return 8 }
+func (elm *Bytes12) Size() uint32 { return 12 }
 func (elm *Bytes16) Size() uint32 { return 16 }
 func (elm *Bytes21) Size() uint32 { return 21 }
 func (elm *Bytes32) Size() uint32 { return 32 }
@@ -100,6 +106,8 @@ func bytesParse(elm interface{}, buf []byte, seek uint32, maxlen uint32) (uint32
 		*a = (Bytes8(addrbytes))
 	case *Bytes16:
 		*a = (Bytes16(addrbytes))
+	case *Bytes12:
+		*a = (Bytes12(addrbytes))
 	case *Bytes21:
 		*a = (Bytes21(addrbytes))
 	case *Bytes32:
@@ -119,7 +127,7 @@ func bytesSerialize(str string, maxlen uint32) ([]byte, error) {
 	//var str = string(*elm)
 	for {
 		if uint32(len(str)) < maxlen {
-			str += " "
+			str += string([]byte{0})
 		} else {
 			break
 		}
