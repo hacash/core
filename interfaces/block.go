@@ -7,7 +7,7 @@ import (
 type Block interface {
 
 	// origin
-	OriginMark() string // "sync", "discover", "mining"
+	OriginMark() string // "", "sync", "discover", "mining"
 	SetOriginMark(string)
 
 	// copy

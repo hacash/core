@@ -421,6 +421,10 @@ func (trs *Transaction_2_Simple) GetAddress() fields.Address {
 	return trs.Address
 }
 
+func (trs *Transaction_2_Simple) SetAddress(addr fields.Address) {
+	trs.Address = addr
+}
+
 func (trs *Transaction_2_Simple) GetFee() fields.Amount {
 	return trs.Fee
 }

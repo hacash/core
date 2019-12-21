@@ -5,6 +5,8 @@ import (
 	"github.com/hacash/core/sys/inicnf"
 	"math/rand"
 	"os"
+	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -37,6 +39,18 @@ func (i *Inicnf) SetMustDataDir(dir string) {
 	panic("Cannot SetMustDataDir on running.")
 }
 
+func AbsDir(dir string) string {
+	if path.IsAbs(dir) == false {
+		ppp, err := filepath.Abs(os.Args[0])
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(0)
+		}
+		dir = path.Join(path.Dir(ppp), dir)
+	}
+	return dir
+}
+
 // data dir
 func (i *Inicnf) MustDataDir() string {
 	if i.mustDataDir != "" {
@@ -46,8 +60,9 @@ func (i *Inicnf) MustDataDir() string {
 	if strings.HasPrefix(dir, "~/") {
 		dir = os.Getenv("HOME") + string([]byte(dir)[1:])
 	}
+	dir = AbsDir(dir)
 	i.mustDataDir = dir
-	fmt.Println("[Inicnf] Load config file must data dir: \"", dir, "\"")
+	fmt.Println("[Inicnf] Must data dir: \"" + dir + "\"")
 	return dir
 }
 

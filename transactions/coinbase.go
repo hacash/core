@@ -194,6 +194,10 @@ func (trs *Transaction_0_Coinbase) GetAddress() fields.Address {
 	return trs.Address
 }
 
+func (trs *Transaction_0_Coinbase) SetAddress(addr fields.Address) {
+	trs.Address = addr
+}
+
 func (trs *Transaction_0_Coinbase) GetFee() fields.Amount {
 	return trs.TotalFee
 }

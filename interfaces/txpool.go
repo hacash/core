@@ -1,9 +1,14 @@
 package interfaces
 
+import (
+	"github.com/hacash/core/fields"
+)
+
 type TxPool interface {
 	SetBlockChain(BlockChain)
 
 	// 检查交易是否已经存在
+	CheckTxExistByHash(fields.Hash) bool
 	CheckTxExist(Transaction) bool
 	// 添加交易
 	AddTx(Transaction) error
@@ -13,6 +18,9 @@ type TxPool interface {
 	CopyTxsOrderByFeePurity(targetblockheight uint64, maxcount uint32, maxsize uint32) []Transaction
 	// 过滤、清除交易
 	RemoveTxs([]Transaction)
+	// 添加交易成功事件订阅
+	SubscribeOnAddTxSuccess(chan Transaction)
+
 	// 获取手续费最高的一笔交易
 	// PopTxByHighestFee() Transaction
 	// 订阅交易池加入新交易事件

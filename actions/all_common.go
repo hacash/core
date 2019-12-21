@@ -138,6 +138,7 @@ func DoSubBalanceFromChainState(state interfaces.ChainStateOperation, addr field
 	}
 	//fmt.Println("amtnew1: " + amtnew1.ToFinString())
 	blssto.Amount = *amtnew1
+	//fmt.Println("state.BalanceSet: ", addr.ToReadable(), amtnew1.ToFinString())
 	bserr := state.BalanceSet(addr, blssto)
 	if bserr != nil {
 		return bserr

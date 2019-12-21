@@ -401,6 +401,10 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetAddress() fields.Address {
 	return trs.Address
 }
 
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) SetAddress(addr fields.Address) {
+	trs.Address = addr
+}
+
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetFee() fields.Amount {
 	return trs.Fee
 }
