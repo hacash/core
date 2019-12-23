@@ -1,6 +1,7 @@
 package fields
 
 import (
+	"bytes"
 	"fmt"
 	base58check "github.com/hacash/core/account"
 )
@@ -43,4 +44,9 @@ func (this Address) IsValid() bool {
 	}
 	// ok
 	return true
+}
+
+// check equal
+func (this Address) Equal(tar Address) bool {
+	return bytes.Compare(this, tar) == 0
 }

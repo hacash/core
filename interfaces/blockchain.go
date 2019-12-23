@@ -12,4 +12,6 @@ type BlockChain interface {
 	SubscribeDiamondOnCreate(chan *stores.DiamondSmelt)
 
 	ReadPrev288BlockTimestamp(blockHeight uint64) (uint64, error)
+
+	RollbackToBlockHeight(uint64) (uint64, error)
 }

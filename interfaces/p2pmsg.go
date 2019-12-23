@@ -9,6 +9,7 @@ type MsgPeer interface {
 
 type MsgCommunicator interface {
 	PeerLen() int
+	GetAllPeers() []MsgPeer
 	FindAnyOnePeerBetterBePublic() MsgPeer
 	BroadcastDataMessageToUnawarePeers(ty uint16, msgbody []byte, KnowledgeKey string, KnowledgeValue string)
 }
