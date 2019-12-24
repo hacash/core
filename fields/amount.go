@@ -188,6 +188,9 @@ func NewAmountFromFinString(finstr string) (*Amount, error) {
 	if strings.HasPrefix(finstr, "HCX") {
 		finstr = string([]byte(finstr)[3:])
 	}
+	if strings.HasPrefix(finstr, "HAC") {
+		finstr = string([]byte(finstr)[3:])
+	}
 	if strings.HasPrefix(finstr, "ㄜ") {
 		finstr = string([]byte(finstr)[3:])
 	}

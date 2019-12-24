@@ -1,11 +1,15 @@
 package interfaces
 
-import "github.com/hacash/core/stores"
+import (
+	"github.com/hacash/core/stores"
+)
 
 type BlockChain interface {
 	InsertBlock(Block) error
 	State() ChainStateOperation
+
 	ValidateTransaction(Transaction) error
+	ValidateDiamondCreateAction(Action) error
 	CreateNextBlockByValidateTxs([]Transaction) (Block, uint32, error)
 
 	SubscribeValidatedBlockOnInsert(chan Block)

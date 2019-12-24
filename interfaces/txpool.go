@@ -20,6 +20,8 @@ type TxPool interface {
 	RemoveTxs([]Transaction)
 	// 添加交易成功事件订阅
 	SubscribeOnAddTxSuccess(chan Transaction)
+	PauseEventSubscribe()   // 暂停事件订阅
+	RenewalEventSubscribe() // 重开事件订阅
 
 	// 获取手续费最高的一笔交易
 	// PopTxByHighestFee() Transaction

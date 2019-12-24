@@ -81,6 +81,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	if blkhei%5 != 0 {
 		return fmt.Errorf("{BACKTOPOOL} Diamond must be in block height multiple of 5.")
 	}
+
 	// 矿工状态检查
 	lastdiamond, err := state.ReadLastestDiamond()
 	if err != nil {
@@ -110,6 +111,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	if !difok {
 		return fmt.Errorf("Diamond difficulty not meet the requirements.")
 	}
+
 	// 查询钻石是否已经存在
 	hasaddr := state.Diamond(act.Diamond)
 	if hasaddr != nil {
