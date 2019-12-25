@@ -88,6 +88,10 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		return err
 	}
 	if lastdiamond != nil {
+		//fmt.Println(lastdiamond.Diamond)
+		//fmt.Println(lastdiamond.Number)
+		//fmt.Println(lastdiamond.ContainBlockHash.ToHex())
+		//fmt.Println(lastdiamond.PrevContainBlockHash.ToHex())
 		prevdiamondnum, prevdiamondhash := uint32(lastdiamond.Number), lastdiamond.ContainBlockHash
 		// 检查钻石是否是从上一个区块得来
 		if act.PrevHash.Equal(prevdiamondhash) != true {
@@ -111,7 +115,6 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	if !difok {
 		return fmt.Errorf("Diamond difficulty not meet the requirements.")
 	}
-
 	// 查询钻石是否已经存在
 	hasaddr := state.Diamond(act.Diamond)
 	if hasaddr != nil {
