@@ -255,13 +255,17 @@ func NewAmountFromFinString(finstr string) (*Amount, error) {
 }
 
 func (bill *Amount) ToFinString() string {
+	return bill.ToFinStringWithMark("ㄜ")
+}
+
+func (bill *Amount) ToFinStringWithMark(mark string) string {
 	unitStr := strconv.Itoa(int(bill.Unit)) // string(bytes.Repeat([]byte{48}, int(bill.Unit)))
 	numStr := new(big.Int).SetBytes(bill.Numeral).String()
 	sig := ""
 	if bill.Dist < 0 {
 		sig = "-"
 	}
-	return "ㄜ" + sig + numStr + ":" + unitStr
+	return mark + sig + numStr + ":" + unitStr
 }
 
 // 省略小数部分 为了存进 20 位空间里面

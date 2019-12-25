@@ -8,8 +8,8 @@ type TxPool interface {
 	SetBlockChain(BlockChain)
 
 	// 检查交易是否已经存在
-	CheckTxExistByHash(fields.Hash) bool
-	CheckTxExist(Transaction) bool
+	CheckTxExistByHash(fields.Hash) (Transaction, bool)
+	CheckTxExist(Transaction) (Transaction, bool)
 	// 添加交易
 	AddTx(Transaction) error
 	// 从交易池里查询一笔交易
@@ -22,6 +22,8 @@ type TxPool interface {
 	SubscribeOnAddTxSuccess(chan Transaction)
 	PauseEventSubscribe()   // 暂停事件订阅
 	RenewalEventSubscribe() // 重开事件订阅
+
+	GetDiamondCreateTxs() []Transaction
 
 	// 获取手续费最高的一笔交易
 	// PopTxByHighestFee() Transaction

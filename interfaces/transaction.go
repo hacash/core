@@ -20,9 +20,9 @@ type Transaction interface {
 	// Addresses that need to verify signatures
 	RequestSignAddresses([]fields.Address) ([]fields.Address, error)
 
+	CleanSigns()
 	// fill signatures
 	FillNeedSigns(map[string][]byte, []fields.Address) error
-
 	// verify signatures
 	VerifyNeedSigns([]fields.Address) (bool, error)
 
@@ -37,6 +37,7 @@ type Transaction interface {
 	GetAddress() fields.Address
 	SetAddress(fields.Address)
 	GetFee() fields.Amount
+	SetFee(*fields.Amount)
 	GetActions() []Action
 	GetTimestamp() uint64
 	GetMessage() fields.TrimString16

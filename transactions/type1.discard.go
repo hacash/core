@@ -251,6 +251,12 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RequestSignAddresses([]fields.Addr
 	return requests, nil
 }
 
+// 清除所有签名
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) CleanSigns() {
+	trs.SignCount = 0
+	trs.Signs = []fields.Sign{}
+}
+
 // 填充签名
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) FillNeedSigns(addrPrivates map[string][]byte, reqs []fields.Address) error {
 	// hash := trs.HashWithFeeFresh()
@@ -407,6 +413,10 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) SetAddress(addr fields.Address) {
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetFee() fields.Amount {
 	return trs.Fee
+}
+
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) SetFee(fee *fields.Amount) {
+	trs.Fee = *fee
 }
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetActions() []interfaces.Action {

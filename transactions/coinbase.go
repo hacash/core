@@ -155,6 +155,10 @@ func (trs *Transaction_0_Coinbase) RequestSignAddresses([]fields.Address) ([]fie
 	return []fields.Address{}, nil
 }
 
+// 清除所有签名
+func (trs *Transaction_0_Coinbase) CleanSigns() {
+}
+
 // 填充签名
 func (trs *Transaction_0_Coinbase) FillNeedSigns(map[string][]byte, []fields.Address) error {
 	return nil
@@ -200,6 +204,9 @@ func (trs *Transaction_0_Coinbase) SetAddress(addr fields.Address) {
 
 func (trs *Transaction_0_Coinbase) GetFee() fields.Amount {
 	return trs.TotalFee
+}
+
+func (trs *Transaction_0_Coinbase) SetFee(fee *fields.Amount) {
 }
 
 func (trs *Transaction_0_Coinbase) GetActions() []interfaces.Action {

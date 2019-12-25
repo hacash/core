@@ -257,16 +257,22 @@ func (trs *Transaction_2_Simple) RequestSignAddresses(reqs []fields.Address) ([]
 	return results, nil
 }
 
+// 清清除所有签名
+func (trs *Transaction_2_Simple) CleanSigns() {
+	trs.SignCount = 0
+	trs.Signs = []fields.Sign{}
+}
+
 // 填充签名
 func (trs *Transaction_2_Simple) FillNeedSigns(addrPrivateKeys map[string][]byte, appendReqs []fields.Address) error {
-	hash := trs.HashWithFeeFresh()
+	hashWithFee := trs.HashWithFeeFresh()
 	hashNoFee := trs.Hash()
 	requests, e0 := trs.RequestSignAddresses(appendReqs)
 	if e0 != nil {
 		return e0
 	}
 	// 主签名（包括手续费）
-	e1 := trs.addOneSign(hash, addrPrivateKeys, trs.Address)
+	e1 := trs.addOneSign(hashWithFee, addrPrivateKeys, trs.Address)
 	if e1 != nil {
 		return e1
 	}
@@ -282,8 +288,7 @@ func (trs *Transaction_2_Simple) FillNeedSigns(addrPrivateKeys map[string][]byte
 }
 
 func (trs *Transaction_2_Simple) addOneSign(hash []byte, addrPrivates map[string][]byte, address []byte) error {
-	// 判断签名是否已经存在
-
+	// 判断私钥是否存在
 	privitebytes, has := addrPrivates[string(address)]
 	if !has {
 		return fmt.Errorf("Private Key '" + account.Base58CheckEncode(address) + "' necessary")
@@ -427,6 +432,10 @@ func (trs *Transaction_2_Simple) SetAddress(addr fields.Address) {
 
 func (trs *Transaction_2_Simple) GetFee() fields.Amount {
 	return trs.Fee
+}
+
+func (trs *Transaction_2_Simple) SetFee(fee *fields.Amount) {
+	trs.Fee = *fee
 }
 
 func (trs *Transaction_2_Simple) GetActions() []interfaces.Action {
