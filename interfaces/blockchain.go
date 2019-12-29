@@ -6,11 +6,11 @@ import (
 
 type BlockChain interface {
 	InsertBlock(Block) error
-	State() ChainStateOperation
+	State() ChainState
 
 	ValidateTransaction(Transaction) error
 	ValidateDiamondCreateAction(Action) error
-	CreateNextBlockByValidateTxs([]Transaction) (Block, uint32, error)
+	CreateNextBlockByValidateTxs([]Transaction) (Block, []Transaction, uint32, error)
 
 	SubscribeValidatedBlockOnInsert(chan Block)
 	SubscribeDiamondOnCreate(chan *stores.DiamondSmelt)

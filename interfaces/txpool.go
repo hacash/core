@@ -18,6 +18,8 @@ type TxPool interface {
 	CopyTxsOrderByFeePurity(targetblockheight uint64, maxcount uint32, maxsize uint32) []Transaction
 	// 过滤、清除交易
 	RemoveTxs([]Transaction)
+	RemoveTxsOnNextBlockArrive([]Transaction)
+	SetAutomaticallyCleanInvalidTransactions(bool)
 	// 添加交易成功事件订阅
 	SubscribeOnAddTxSuccess(chan Transaction)
 	PauseEventSubscribe()   // 暂停事件订阅
