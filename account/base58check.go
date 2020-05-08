@@ -147,13 +147,13 @@ func Base58CheckDecodeTestPrint(encoded string) ([]byte, error) {
 
 	if !reflect.DeepEqual(checksum, hash[:4]) {
 
-		fmt.Println("----data----", hex.EncodeToString(data), data)
+		fmt.Println("----data---- size:", len(data), hex.EncodeToString(data), data)
 		fmt.Println("right addr =", Base58CheckEncode(data))
 
 		return nil, errors.New("Data and checksum don't match")
 	}
 
-	fmt.Println(encoded, " address ok")
+	fmt.Println(encoded, "size:", len(data), "address ok")
 
 	return data, nil
 }
