@@ -363,6 +363,7 @@ func (block *Block_v1) WriteinChainState(blockstate interfaces.ChainStateOperati
 func (block *Block_v1) RecoverChainState(blockstate interfaces.ChainStateOperation) error {
 	txlen := len(block.Transactions)
 	totalfee := fields.NewEmptyAmount()
+	store := blockstate.BlockStore()
 	for i := txlen - 1; i > 0; i-- {
 		tx := block.Transactions[i]
 		e := tx.RecoverChainState(blockstate)
@@ -371,6 +372,11 @@ func (block *Block_v1) RecoverChainState(blockstate interfaces.ChainStateOperati
 		}
 		var fee = tx.GetFee()
 		totalfee, e = totalfee.Add(&fee)
+		// delete tx from db
+		delerr := store.DeleteTransactionByHash(tx.Hash())
+		if delerr != nil {
+			return delerr
+		}
 	}
 	coinbase, _ := block.Transactions[0].(*transactions.Transaction_0_Coinbase)
 	coinbase.TotalFee = *totalfee
