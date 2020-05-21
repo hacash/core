@@ -5,6 +5,8 @@ import (
 )
 
 type BlockChain interface {
+	Start()
+
 	InsertBlock(Block) error
 	State() ChainState
 
