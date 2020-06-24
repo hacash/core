@@ -78,6 +78,7 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	labt, _ := act.LeftAmount.Serialize()
 	rabt, _ := act.RightAmount.Serialize()
 	if len(labt) > 6 || len(rabt) > 6 {
+		// 避免锁定资金的储存位数过长，导致的复利计算后的值存储位数超过最大范围
 		return fmt.Errorf("Payment Channel create error: left or right Amount bytes too long.")
 	}
 	// 不能为零或负数
@@ -210,7 +211,7 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 	DoAddBalanceFromChainState(state, paychan.RightAddress, rightAmount)
 	// 暂时保留通道用于数据回退
 	paychan.IsClosed = fields.VarInt1(1) // 标记通道已经关闭了
-	state.ChannelCreate(act.ChannelId, paychan)
+	state.ChannelUpdate(act.ChannelId, paychan)
 	//
 	return nil
 }
@@ -243,7 +244,7 @@ func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.Chai
 	DoSubBalanceFromChainState(state, paychan.RightAddress, rightAmount)
 	// 恢复通道状态
 	paychan.IsClosed = fields.VarInt1(0) // 重新标记通道为开启状态
-	state.ChannelCreate(act.ChannelId, paychan)
+	state.ChannelUpdate(act.ChannelId, paychan)
 	return nil
 }
 

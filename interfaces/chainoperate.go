@@ -42,6 +42,7 @@ type ChainStateOperation interface {
 	BalanceDel(fields.Address) error
 
 	ChannelCreate(fields.Bytes16, *stores.Channel) error
+	ChannelUpdate(fields.Bytes16, *stores.Channel) error
 	ChannelDelete(fields.Bytes16) error
 
 	DiamondSet(fields.Bytes6, *stores.Diamond) error
