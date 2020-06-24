@@ -137,7 +137,6 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		return e3
 	}
 	// 设置矿工状态
-	//state.SetPrevDiamondHash(act.Number, )
 	//标记本区块已经包含钻石
 	var diamondstore = &stores.DiamondSmelt{
 		Diamond:              act.Diamond,
