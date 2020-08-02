@@ -13,6 +13,7 @@ import (
 
 //////////////////////////////////////////////////////////
 
+// hac转账
 func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, amt fields.Amount) error {
 
 	//fmt.Println("addr1:", addr1.ToReadable(), "addr2:", addr2.ToReadable(), "amt:", amt.ToFinString())

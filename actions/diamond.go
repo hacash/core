@@ -16,6 +16,9 @@ import (
  * 钻石交易类型
  */
 
+// 第 20001 个钻石开始，启用 32 位的 msg byte
+const DiamondCreateCustomMessageAboveNumber uint32 = 20000
+
 // 挖出钻石
 type Action_4_DiamondCreate struct {
 	Diamond  fields.Bytes6  // 钻石字面量 WTYUIAHXVMEKBSZN
@@ -23,6 +26,8 @@ type Action_4_DiamondCreate struct {
 	PrevHash fields.Hash    // 上一个包含钻石的区块hash
 	Nonce    fields.Bytes8  // 随机数
 	Address  fields.Address // 所属账户
+	// 客户消息
+	CustomMessage fields.Bytes32
 
 	// 数据指针
 	// 所属交易
@@ -34,12 +39,25 @@ func (elm *Action_4_DiamondCreate) Kind() uint16 {
 }
 
 func (elm *Action_4_DiamondCreate) Size() uint32 {
-	return 2 +
+	size := 2 +
 		elm.Diamond.Size() +
 		elm.Number.Size() +
 		elm.PrevHash.Size() +
 		elm.Nonce.Size() +
 		elm.Address.Size()
+	// 加上 msg byte
+	if uint32(elm.Number) > DiamondCreateCustomMessageAboveNumber {
+		size += elm.CustomMessage.Size()
+	}
+	return size
+}
+
+func (elm *Action_4_DiamondCreate) GetRealCustomMessage() []byte {
+	if uint32(elm.Number) > DiamondCreateCustomMessageAboveNumber {
+		var msgBytes, _ = elm.CustomMessage.Serialize()
+		return msgBytes
+	}
+	return []byte{}
 }
 
 func (elm *Action_4_DiamondCreate) Serialize() ([]byte, error) {
@@ -57,6 +75,11 @@ func (elm *Action_4_DiamondCreate) Serialize() ([]byte, error) {
 	buffer.Write(prevBytes)
 	buffer.Write(nonceBytes)
 	buffer.Write(addrBytes)
+	// 加上 msg byte
+	if uint32(elm.Number) > DiamondCreateCustomMessageAboveNumber {
+		var msgBytes, _ = elm.CustomMessage.Serialize()
+		buffer.Write(msgBytes)
+	}
 	return buffer.Bytes(), nil
 }
 
@@ -66,6 +89,10 @@ func (elm *Action_4_DiamondCreate) Parse(buf []byte, seek uint32) (uint32, error
 	var moveseek3, _ = elm.PrevHash.Parse(buf, moveseek2)
 	var moveseek4, _ = elm.Nonce.Parse(buf, moveseek3)
 	var moveseek5, _ = elm.Address.Parse(buf, moveseek4)
+	// 加上 msg byte
+	if uint32(elm.Number) > DiamondCreateCustomMessageAboveNumber {
+		moveseek5, _ = elm.CustomMessage.Parse(buf, moveseek5)
+	}
 	return moveseek5, nil
 }
 
@@ -102,7 +129,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		}
 	}
 	// 检查钻石挖矿计算
-	diamond_resbytes, diamond_str := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address)
+	diamond_resbytes, diamond_str := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address, act.GetRealCustomMessage())
 	diamondstrval, isdia := x16rs.IsDiamondHashResultString(diamond_str)
 	if !isdia {
 		return fmt.Errorf("String <%s> is not diamond.", diamond_str)
@@ -146,6 +173,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		PrevContainBlockHash: act.PrevHash,
 		MinerAddress:         act.Address,
 		Nonce:                act.Nonce,
+		CustomMessage:        act.GetRealCustomMessage(),
 	}
 	e4 := state.SetLastestDiamond(diamondstore)
 	if e4 != nil {
@@ -158,6 +186,8 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 
 	//fmt.Println("Action_4_DiamondCreate:", diamondstore.Number, string(diamondstore.Diamond), diamondstore.MinerAddress.ToReadable())
 	//fmt.Print(string(diamondstore.Diamond)+",")
+
+	fmt.Println("Action_4_DiamondCreate:", act.Nonce)
 
 	return nil
 }

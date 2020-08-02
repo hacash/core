@@ -33,6 +33,7 @@ type ChainStateOperation interface {
 	// query
 
 	Balance(fields.Address) *stores.Balance
+	Satoshi(fields.Address) *stores.Satoshi
 	Channel(fields.Bytes16) *stores.Channel
 	Diamond(fields.Bytes6) *stores.Diamond
 
@@ -40,6 +41,9 @@ type ChainStateOperation interface {
 
 	BalanceSet(fields.Address, *stores.Balance) error
 	BalanceDel(fields.Address) error
+
+	SatoshiSet(fields.Address, *stores.Satoshi) error
+	SatoshiDel(fields.Address) error
 
 	ChannelCreate(fields.Bytes16, *stores.Channel) error
 	ChannelUpdate(fields.Bytes16, *stores.Channel) error

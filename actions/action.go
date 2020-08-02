@@ -23,6 +23,10 @@ func NewActionByKind(kind uint16) (interfaces.Action, error) {
 		return new(Action_5_DiamondTransfer), nil
 	case 6:
 		return new(Action_6_OutfeeQuantityDiamondTransfer), nil
+	case 7:
+		return new(Action_7_SatoshiGenesis), nil
+	case 8:
+		return new(Action_8_SimpleSatoshiTransfer), nil
 	}
 	////////////////////    END      ////////////////////
 	return nil, fmt.Errorf("Cannot find Action kind of " + string(kind))
