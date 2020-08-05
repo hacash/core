@@ -187,7 +187,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	//fmt.Println("Action_4_DiamondCreate:", diamondstore.Number, string(diamondstore.Diamond), diamondstore.MinerAddress.ToReadable())
 	//fmt.Print(string(diamondstore.Diamond)+",")
 
-	fmt.Println("Action_4_DiamondCreate:", act.Nonce)
+	//fmt.Println("Action_4_DiamondCreate:", act.Nonce)
 
 	return nil
 }

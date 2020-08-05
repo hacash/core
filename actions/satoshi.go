@@ -3,6 +3,7 @@ package actions
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
 	"math/big"
@@ -86,6 +87,10 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
+
+	// TODO: 验证转移的BTC
+	return fmt.Errorf("Not yet.")
+
 	// 增发 hac
 	hacmeibig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount))
 	addhacamt, err := fields.NewAmountByBigIntWithUnit(hacmeibig, 248)
