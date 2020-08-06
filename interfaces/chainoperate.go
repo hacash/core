@@ -10,7 +10,12 @@ import (
 type ChainStateOperation interface {
 
 	// status
+	IsInMemTxPool() bool // 否在交易池
+	SetInMemTxPool(bool)
 
+	LoadValidatedSatoshiGenesis(int64) (*stores.SatoshiGenesis, bool) // 获取已验证的BTC转移日志 & 是否需要验证
+
+	// status
 	GetPendingBlockHeight() uint64
 	SetPendingBlockHeight(uint64)
 	GetPendingBlockHash() fields.Hash
@@ -25,6 +30,7 @@ type ChainStateOperation interface {
 	SetLastestDiamond(*stores.DiamondSmelt) error
 	ReadLastestDiamond() (*stores.DiamondSmelt, error)
 
+	// store
 	BlockStore() BlockStore
 	SetBlockStore(BlockStore) error
 
@@ -51,4 +57,8 @@ type ChainStateOperation interface {
 
 	DiamondSet(fields.Bytes6, *stores.Diamond) error
 	DiamondDel(fields.Bytes6) error
+
+	// movebtc
+	SaveMoveBTCBelongTxHash(trsno uint32, txhash []byte) error
+	ReadMoveBTCTxHashByNumber(trsno uint32) ([]byte, error)
 }

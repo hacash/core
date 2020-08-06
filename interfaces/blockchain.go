@@ -7,10 +7,10 @@ import (
 type BlockChain interface {
 	Start()
 
-	InsertBlock(Block) error
+	InsertBlock(Block, string) error
 	State() ChainState
 
-	ValidateTransaction(Transaction) error
+	ValidateTransaction(Transaction, func(ChainState)) error
 	ValidateDiamondCreateAction(Action) error
 	CreateNextBlockByValidateTxs([]Transaction) (Block, []Transaction, uint32, error)
 

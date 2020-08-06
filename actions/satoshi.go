@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
+	"math"
 	"math/big"
+	"time"
 )
 
 type Action_7_SatoshiGenesis struct {
@@ -88,8 +90,64 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// TODO: 验证转移的BTC
-	return fmt.Errorf("Not yet.")
+	if act.belong_trs != nil {
+		return fmt.Errorf("Not yet.")
+	}
+
+	// 请求验证数据
+	checkact, mustcheck := state.LoadValidatedSatoshiGenesis(int64(act.TransferNo))
+	if mustcheck {
+		// 交易位于交易池时 和 设置了check url时， 必须验证
+		if checkact == nil {
+			// URL 未返回数据
+			return fmt.Errorf("Satoshi btc move logs url return invalid.")
+		}
+		// 比较
+		if act.TransferNo != checkact.TransferNo ||
+			act.BitcoinBlockHeight != checkact.BitcoinBlockHeight ||
+			act.BitcoinBlockTimestamp != checkact.BitcoinBlockTimestamp ||
+			act.BitcoinEffectiveGenesis != checkact.BitcoinEffectiveGenesis ||
+			act.BitcoinQuantity != checkact.BitcoinQuantity ||
+			act.AdditionalTotalHacAmount != checkact.AdditionalTotalHacAmount ||
+			bytes.Compare(act.OriginAddress, checkact.OriginAddress) != 0 ||
+			bytes.Compare(act.BitcoinTransferHash, checkact.BitcoinTransferHash) != 0 {
+			return fmt.Errorf("Action_7_SatoshiGenesis act and check act is mismatch.")
+		}
+		// 验证数据
+		if act.BitcoinQuantity < 1 && act.BitcoinQuantity > 1000 {
+			return fmt.Errorf("Satoshi act BitcoinQuantity number is error (right is 1 ~ 1000).")
+		}
+		var ttHac int64 = 0
+		for i := act.BitcoinEffectiveGenesis + 1; i <= act.BitcoinEffectiveGenesis+act.BitcoinQuantity; i++ {
+			ttHac += act.moveBtcCoinRewardByIdx(int64(i))
+		}
+		if ttHac != int64(act.AdditionalTotalHacAmount) {
+			// 增发的 HAC 数量不对
+			return fmt.Errorf("Satoshi act AdditionalTotalHacAmount need %d but goot %d.", ttHac, act.AdditionalTotalHacAmount)
+		}
+		// 检查时间
+		targettime := time.Unix(int64(act.BitcoinBlockTimestamp), 0).AddDate(0, 0, 28)
+		if targettime.After(time.Now()) {
+			return fmt.Errorf("SatoshiGenesis time must over %s", targettime.Format("2006/01/02 15:04:05"))
+		}
+		// 检查成功！！！
+	}
+
+	// 检查已经记录的增发
+	belongtxhx, berr2 := state.ReadMoveBTCTxHashByNumber(uint32(act.TransferNo))
+	if berr2 != nil {
+		return berr2
+	}
+	if belongtxhx != nil {
+		// 增发已经完成
+		return fmt.Errorf("Satoshi act TransferNo<%d> has been executed.", act.TransferNo)
+	}
+
+	// 记录 标记 已完成的 转移增发
+	stoerr := state.SaveMoveBTCBelongTxHash(uint32(act.TransferNo), act.belong_trs.Hash())
+	if stoerr != nil {
+		return stoerr
+	}
 
 	// 增发 hac
 	hacmeibig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount))
@@ -103,7 +161,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	}
 	// 发行 btc
 	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位 聪
-	return DoAddSatoshiFromChainState(state, act.belong_trs.GetAddress(), fields.VarInt8(satBTC))
+	return DoAddSatoshiFromChainState(state, act.OriginAddress, fields.VarInt8(satBTC))
 }
 
 func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStateOperation) error {
@@ -122,12 +180,38 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStat
 	}
 	// 扣除 btc
 	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位 聪
-	return DoSubSatoshiFromChainState(state, act.belong_trs.GetAddress(), fields.VarInt8(satBTC))
+	return DoSubSatoshiFromChainState(state, act.OriginAddress, fields.VarInt8(satBTC))
 }
 
 // 设置所属 belone_trs
 func (act *Action_7_SatoshiGenesis) SetBelongTransaction(trs interfaces.Transaction) {
 	act.belong_trs = trs
+}
+
+func (act Action_7_SatoshiGenesis) powf2(n int) int64 {
+	res := math.Pow(2.0, float64(n))
+	return int64(res)
+}
+
+// 第几枚BTC增发HAC数量（单位：枚）
+func (act Action_7_SatoshiGenesis) moveBtcCoinRewardByIdx(btcidx int64) int64 {
+	var lvn = 21
+	if btcidx == 1 {
+		return act.powf2(lvn - 1)
+	}
+	if btcidx > act.powf2(lvn)-1 {
+		return 1 // 最后始终增发一枚
+	}
+	var tarlv int
+	for i := 0; i < lvn; i++ {
+		l := act.powf2(i) - 1
+		r := act.powf2(i+1) - 1
+		if btcidx > l && btcidx <= r {
+			tarlv = i + 1
+			break
+		}
+	}
+	return act.powf2(lvn - tarlv)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +232,7 @@ func NewAction_8_SimpleSatoshiTransfer(addr fields.Address, amt fields.VarInt8) 
 }
 
 func (elm *Action_8_SimpleSatoshiTransfer) Kind() uint16 {
-	return 1
+	return 8
 }
 
 func (elm *Action_8_SimpleSatoshiTransfer) Serialize() ([]byte, error) {
@@ -173,8 +257,8 @@ func (elm *Action_8_SimpleSatoshiTransfer) Size() uint32 {
 	return 2 + elm.Address.Size() + elm.Amount.Size()
 }
 
-func (*Action_8_SimpleSatoshiTransfer) RequestSignAddresses() []fields.Address {
-	return []fields.Address{} // not sign
+func (elm *Action_8_SimpleSatoshiTransfer) RequestSignAddresses() []fields.Address {
+	return []fields.Address{}
 }
 
 func (act *Action_8_SimpleSatoshiTransfer) WriteinChainState(state interfaces.ChainStateOperation) error {
