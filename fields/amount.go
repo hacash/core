@@ -183,7 +183,8 @@ func AmountToZeroFinString() string {
 // create form readble string
 func NewAmountFromFinString(finstr string) (*Amount, error) {
 	finstr = strings.ToUpper(finstr)
-	finstr = strings.Replace(finstr, " ", "", -1)
+	finstr = strings.Replace(finstr, " ", "", -1) // 去掉空格
+	finstr = strings.Replace(finstr, ",", "", -1) // 去掉逗号
 	var sig = 1
 	if strings.HasPrefix(finstr, "HCX") {
 		finstr = string([]byte(finstr)[3:])
@@ -264,7 +265,23 @@ func (bill *Amount) ToFinStringWithMark(mark string) string {
 	if bill.Dist < 0 {
 		sig = "-"
 	}
-	return mark + sig + numStr + ":" + unitStr
+	var numStrX string
+	if len(numStr) > 3 {
+		i := 1
+		x := len(numStr) - 1
+		for x >= 0 {
+			numStrX = string([]byte(numStr)[x]) + numStrX
+			if i%3 == 0 {
+				numStrX = "," + numStrX
+			}
+			x--
+			i++
+		}
+	} else {
+		numStrX = numStr
+	}
+	numStrX = strings.TrimLeft(numStrX, ",")
+	return mark + sig + numStrX + ":" + unitStr
 }
 
 // 省略小数部分 为了存进 20 位空间里面

@@ -8,7 +8,7 @@ import (
 
 func Test_t1(t *testing.T) {
 
-	bignum, _ := new(big.Int).SetString("12340000123400001234000012340000123400001234000012340000123400001234000012340000", 10)
+	bignum, _ := new(big.Int).SetString("387465837000000", 10)
 
 	amount, _ := NewAmountByBigInt(bignum)
 
