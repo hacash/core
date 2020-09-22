@@ -391,6 +391,12 @@ func (trs *Transaction_2_Simple) RequestAddressBalance() ([][]byte, []big.Int, e
 
 // 修改 / 恢复 状态数据库
 func (trs *Transaction_2_Simple) WriteinChainState(state interfaces.ChainStateOperation) error {
+	// 检查 fee size
+	if state.GetPendingBlockHeight() > 200000 {
+		if trs.Fee.Size() > 2+4 {
+			return fmt.Errorf("BlockHeight more than 20w trs.Fee.Size() must less than 6 bytes.")
+		}
+	}
 	// actions
 	for i := 0; i < len(trs.Actions); i++ {
 		trs.Actions[i].SetBelongTransaction(trs)

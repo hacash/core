@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/stores"
 	"math"
 	"math/big"
 	"time"
@@ -155,11 +156,65 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	if err != nil {
 		return err
 	}
-	e1 := DoAddBalanceFromChainState(state, act.OriginAddress, *addhacamt)
-	if e1 != nil {
-		return e1
+	// 锁仓时间按最先一枚计算
+	// 判断是否线性锁仓至 lockbls
+	lockweek, weekhei := act.moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
+	if weekhei > 17000000 {
+		return fmt.Errorf("moveBtcLockWeekByIdx weekhei overflow.")
 	}
-	// 发行 btc
+	if lockweek > 0 {
+
+		// 线性锁仓（周）
+		// 自己创建的 key 不允许创建这样的的前面全为0的key!!!
+		lockbleid := bytes.Repeat([]byte{0}, 4) // key size = 24
+		binary.BigEndian.PutUint32(lockbleid, uint32(act.TransferNo))
+		lockbleidbytes := bytes.NewBuffer(bytes.Repeat([]byte{0}, 20))
+		lockbleidbytes.Write(lockbleid)
+		// 存储
+		lockbls := stores.NewEmptyLockbls(act.OriginAddress)
+		lockbls.EffectBlockHeight = fields.VarInt5(state.GetPendingBlockHeight())
+		lockbls.LinearBlockNumber = fields.VarInt3(weekhei) // 2000
+		// amts
+		var ea error
+		allamtstorebytes := make([][]byte, 3)
+		allamtbytes := make([][]byte, 3)
+		allamts := make([]*fields.Amount, 3)
+		// 锁的总额
+		allamts[0] = addhacamt
+		// 每周解锁的币
+		hacweekbig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount) / uint64(lockweek))
+		wklkhacamt, _ := fields.NewAmountByBigIntWithUnit(hacweekbig, 248)
+		allamts[1] = wklkhacamt // 每周解锁
+		// 余额
+		allamts[2] = addhacamt
+		for i := 0; i < 3; i++ {
+			allamtstorebytes[i] = []byte{0, 0, 0, 0, 0, 0, 0, 0}
+			allamtbytes[i], ea = allamts[i].Serialize()
+			if ea != nil {
+				return ea
+			}
+			if len(allamtbytes[i]) > 8 {
+				return fmt.Errorf("moveBtcLockWeekByIdx AmountBytes length over 8 bytes.")
+			}
+			copy(allamtstorebytes[i], allamtbytes[i])
+		}
+		// stores
+		lockbls.TotalStockAmountBytes = fields.Bytes8(allamtstorebytes[0])
+		lockbls.LinearReleaseAmountBytes = fields.Bytes8(allamtstorebytes[1])
+		lockbls.BalanceAmountBytes = fields.Bytes8(allamtstorebytes[2])
+		// 创建线性锁仓
+		state.LockblsCreate(lockbleidbytes.Bytes(), lockbls)
+
+	} else {
+
+		// 不锁仓，直接打到余额
+		e1 := DoAddBalanceFromChainState(state, act.OriginAddress, *addhacamt)
+		if e1 != nil {
+			return e1
+		}
+	}
+
+	// 发行 btc 到地址
 	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位 聪
 	return DoAddSatoshiFromChainState(state, act.OriginAddress, fields.VarInt8(satBTC))
 }
@@ -212,6 +267,29 @@ func (act Action_7_SatoshiGenesis) moveBtcCoinRewardByIdx(btcidx int64) int64 {
 		}
 	}
 	return act.powf2(lvn - tarlv)
+}
+
+// 第几枚BTC锁仓信息
+func (act Action_7_SatoshiGenesis) moveBtcLockWeekByIdx(btcidx int64) (int64, int64) {
+	var oneweekhei int64 = 2000   // 2000 / 288 = 6.9444天
+	var mostlockweek int64 = 1024 // 1024周约等于 20 年
+	if btcidx == 1 {
+		return mostlockweek, oneweekhei
+	}
+	var lvn = 21
+	var lockweek = mostlockweek
+	for i := 0; i < lvn; i++ {
+		l := act.powf2(i) - 1
+		r := act.powf2(i+1) - 1
+		if btcidx > l && btcidx <= r {
+			break
+		}
+		lockweek /= 2
+		if lockweek == 0 {
+			return 0, oneweekhei
+		}
+	}
+	return lockweek, oneweekhei
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
