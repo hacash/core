@@ -97,6 +97,9 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfaces.ChainState
 		return fmt.Errorf("Lockbls id<%s> already.", hex.EncodeToString(act.LockblsId))
 	}
 	// 检查 步进 block number
+	if act.LinearBlockNumber < 288 {
+		return fmt.Errorf("LinearBlockNumber less 288.")
+	}
 	if act.LinearBlockNumber > 1700*10000 {
 		return fmt.Errorf("LinearBlockNumber over 17000000.")
 	}
@@ -117,29 +120,21 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfaces.ChainState
 	lockbls := stores.NewEmptyLockbls(act.MasterAddress)
 	lockbls.EffectBlockHeight = act.EffectBlockHeight
 	lockbls.LinearBlockNumber = act.LinearBlockNumber
-	var ea error
-	allamtstorebytes := make([][]byte, 3)
-	allamtbytes := make([][]byte, 3)
+	// 保存
+	allamtstorebytes := make([]*fields.Bytes8, 3)
+	allamtstorebytes[0] = &lockbls.TotalLockAmountBytes     // 锁的总额
+	allamtstorebytes[1] = &lockbls.LinearReleaseAmountBytes // 每次解锁
+	allamtstorebytes[2] = &lockbls.BalanceAmountBytes       // 有效（未提取）余额
 	allamts := make([]*fields.Amount, 3)
 	allamts[0] = &act.TotalStockAmount    // 锁的总额
 	allamts[1] = &act.LinearReleaseAmount // 每次解锁
 	allamts[2] = &act.TotalStockAmount    // 有效（未提取）余额
 	for i := 0; i < 3; i++ {
-		allamtstorebytes[i] = []byte{0, 0, 0, 0, 0, 0, 0, 0}
-		allamtbytes[i], ea = allamts[i].Serialize()
-		if ea != nil {
-			return ea
+		e5 := lockbls.PutAmount(allamtstorebytes[i], allamts[i])
+		if e5 != nil {
+			return e5
 		}
-		if len(allamtbytes[i]) > 8 {
-			return fmt.Errorf("Action_9_LockblsCreate AmountBytes length over 8 bytes.")
-		}
-		copy(allamtstorebytes[i], allamtbytes[i])
 	}
-	// stores
-	lockbls.TotalStockAmountBytes = fields.Bytes8(allamtstorebytes[0])
-	lockbls.LinearReleaseAmountBytes = fields.Bytes8(allamtstorebytes[1])
-	lockbls.BalanceAmountBytes = fields.Bytes8(allamtstorebytes[2])
-
 	// 扣除 payment
 	e1 := DoSubBalanceFromChainState(state, act.PaymentAddress, act.TotalStockAmount)
 	if e1 != nil {
@@ -238,14 +233,16 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfaces.ChainSta
 	currentBlockHeight := state.GetPendingBlockHeight()
 	// 计算提取额度
 	rlsnum := (currentBlockHeight - uint64(lockbls.EffectBlockHeight)) / uint64(lockbls.LinearBlockNumber)
-	steprlsamt := fields.Amount{}
-	_, e1 := steprlsamt.Parse(lockbls.LinearReleaseAmountBytes, 0)
+	totalrlsamt, e0 := lockbls.GetAmount(&lockbls.TotalLockAmountBytes)
+	if e0 != nil {
+		return e0
+	}
+	steprlsamt, e1 := lockbls.GetAmount(&lockbls.LinearReleaseAmountBytes)
 	if e1 != nil {
 		return e1
 	}
 	// 有效余额
-	lockblsamt := fields.Amount{}
-	_, e2 := lockblsamt.Parse(lockbls.BalanceAmountBytes, 0)
+	lockblsamt, e2 := lockbls.GetAmount(&lockbls.BalanceAmountBytes)
 	if e2 != nil {
 		return e2
 	}
@@ -257,6 +254,17 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfaces.ChainSta
 	if e3 != nil {
 		return e3
 	}
+	// 可提余额要减除掉已经提走的
+	alreadyExtractedAmount, e9 := totalrlsamt.Sub(lockblsamt) // 已经提走的余额
+	if e9 != nil {
+		return e9
+	}
+	// 有效可提余额
+	currentMaxReleaseAmount, e9 = currentMaxReleaseAmount.Sub(alreadyExtractedAmount)
+	if e9 != nil {
+		return e9
+	}
+	// 可提余额判断
 	if currentMaxReleaseAmount.LessThan(&act.ReleaseAmount) {
 		return fmt.Errorf("Current Max Release Amount not enough.") // 目前可提余额不足
 	}
@@ -266,15 +274,10 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfaces.ChainSta
 	if e4 != nil {
 		return e4
 	}
-	newBalanceAmountBytes, e5 := newBalanceAmount.Serialize()
+	e5 := lockbls.PutAmount(&lockbls.BalanceAmountBytes, newBalanceAmount)
 	if e5 != nil {
 		return e5
 	}
-	if len(newBalanceAmountBytes) > 8 {
-		return fmt.Errorf("newBalanceAmountBytes length cannot over 8 bytes.") // 储存大小精度
-	}
-	lockbls.BalanceAmountBytes = []byte{0, 0, 0, 0, 0, 0, 0, 0}
-	copy(lockbls.BalanceAmountBytes, newBalanceAmountBytes)
 	if newBalanceAmount.IsEmpty() {
 		// 锁仓已经全部提取，删除
 		// 为了回退暂不删除，而是为区块回退而暂时保存
@@ -297,8 +300,7 @@ func (act *Action_10_LockblsRelease) RecoverChainState(state interfaces.ChainSta
 	}
 	// 锁仓回退
 	// 更新锁仓余额
-	lockblsamt := fields.Amount{}
-	_, e2 := lockblsamt.Parse(lockbls.BalanceAmountBytes, 0)
+	lockblsamt, e2 := lockbls.GetAmount(&lockbls.BalanceAmountBytes)
 	if e2 != nil {
 		return e2
 	}
@@ -306,12 +308,10 @@ func (act *Action_10_LockblsRelease) RecoverChainState(state interfaces.ChainSta
 	if e4 != nil {
 		return e4
 	}
-	oldBalanceAmountBytes, e5 := oldBalanceAmount.Serialize()
+	e5 := lockbls.PutAmount(&lockbls.BalanceAmountBytes, oldBalanceAmount)
 	if e5 != nil {
 		return e5
 	}
-	lockbls.BalanceAmountBytes = []byte{0, 0, 0, 0, 0, 0, 0, 0}
-	copy(lockbls.BalanceAmountBytes, oldBalanceAmountBytes)
 	// 扣除 储存
 	state.LockblsUpdate(act.LockblsId, lockbls)
 	// 回退余额

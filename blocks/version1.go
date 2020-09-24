@@ -364,6 +364,7 @@ func (block *Block_v1) RecoverChainState(blockstate interfaces.ChainStateOperati
 	txlen := len(block.Transactions)
 	totalfee := fields.NewEmptyAmount()
 	store := blockstate.BlockStore()
+	// 倒序从最后一笔交易开始 Recover
 	for i := txlen - 1; i > 0; i-- {
 		tx := block.Transactions[i]
 		e := tx.RecoverChainState(blockstate)

@@ -121,6 +121,9 @@ func (bill *Amount) Serialize() ([]byte, error) {
 }
 
 func (bill *Amount) Parse(buf []byte, seek uint32) (uint32, error) {
+	if uint32(len(buf)) < seek+2 {
+		return 0, fmt.Errorf("buf length not less than 2.")
+	}
 	bill.Unit = uint8(buf[seek])
 	bill.Dist = int8(buf[seek+1])
 	var numCount = int(bill.Dist)
@@ -128,6 +131,9 @@ func (bill *Amount) Parse(buf []byte, seek uint32) (uint32, error) {
 		numCount *= -1
 	}
 	var tail = seek + 2 + uint32(numCount)
+	if uint32(len(buf)) < tail {
+		return 0, fmt.Errorf("buf length error.")
+	}
 	var nnnold = buf[seek+2 : tail]
 	bill.Numeral = make([]byte, len(nnnold))
 	copy(bill.Numeral, nnnold)

@@ -91,9 +91,9 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		panic("Action belong to transaction not be nil !")
 	}
 
-	if act.belong_trs != nil {
-		return fmt.Errorf("Not yet.")
-	}
+	//if act.belong_trs != nil {
+	//	return fmt.Errorf("Not yet.")
+	//}
 
 	// 请求验证数据
 	checkact, mustcheck := state.LoadValidatedSatoshiGenesis(int64(act.TransferNo))
@@ -199,7 +199,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 			copy(allamtstorebytes[i], allamtbytes[i])
 		}
 		// stores
-		lockbls.TotalStockAmountBytes = fields.Bytes8(allamtstorebytes[0])
+		lockbls.TotalLockAmountBytes = fields.Bytes8(allamtstorebytes[0])
 		lockbls.LinearReleaseAmountBytes = fields.Bytes8(allamtstorebytes[1])
 		lockbls.BalanceAmountBytes = fields.Bytes8(allamtstorebytes[2])
 		// 创建线性锁仓
