@@ -95,6 +95,16 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	//	return fmt.Errorf("Not yet.")
 	//}
 
+	// 检查已经记录的增发
+	belongtxhx, berr2 := state.ReadMoveBTCTxHashByNumber(uint32(act.TransferNo))
+	if berr2 != nil {
+		return berr2
+	}
+	if belongtxhx != nil {
+		// 增发已经完成
+		return fmt.Errorf("Satoshi act TransferNo<%d> has been executed.", act.TransferNo)
+	}
+
 	// 请求验证数据
 	checkact, mustcheck := state.LoadValidatedSatoshiGenesis(int64(act.TransferNo))
 	if mustcheck {
@@ -134,16 +144,6 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		// 检查成功！！！
 	}
 
-	// 检查已经记录的增发
-	belongtxhx, berr2 := state.ReadMoveBTCTxHashByNumber(uint32(act.TransferNo))
-	if berr2 != nil {
-		return berr2
-	}
-	if belongtxhx != nil {
-		// 增发已经完成
-		return fmt.Errorf("Satoshi act TransferNo<%d> has been executed.", act.TransferNo)
-	}
-
 	// 记录 标记 已完成的 转移增发
 	stoerr := state.SaveMoveBTCBelongTxHash(uint32(act.TransferNo), act.belong_trs.Hash())
 	if stoerr != nil {
@@ -165,10 +165,10 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	if lockweek > 0 {
 
 		// 线性锁仓（周）
-		// 自己创建的 key 不允许创建这样的的前面全为0的key!!!
-		lockbleid := bytes.Repeat([]byte{0}, 4) // key size = 24
+		// 自己创建的 lockbls key 不允许创建这样的的前面全为0的key!!!
+		lockbleid := bytes.Repeat([]byte{0}, 4) // key size = 18
 		binary.BigEndian.PutUint32(lockbleid, uint32(act.TransferNo))
-		lockbleidbytes := bytes.NewBuffer(bytes.Repeat([]byte{0}, 20))
+		lockbleidbytes := bytes.NewBuffer(bytes.Repeat([]byte{0}, stores.LockblsIdLength-4))
 		lockbleidbytes.Write(lockbleid)
 		// 存储
 		lockbls := stores.NewEmptyLockbls(act.OriginAddress)

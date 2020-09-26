@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	LockblsSize = 21 + 5 + 3 + 8 + 8 + 8
+	LockblsSize     = 21 + 5 + 3 + 8 + 8 + 8
+	LockblsIdLength = 18
 )
 
 type Lockbls struct {

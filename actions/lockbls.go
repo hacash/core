@@ -12,7 +12,7 @@ import (
 )
 
 type Action_9_LockblsCreate struct {
-	LockblsId           fields.Bytes24 // 线性锁仓id
+	LockblsId           fields.Bytes18 // 线性锁仓id
 	PaymentAddress      fields.Address // 付款地址
 	MasterAddress       fields.Address // 主地址（领取权）
 	EffectBlockHeight   fields.VarInt5 // 生效（开始）区块
@@ -88,7 +88,7 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfaces.ChainState
 	}
 
 	// 检查key值合法性
-	if act.LockblsId[0] == 0 || act.LockblsId[23] == 0 {
+	if act.LockblsId[0] == 0 || act.LockblsId[stores.LockblsIdLength-1] == 0 {
 		return fmt.Errorf("LockblsId format error.")
 	}
 	// 检查是否key已经存在
@@ -178,7 +178,7 @@ func (act *Action_9_LockblsCreate) SetBelongTransaction(trs interfaces.Transacti
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 type Action_10_LockblsRelease struct {
-	LockblsId     fields.Bytes24 // 线性锁仓id
+	LockblsId     fields.Bytes18 // 线性锁仓id
 	ReleaseAmount fields.Amount  // 本次提取额度
 
 	// data ptr
@@ -231,8 +231,14 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfaces.ChainSta
 	}
 	// 提取出来
 	currentBlockHeight := state.GetPendingBlockHeight()
+	if currentBlockHeight < uint64(lockbls.EffectBlockHeight) {
+		return fmt.Errorf("EffectBlockHeight be set %d", lockbls.EffectBlockHeight)
+	}
 	// 计算提取额度
 	rlsnum := (currentBlockHeight - uint64(lockbls.EffectBlockHeight)) / uint64(lockbls.LinearBlockNumber)
+	if rlsnum == 0 {
+		return fmt.Errorf("first release Block Height is %d, ", uint64(lockbls.EffectBlockHeight)+uint64(lockbls.LinearBlockNumber))
+	}
 	totalrlsamt, e0 := lockbls.GetAmount(&lockbls.TotalLockAmountBytes)
 	if e0 != nil {
 		return e0
