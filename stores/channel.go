@@ -11,15 +11,15 @@ const (
 
 //
 type Channel struct {
-	BelongHeight fields.VarInt5 // 通道开启时的区块高度
-	LockBlock    fields.VarInt2 // 单方面结束通道要锁定的区块数量
+	BelongHeight fields.VarUint5 // 通道开启时的区块高度
+	LockBlock    fields.VarUint2 // 单方面结束通道要锁定的区块数量
 	LeftAddress  fields.Address
 	LeftAmount   fields.Amount // 抵押数额1  【6位定宽】
 	RightAddress fields.Address
-	RightAmount  fields.Amount  // 抵押数额2  【6位定宽】
-	IsClosed     fields.VarInt1 // 已经关闭并结算
-	ConfigMark   fields.VarInt2 // 标志位
-	Others       fields.Bytes16 // 扩展位
+	RightAmount  fields.Amount   // 抵押数额2  【6位定宽】
+	IsClosed     fields.VarUint1 // 已经关闭并结算
+	ConfigMark   fields.VarUint2 // 标志位
+	Others       fields.Bytes16  // 扩展位
 
 	// cache data
 }

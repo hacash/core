@@ -3,7 +3,7 @@ package fields
 import "fmt"
 
 type ExtendMessageMaxLen255 struct {
-	Count   VarInt1
+	Count   VarUint1
 	Message []byte
 }
 
@@ -19,7 +19,7 @@ func (e *ExtendMessageMaxLen255) Serialize() ([]byte, error) {
 }
 
 func (e *ExtendMessageMaxLen255) Parse(buf []byte, seek uint32) (uint32, error) {
-	e.Count = VarInt1(buf[int(seek)])
+	e.Count = VarUint1(buf[int(seek)])
 	seek++
 	start := seek
 	end := start + uint32(e.Count)

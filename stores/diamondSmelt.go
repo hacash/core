@@ -11,8 +11,8 @@ const (
 
 type DiamondSmelt struct {
 	Diamond              fields.Bytes6 // WTYUIAHXVMEKBSZN
-	Number               fields.VarInt3
-	ContainBlockHeight   fields.VarInt5
+	Number               fields.VarUint3
+	ContainBlockHeight   fields.VarUint5
 	ContainBlockHash     fields.Hash // current pending block hash
 	PrevContainBlockHash fields.Hash // prev block hash
 	MinerAddress         fields.Address

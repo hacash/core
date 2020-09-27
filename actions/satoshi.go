@@ -13,14 +13,14 @@ import (
 )
 
 type Action_7_SatoshiGenesis struct {
-	TransferNo               fields.VarInt4 // 转账流水编号
-	BitcoinBlockHeight       fields.VarInt4 // 转账的比特币区块高度
-	BitcoinBlockTimestamp    fields.VarInt4 // 转账的比特币区块时间戳
-	BitcoinEffectiveGenesis  fields.VarInt4 // 在这笔之前已经成功转移的比特币数量
-	BitcoinQuantity          fields.VarInt4 // 本笔转账的比特币数量（单位：枚）
-	AdditionalTotalHacAmount fields.VarInt4 // 本次转账[总共]应该增发的 hac 数量 （单位：枚）
-	OriginAddress            fields.Address // 转出的比特币来源地址
-	BitcoinTransferHash      fields.Hash    // 比特币转账交易哈希
+	TransferNo               fields.VarUint4 // 转账流水编号
+	BitcoinBlockHeight       fields.VarUint4 // 转账的比特币区块高度
+	BitcoinBlockTimestamp    fields.VarUint4 // 转账的比特币区块时间戳
+	BitcoinEffectiveGenesis  fields.VarUint4 // 在这笔之前已经成功转移的比特币数量
+	BitcoinQuantity          fields.VarUint4 // 本笔转账的比特币数量（单位：枚）
+	AdditionalTotalHacAmount fields.VarUint4 // 本次转账[总共]应该增发的 hac 数量 （单位：枚）
+	OriginAddress            fields.Address  // 转出的比特币来源地址
+	BitcoinTransferHash      fields.Hash     // 比特币转账交易哈希
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -125,8 +125,8 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 			return fmt.Errorf("Action_7_SatoshiGenesis act and check act is mismatch.")
 		}
 		// 验证数据
-		if act.BitcoinQuantity < 1 && act.BitcoinQuantity > 1000 {
-			return fmt.Errorf("Satoshi act BitcoinQuantity number is error (right is 1 ~ 1000).")
+		if act.BitcoinQuantity < 1 && act.BitcoinQuantity > 10000 {
+			return fmt.Errorf("Satoshi act BitcoinQuantity number is error (right is 1 ~ 10000).")
 		}
 		var ttHac int64 = 0
 		for i := act.BitcoinEffectiveGenesis + 1; i <= act.BitcoinEffectiveGenesis+act.BitcoinQuantity; i++ {
@@ -136,7 +136,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 			// 增发的 HAC 数量不对
 			return fmt.Errorf("Satoshi act AdditionalTotalHacAmount need %d but goot %d.", ttHac, act.AdditionalTotalHacAmount)
 		}
-		// 检查时间
+		// 检查时间（延迟28天才能领取）
 		targettime := time.Unix(int64(act.BitcoinBlockTimestamp), 0).AddDate(0, 0, 28)
 		if targettime.After(time.Now()) {
 			return fmt.Errorf("SatoshiGenesis time must over %s", targettime.Format("2006/01/02 15:04:05"))
@@ -152,7 +152,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 
 	// 增发 hac
 	hacmeibig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount))
-	addhacamt, err := fields.NewAmountByBigIntWithUnit(hacmeibig, 248)
+	totaladdhacamt, err := fields.NewAmountByBigIntWithUnit(hacmeibig, 248)
 	if err != nil {
 		return err
 	}
@@ -172,43 +172,37 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		lockbleidbytes.Write(lockbleid)
 		// 存储
 		lockbls := stores.NewEmptyLockbls(act.OriginAddress)
-		lockbls.EffectBlockHeight = fields.VarInt5(state.GetPendingBlockHeight())
-		lockbls.LinearBlockNumber = fields.VarInt3(weekhei) // 2000
+		lockbls.EffectBlockHeight = fields.VarUint5(state.GetPendingBlockHeight())
+		lockbls.LinearBlockNumber = fields.VarUint3(weekhei) // 2000
 		// amts
-		var ea error
-		allamtstorebytes := make([][]byte, 3)
-		allamtbytes := make([][]byte, 3)
+		allamtstorebytes := make([]*fields.Bytes8, 3)
+		allamtstorebytes[0] = &lockbls.TotalLockAmountBytes
+		allamtstorebytes[1] = &lockbls.BalanceAmountBytes
+		allamtstorebytes[2] = &lockbls.LinearReleaseAmountBytes
 		allamts := make([]*fields.Amount, 3)
 		// 锁的总额
-		allamts[0] = addhacamt
+		allamts[0] = totaladdhacamt
+		// 余额
+		allamts[1] = totaladdhacamt
 		// 每周解锁的币
 		hacweekbig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount) / uint64(lockweek))
 		wklkhacamt, _ := fields.NewAmountByBigIntWithUnit(hacweekbig, 248)
-		allamts[1] = wklkhacamt // 每周解锁
-		// 余额
-		allamts[2] = addhacamt
+		allamts[2] = wklkhacamt // 每周解锁
+		// 赋值
 		for i := 0; i < 3; i++ {
-			allamtstorebytes[i] = []byte{0, 0, 0, 0, 0, 0, 0, 0}
-			allamtbytes[i], ea = allamts[i].Serialize()
+			ea := lockbls.PutAmount(allamtstorebytes[i], allamts[i])
 			if ea != nil {
 				return ea
 			}
-			if len(allamtbytes[i]) > 8 {
-				return fmt.Errorf("moveBtcLockWeekByIdx AmountBytes length over 8 bytes.")
-			}
-			copy(allamtstorebytes[i], allamtbytes[i])
 		}
 		// stores
-		lockbls.TotalLockAmountBytes = fields.Bytes8(allamtstorebytes[0])
-		lockbls.LinearReleaseAmountBytes = fields.Bytes8(allamtstorebytes[1])
-		lockbls.BalanceAmountBytes = fields.Bytes8(allamtstorebytes[2])
 		// 创建线性锁仓
 		state.LockblsCreate(lockbleidbytes.Bytes(), lockbls)
 
 	} else {
 
 		// 不锁仓，直接打到余额
-		e1 := DoAddBalanceFromChainState(state, act.OriginAddress, *addhacamt)
+		e1 := DoAddBalanceFromChainState(state, act.OriginAddress, *totaladdhacamt)
 		if e1 != nil {
 			return e1
 		}
@@ -216,7 +210,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 
 	// 发行 btc 到地址
 	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位 聪
-	return DoAddSatoshiFromChainState(state, act.OriginAddress, fields.VarInt8(satBTC))
+	return DoAddSatoshiFromChainState(state, act.OriginAddress, fields.VarUint8(satBTC))
 }
 
 func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStateOperation) error {
@@ -235,7 +229,7 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStat
 	}
 	// 扣除 btc
 	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位 聪
-	return DoSubSatoshiFromChainState(state, act.OriginAddress, fields.VarInt8(satBTC))
+	return DoSubSatoshiFromChainState(state, act.OriginAddress, fields.VarUint8(satBTC))
 }
 
 // 设置所属 belone_trs
@@ -296,13 +290,13 @@ func (act Action_7_SatoshiGenesis) moveBtcLockWeekByIdx(btcidx int64) (int64, in
 
 type Action_8_SimpleSatoshiTransfer struct {
 	Address fields.Address
-	Amount  fields.VarInt8
+	Amount  fields.VarUint8
 
 	// data ptr
 	belong_trs interfaces.Transaction
 }
 
-func NewAction_8_SimpleSatoshiTransfer(addr fields.Address, amt fields.VarInt8) *Action_8_SimpleSatoshiTransfer {
+func NewAction_8_SimpleSatoshiTransfer(addr fields.Address, amt fields.VarUint8) *Action_8_SimpleSatoshiTransfer {
 	return &Action_8_SimpleSatoshiTransfer{
 		Address: addr,
 		Amount:  amt,

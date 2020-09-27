@@ -15,10 +15,10 @@ type Transaction_0_Coinbase struct {
 	Address fields.Address
 	Reward  fields.Amount
 	Message fields.TrimString16
-	// nonce fields.VarInt8
-	WitnessCount fields.VarInt1 // 投票见证人数量
-	WitnessSigs  []uint8        // 见证人指定哈希尾数
-	Witnesses    []fields.Sign  // 对prev区块hash的签名，投票分叉
+	// nonce fields.VarUint8
+	WitnessCount fields.VarUint1 // 投票见证人数量
+	WitnessSigs  []uint8         // 见证人指定哈希尾数
+	Witnesses    []fields.Sign   // 对prev区块hash的签名，投票分叉
 
 	/* -------- -------- */
 

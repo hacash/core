@@ -15,17 +15,17 @@ import (
 )
 
 type Transaction_2_Simple struct {
-	Timestamp fields.VarInt5
+	Timestamp fields.VarUint5
 	Address   fields.Address
 	Fee       fields.Amount
 
-	ActionCount fields.VarInt2
+	ActionCount fields.VarUint2
 	Actions     []interfaces.Action
 
-	SignCount fields.VarInt2
+	SignCount fields.VarUint2
 	Signs     []fields.Sign
 
-	MultisignCount fields.VarInt2
+	MultisignCount fields.VarUint2
 	Multisigns     []fields.Multisign
 
 	// cache data
@@ -39,12 +39,12 @@ func NewEmptyTransaction_2_Simple(master fields.Address) (*Transaction_2_Simple,
 	}
 	timeUnix := time.Now().Unix()
 	return &Transaction_2_Simple{
-		Timestamp:      fields.VarInt5(uint64(timeUnix)),
+		Timestamp:      fields.VarUint5(uint64(timeUnix)),
 		Address:        master,
 		Fee:            *fields.NewEmptyAmount(),
-		ActionCount:    fields.VarInt2(0),
-		SignCount:      fields.VarInt2(0),
-		MultisignCount: fields.VarInt2(0),
+		ActionCount:    fields.VarUint2(0),
+		SignCount:      fields.VarUint2(0),
+		MultisignCount: fields.VarUint2(0),
 	}, nil
 }
 

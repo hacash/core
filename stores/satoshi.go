@@ -11,13 +11,13 @@ const (
 
 type Satoshi struct {
 	Config fields.Bytes4
-	Amount fields.VarInt8
+	Amount fields.VarUint8
 }
 
 func NewEmptySatoshi() *Satoshi {
 	return &Satoshi{
 		Config: []byte{0, 0, 0, 0},
-		Amount: fields.VarInt8(0),
+		Amount: fields.VarUint8(0),
 	}
 }
 

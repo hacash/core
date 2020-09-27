@@ -12,16 +12,16 @@ import (
 
 type Block_v1 struct {
 	// head
-	/* Version   fields.VarInt1 */
-	Height           fields.VarInt5
-	Timestamp        fields.VarInt5
+	/* Version   fields.VarUint1 */
+	Height           fields.VarUint5
+	Timestamp        fields.VarUint5
 	PrevHash         fields.Bytes32
 	MrklRoot         fields.Bytes32
-	TransactionCount fields.VarInt4
+	TransactionCount fields.VarUint4
 	// meta
-	Nonce        fields.VarInt4 // 挖矿随机值
-	Difficulty   fields.VarInt4 // 目标难度值
-	WitnessStage fields.VarInt2 // 见证数量级别
+	Nonce        fields.VarUint4 // 挖矿随机值
+	Difficulty   fields.VarUint4 // 目标难度值
+	WitnessStage fields.VarUint2 // 见证数量级别
 	// body
 	Transactions []interfaces.Transaction
 
@@ -38,7 +38,7 @@ func NewEmptyBlock_v1(prevBlockHead interfaces.Block) *Block_v1 {
 	curt := time.Now().Unix()
 	empty := &Block_v1{
 		Height:           0,
-		Timestamp:        fields.VarInt5(curt),
+		Timestamp:        fields.VarUint5(curt),
 		PrevHash:         fields.EmptyZeroBytes32,
 		MrklRoot:         fields.EmptyZeroBytes32,
 		TransactionCount: 0,
@@ -49,8 +49,8 @@ func NewEmptyBlock_v1(prevBlockHead interfaces.Block) *Block_v1 {
 	}
 	if prevBlockHead != nil {
 		empty.PrevHash = prevBlockHead.Hash()
-		empty.Height = fields.VarInt5(prevBlockHead.GetHeight() + 1)
-		empty.Difficulty = fields.VarInt4(prevBlockHead.GetDifficulty())
+		empty.Height = fields.VarUint5(prevBlockHead.GetHeight() + 1)
+		empty.Difficulty = fields.VarUint4(prevBlockHead.GetDifficulty())
 	}
 	return empty
 }
@@ -296,7 +296,7 @@ func (block *Block_v1) SetMrklRoot(root fields.Hash) {
 	block.MrklRoot = root
 }
 func (block *Block_v1) SetNonce(n uint32) {
-	block.Nonce = fields.VarInt4(n)
+	block.Nonce = fields.VarUint4(n)
 }
 
 func (block *Block_v1) SetTransactions(trs []interfaces.Transaction) {

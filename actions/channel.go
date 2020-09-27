@@ -105,8 +105,8 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	curheight := state.GetPendingBlockHeight()
 	// 创建 channel
 	var storeItem stores.Channel
-	storeItem.BelongHeight = fields.VarInt5(curheight)
-	storeItem.LockBlock = fields.VarInt2(uint16(5000)) // 单方面提出的锁定期约为 17 天
+	storeItem.BelongHeight = fields.VarUint5(curheight)
+	storeItem.LockBlock = fields.VarUint2(uint16(5000)) // 单方面提出的锁定期约为 17 天
 	storeItem.LeftAddress = act.LeftAddress
 	storeItem.LeftAmount = act.LeftAmount
 	storeItem.RightAddress = act.RightAddress
@@ -210,7 +210,7 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 	DoAddBalanceFromChainState(state, paychan.LeftAddress, leftAmount)
 	DoAddBalanceFromChainState(state, paychan.RightAddress, rightAmount)
 	// 暂时保留通道用于数据回退
-	paychan.IsClosed = fields.VarInt1(1) // 标记通道已经关闭了
+	paychan.IsClosed = fields.VarUint1(1) // 标记通道已经关闭了
 	state.ChannelUpdate(act.ChannelId, paychan)
 	//
 	return nil
@@ -243,7 +243,7 @@ func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.Chai
 	DoSubBalanceFromChainState(state, paychan.LeftAddress, leftAmount)
 	DoSubBalanceFromChainState(state, paychan.RightAddress, rightAmount)
 	// 恢复通道状态
-	paychan.IsClosed = fields.VarInt1(0) // 重新标记通道为开启状态
+	paychan.IsClosed = fields.VarUint1(0) // 重新标记通道为开启状态
 	state.ChannelUpdate(act.ChannelId, paychan)
 	return nil
 }

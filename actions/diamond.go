@@ -21,11 +21,11 @@ const DiamondCreateCustomMessageAboveNumber uint32 = 20000
 
 // 挖出钻石
 type Action_4_DiamondCreate struct {
-	Diamond  fields.Bytes6  // 钻石字面量 WTYUIAHXVMEKBSZN
-	Number   fields.VarInt3 // 钻石序号，用于难度检查
-	PrevHash fields.Hash    // 上一个包含钻石的区块hash
-	Nonce    fields.Bytes8  // 随机数
-	Address  fields.Address // 所属账户
+	Diamond  fields.Bytes6   // 钻石字面量 WTYUIAHXVMEKBSZN
+	Number   fields.VarUint3 // 钻石序号，用于难度检查
+	PrevHash fields.Hash     // 上一个包含钻石的区块hash
+	Nonce    fields.Bytes8   // 随机数
+	Address  fields.Address  // 所属账户
 	// 客户消息
 	CustomMessage fields.Bytes32
 
@@ -168,7 +168,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	var diamondstore = &stores.DiamondSmelt{
 		Diamond:              act.Diamond,
 		Number:               act.Number,
-		ContainBlockHeight:   fields.VarInt5(blkhei),
+		ContainBlockHeight:   fields.VarUint5(blkhei),
 		ContainBlockHash:     nil, // current block not exist !!!
 		PrevContainBlockHash: act.PrevHash,
 		MinerAddress:         act.Address,
@@ -328,7 +328,7 @@ func (elm *Action_5_DiamondTransfer) SetBelongTransaction(t interfaces.Transacti
 type Action_6_OutfeeQuantityDiamondTransfer struct {
 	FromAddress  fields.Address  // 拥有钻石的账户
 	ToAddress    fields.Address  // 收钻方账户
-	DiamondCount fields.VarInt1  // 钻石数量
+	DiamondCount fields.VarUint1 // 钻石数量
 	Diamonds     []fields.Bytes6 // 钻石字面量数组
 
 	// 数据指针

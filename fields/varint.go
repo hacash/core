@@ -7,59 +7,59 @@ import (
 	"unsafe"
 )
 
-type VarInt1 uint8
-type VarInt2 uint16
-type VarInt3 uint32
-type VarInt4 uint32
-type VarInt5 uint64
-type VarInt6 uint64
-type VarInt7 uint64
-type VarInt8 uint64
+type VarUint1 uint8
+type VarUint2 uint16
+type VarUint3 uint32
+type VarUint4 uint32
+type VarUint5 uint64
+type VarUint6 uint64
+type VarUint7 uint64
+type VarUint8 uint64
 
 ////////////////////////////////////////////////////////
 
-func (elm *VarInt1) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 1) }
-func (elm *VarInt2) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 2) }
-func (elm *VarInt3) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 3) }
-func (elm *VarInt4) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 4) }
-func (elm *VarInt5) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 5) }
-func (elm *VarInt6) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 6) }
-func (elm *VarInt7) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 7) }
-func (elm *VarInt8) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 8) }
+func (elm *VarUint1) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 1) }
+func (elm *VarUint2) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 2) }
+func (elm *VarUint3) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 3) }
+func (elm *VarUint4) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 4) }
+func (elm *VarUint5) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 5) }
+func (elm *VarUint6) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 6) }
+func (elm *VarUint7) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 7) }
+func (elm *VarUint8) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 8) }
 
-func (elm *VarInt1) Parse(buf []byte, seek uint32) (uint32, error) {
+func (elm *VarUint1) Parse(buf []byte, seek uint32) (uint32, error) {
 	return varIntParse(elm, buf, seek, 1)
 }
-func (elm *VarInt2) Parse(buf []byte, seek uint32) (uint32, error) {
+func (elm *VarUint2) Parse(buf []byte, seek uint32) (uint32, error) {
 	return varIntParse(elm, buf, seek, 2)
 }
-func (elm *VarInt3) Parse(buf []byte, seek uint32) (uint32, error) {
+func (elm *VarUint3) Parse(buf []byte, seek uint32) (uint32, error) {
 	return varIntParse(elm, buf, seek, 3)
 }
-func (elm *VarInt4) Parse(buf []byte, seek uint32) (uint32, error) {
+func (elm *VarUint4) Parse(buf []byte, seek uint32) (uint32, error) {
 	return varIntParse(elm, buf, seek, 4)
 }
-func (elm *VarInt5) Parse(buf []byte, seek uint32) (uint32, error) {
+func (elm *VarUint5) Parse(buf []byte, seek uint32) (uint32, error) {
 	return varIntParse(elm, buf, seek, 5)
 }
-func (elm *VarInt6) Parse(buf []byte, seek uint32) (uint32, error) {
+func (elm *VarUint6) Parse(buf []byte, seek uint32) (uint32, error) {
 	return varIntParse(elm, buf, seek, 6)
 }
-func (elm *VarInt7) Parse(buf []byte, seek uint32) (uint32, error) {
+func (elm *VarUint7) Parse(buf []byte, seek uint32) (uint32, error) {
 	return varIntParse(elm, buf, seek, 7)
 }
-func (elm *VarInt8) Parse(buf []byte, seek uint32) (uint32, error) {
+func (elm *VarUint8) Parse(buf []byte, seek uint32) (uint32, error) {
 	return varIntParse(elm, buf, seek, 8)
 }
 
-func (elm *VarInt1) Size() uint32 { return 1 }
-func (elm *VarInt2) Size() uint32 { return 2 }
-func (elm *VarInt3) Size() uint32 { return 3 }
-func (elm *VarInt4) Size() uint32 { return 4 }
-func (elm *VarInt5) Size() uint32 { return 5 }
-func (elm *VarInt6) Size() uint32 { return 6 }
-func (elm *VarInt7) Size() uint32 { return 7 }
-func (elm *VarInt8) Size() uint32 { return 8 }
+func (elm *VarUint1) Size() uint32 { return 1 }
+func (elm *VarUint2) Size() uint32 { return 2 }
+func (elm *VarUint3) Size() uint32 { return 3 }
+func (elm *VarUint4) Size() uint32 { return 4 }
+func (elm *VarUint5) Size() uint32 { return 5 }
+func (elm *VarUint6) Size() uint32 { return 6 }
+func (elm *VarUint7) Size() uint32 { return 7 }
+func (elm *VarUint8) Size() uint32 { return 8 }
 
 ////////////////////////////////////////////////////////
 
@@ -86,37 +86,37 @@ func varIntParse(elm interface{}, buf []byte, seek uint32, maxlen uint32) (uint3
 	// fmt.Println(intbytes)
 	// fmt.Println("====== %d", val)
 	switch a := elm.(type) {
-	case *VarInt1:
+	case *VarUint1:
 		// v:= (val)>>56
 		// fmt.Println("**** %d", v)
-		*a = *(*VarInt1)(unsafe.Pointer(&val))
+		*a = *(*VarUint1)(unsafe.Pointer(&val))
 		// fmt.Println("------- %d", *a)
-	case *VarInt2:
+	case *VarUint2:
 		// v:= val>>48
 		// fmt.Println("**** %d", v)
-		*a = *(*VarInt2)(unsafe.Pointer(&val))
+		*a = *(*VarUint2)(unsafe.Pointer(&val))
 		// fmt.Println("------- %d", *a)
-	case *VarInt3:
+	case *VarUint3:
 		// v:= val>>48
 		// fmt.Println("**** %d", v)
-		*a = *(*VarInt3)(unsafe.Pointer(&val))
+		*a = *(*VarUint3)(unsafe.Pointer(&val))
 		// fmt.Println("------- %d", *a)
-	case *VarInt4:
+	case *VarUint4:
 		// v:= val>>32
 		// fmt.Println("**** %d", v)
-		*a = *(*VarInt4)(unsafe.Pointer(&val))
+		*a = *(*VarUint4)(unsafe.Pointer(&val))
 		// fmt.Println("------- %d", *a)
-	case *VarInt5:
-		*a = *(*VarInt5)(unsafe.Pointer(&val))
+	case *VarUint5:
+		*a = *(*VarUint5)(unsafe.Pointer(&val))
 		// fmt.Println("------- %d", *a)
-	case *VarInt6:
-		*a = *(*VarInt6)(unsafe.Pointer(&val))
+	case *VarUint6:
+		*a = *(*VarUint6)(unsafe.Pointer(&val))
 		// fmt.Println("------- %d", *a)
-	case *VarInt7:
-		*a = *(*VarInt7)(unsafe.Pointer(&val))
+	case *VarUint7:
+		*a = *(*VarUint7)(unsafe.Pointer(&val))
 		// fmt.Println("------- %d", *a)
-	case *VarInt8:
-		*a = *(*VarInt8)(unsafe.Pointer(&val))
+	case *VarUint8:
+		*a = *(*VarUint8)(unsafe.Pointer(&val))
 		// fmt.Println("------- %d", *a)
 	default:
 		//fmt.Println("")

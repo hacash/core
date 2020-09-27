@@ -12,12 +12,12 @@ const (
 )
 
 type Lockbls struct {
-	MasterAddress            fields.Address // 主地址（领取权）
-	EffectBlockHeight        fields.VarInt5 // 生效（开始）区块
-	LinearBlockNumber        fields.VarInt3 // 步进区块数 < 17000000 约 160年
-	TotalLockAmountBytes     fields.Bytes8  // 总共存入额度
-	LinearReleaseAmountBytes fields.Bytes8  // 每次释放额度
-	BalanceAmountBytes       fields.Bytes8  // 有效余额（每次可以取出可取额度之内的任意数额）
+	MasterAddress            fields.Address  // 主地址（领取权）
+	EffectBlockHeight        fields.VarUint5 // 生效（开始）区块
+	LinearBlockNumber        fields.VarUint3 // 步进区块数 < 17000000 约 160年
+	TotalLockAmountBytes     fields.Bytes8   // 总共存入额度
+	LinearReleaseAmountBytes fields.Bytes8   // 每次释放额度
+	BalanceAmountBytes       fields.Bytes8   // 有效余额（每次可以取出可取额度之内的任意数额）
 }
 
 func NewEmptyLockbls(addr fields.Address) *Lockbls {

@@ -17,10 +17,10 @@ const (
 
 // protocol
 const (
-	BlockVersion    = fields.VarInt1(1) // uint8
-	TransactionType = fields.VarInt1(2) // uint8
-	ActionKind      = fields.VarInt2(6) // uint16
-	RepairVersion   = fields.VarInt2(2) // uint16
+	BlockVersion    = fields.VarUint1(1) // uint8
+	TransactionType = fields.VarUint1(2) // uint8
+	ActionKind      = fields.VarUint2(6) // uint16
+	RepairVersion   = fields.VarUint2(2) // uint16
 )
 
 ////////////////////////////////////////////////////////////
