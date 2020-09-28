@@ -25,7 +25,7 @@ type TxPool interface {
 	PauseEventSubscribe()   // 暂停事件订阅
 	RenewalEventSubscribe() // 重开事件订阅
 
-	GetDiamondCreateTxs() []Transaction
+	GetDiamondCreateTxs(int) []Transaction
 
 	// 获取手续费最高的一笔交易
 	// PopTxByHighestFee() Transaction

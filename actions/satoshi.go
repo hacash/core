@@ -209,7 +209,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	}
 
 	// 发行 btc 到地址
-	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位 聪
+	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位： 聪 (SAT)
 	return DoAddSatoshiFromChainState(state, act.OriginAddress, fields.VarUint8(satBTC))
 }
 
