@@ -290,6 +290,39 @@ func (bill *Amount) ToFinStringWithMark(mark string) string {
 	return mark + sig + numStrX + ":" + unitStr
 }
 
+// 省略小数部分 为了存进 4 位空间里面
+func (bill *Amount) CompressForMainNumLen(numlen int, enlarge bool) (*Amount, bool, error) {
+	var bignum = new(big.Int)
+	bignum.SetBytes(bill.Numeral)
+	if len(bignum.String()) <= numlen {
+		return bill, false, nil // 数据没变
+	}
+	var unitaddnum int = 0
+	var bn1 = big.NewInt(int64(1))
+	var bn10 = big.NewInt(int64(10))
+	for {
+		unitaddnum++
+		bignum = bignum.Div(bignum, bn10)
+		if enlarge {
+			bignum = bignum.Add(bignum, bn1)
+		}
+		if len(bignum.String()) <= numlen {
+			break
+		}
+	}
+	newunit := unitaddnum + int(bill.Unit)
+	if newunit > 255 {
+		return nil, false, fmt.Errorf("bill.Unit too much long.")
+	}
+	newamt, e1 := NewAmountByBigIntWithUnit(bignum, newunit)
+	if e1 != nil {
+		return nil, false, nil
+	}
+
+	// 成功
+	return newamt, true, nil
+}
+
 // 省略小数部分 为了存进 20 位空间里面
 func (bill *Amount) EllipsisDecimalFor20SizeStore() (*Amount, bool, error) {
 	maxnumlen := 20 - 1 - 1
