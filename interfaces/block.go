@@ -51,6 +51,7 @@ type Block interface {
 
 	// change struct data
 	AddTransaction(Transaction)
+	SetTransactions([]Transaction)
 	SetMrklRoot(fields.Hash)
 	SetNonce(uint32)
 
@@ -58,8 +59,6 @@ type Block interface {
 	VerifyNeedSigns() (bool, error)
 
 	// get some datas
-
-	SetTransactions([]Transaction)
 
 	GetTransactions() []Transaction
 	GetHeight() uint64
@@ -69,6 +68,9 @@ type Block interface {
 	GetTimestamp() uint64
 	GetTransactionCount() uint32
 	GetMrklRoot() fields.Hash
+
+	// customer trs count
+	GetCustomerTransactionCount() uint32
 }
 
 type SerializeTransactionsIterator interface {

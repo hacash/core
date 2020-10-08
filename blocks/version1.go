@@ -289,6 +289,11 @@ func (block *Block_v1) GetNonce() uint32 {
 func (block *Block_v1) GetTransactionCount() uint32 {
 	return uint32(block.TransactionCount)
 }
+func (block *Block_v1) GetCustomerTransactionCount() uint32 {
+	// drop coinbase trs
+	real_count := uint32(block.TransactionCount) - 1
+	return real_count
+}
 func (block *Block_v1) GetMrklRoot() fields.Hash {
 	return block.MrklRoot
 }

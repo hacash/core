@@ -9,6 +9,8 @@ type BlockStore interface {
 
 	// save
 	SaveBlockUniteTransactions(Block) error
+	// cancel
+	CancelUniteTransactions(Block) error
 
 	// block
 	ReadBlockHeadBytesByHeight(uint64) ([]byte, error)
