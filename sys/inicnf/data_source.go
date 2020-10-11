@@ -51,7 +51,7 @@ func (s *sourceData) ReadCloser() (io.ReadCloser, error) {
 	return ioutil.NopCloser(bytes.NewReader(s.data)), nil
 }
 
-// sourceReadCloser represents an input stream with Close method.
+// sourceReadCloser represents an input stream with notifyClose method.
 type sourceReadCloser struct {
 	reader io.ReadCloser
 }

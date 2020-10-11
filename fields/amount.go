@@ -182,6 +182,60 @@ func (bill *Amount) IsPositive() bool {
 	return true
 }
 
+// 转换单位为枚，精确到小数点几位
+func (bill *Amount) ToMeiString(decp int) string {
+	if decp > 16 {
+		decp = 16
+	}
+	if decp < 1 {
+		decp = 1
+	}
+	// 处理
+	mei := bill.ToMei()
+	meistr := strings.TrimRight(fmt.Sprintf(fmt.Sprintf("%%.%df", decp), mei), "0")
+	if strings.HasSuffix(meistr, ".") {
+		meistr += "0"
+	}
+	return strings.TrimRight(meistr, ".0")
+}
+
+// 转换单位为枚
+func (bill *Amount) ToMei() float64 {
+	// 处理
+	bigmei := new(big.Float).SetInt(new(big.Int).SetBytes(bill.Numeral))
+	//fmt.Println(bigmei.String(), int(bill.Unit), int(bill.Unit) - 248)
+	if bill.Dist < 0 {
+		bigmei = bigmei.Neg(bigmei)
+	}
+	bigf10 := new(big.Float).SetFloat64(10.0)
+	bigf10div := new(big.Float).SetFloat64(0.1)
+	if bill.Unit > 0 {
+		pz := int(bill.Unit) - 248
+		if pz > 0 {
+			for i := 0; i < pz; i++ {
+				bigmei = bigmei.Mul(bigmei, bigf10)
+			}
+		} else if pz < 0 {
+			pz = -pz
+			for i := 0; i < pz; i++ {
+				bigmei = bigmei.Mul(bigmei, bigf10div)
+			}
+		}
+	}
+	mei, _ := bigmei.Float64()
+	return mei
+}
+
+// create form readble string
+func NewAmountFromMeiString(meistr string) (*Amount, error) {
+	mei, e1 := strconv.ParseFloat(meistr, 0)
+	if e1 != nil {
+		return nil, e1
+	}
+	mei1yi := uint64(mei * 10000 * 10000)
+	return NewAmountByBigIntWithUnit(new(big.Int).SetUint64(mei1yi), 240)
+}
+
 func AmountToZeroFinString() string {
 	return "ㄜ0:0"
 }
