@@ -17,22 +17,22 @@ const (
 
 // protocol
 const (
-	BlockVersion    = fields.VarUint1(1) // uint8
-	TransactionType = fields.VarUint1(2) // uint8
-	ActionKind      = fields.VarUint2(6) // uint16
-	RepairVersion   = fields.VarUint2(2) // uint16
+	BlockVersion    = fields.VarUint1(1)  // uint8
+	TransactionType = fields.VarUint1(2)  // uint8
+	ActionKind      = fields.VarUint2(10) // uint16
+	RepairVersion   = fields.VarUint2(1)  // uint16
 )
 
 ////////////////////////////////////////////////////////////
 
 func NewBlockByVersion(ty uint8) (interfaces.Block, error) {
 	switch ty {
-	////////////////////  TRANSATION  ////////////////////
+	////////////////////  BLOCK  ////////////////////
 	case 1:
 		return new(Block_v1), nil
-		////////////////////     END      ////////////////////
+		////////////////////   END   ////////////////////
 	}
-	return nil, fmt.Errorf("Cannot find Transaction type of " + string(ty))
+	return nil, fmt.Errorf("Cannot find Block type of " + string(ty))
 }
 
 func ParseBlock(buf []byte, seek uint32) (interfaces.Block, uint32, error) {
