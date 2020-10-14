@@ -53,7 +53,14 @@ func (trs *Transaction_2_Simple) Type() uint8 {
 }
 
 func (trs *Transaction_2_Simple) Copy() interfaces.Transaction {
-	return trs
+	// copy
+	bodys, _ := trs.Serialize()
+	newtrsbts := make([]byte, len(bodys))
+	copy(newtrsbts, bodys)
+	// create
+	var newtrs = new(Transaction_2_Simple)
+	newtrs.Parse(newtrsbts, 0)
+	return newtrs
 }
 
 func (trs *Transaction_2_Simple) Serialize() ([]byte, error) {

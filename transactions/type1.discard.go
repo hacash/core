@@ -53,7 +53,14 @@ func NewEmptyTransaction_1_Simple(master fields.Address) (*Transaction_1_DO_NOT_
 }
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Copy() interfaces.Transaction {
-	return trs
+	// copy
+	bodys, _ := trs.Serialize()
+	newtrsbts := make([]byte, len(bodys))
+	copy(newtrsbts, bodys)
+	// create
+	var newtrs = new(Transaction_1_DO_NOT_USE_WITH_BUG)
+	newtrs.Parse(newtrsbts, 0)
+	return newtrs
 }
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Type() uint8 {
