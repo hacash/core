@@ -182,25 +182,23 @@ func (bill *Amount) IsPositive() bool {
 	return true
 }
 
-// 转换单位为枚，精确到小数点几位
-func (bill *Amount) ToMeiString(decp int) string {
-	if decp > 16 {
-		decp = 16
+func (bill *Amount) ToMeiOrFinString(usemei bool) string {
+	if usemei {
+		return bill.ToMeiString()
+	} else {
+		return bill.ToFinString()
 	}
-	if decp < 1 {
-		decp = 1
-	}
-	// 处理
-	mei := bill.ToMei()
-	meistr := strings.TrimRight(fmt.Sprintf(fmt.Sprintf("%%.%df", decp), mei), "0")
-	if strings.HasSuffix(meistr, ".") {
-		meistr += "0"
-	}
+}
+
+// 转换单位为枚
+func (bill *Amount) ToMeiString() string {
+	bigmei := bill.ToMeiBigFloat()
+	meistr := bigmei.String()
 	return strings.TrimRight(meistr, ".0")
 }
 
 // 转换单位为枚
-func (bill *Amount) ToMei() float64 {
+func (bill *Amount) ToMeiBigFloat() *big.Float {
 	// 处理
 	bigmei := new(big.Float).SetInt(new(big.Int).SetBytes(bill.Numeral))
 	//fmt.Println(bigmei.String(), int(bill.Unit), int(bill.Unit) - 248)
@@ -222,6 +220,12 @@ func (bill *Amount) ToMei() float64 {
 			}
 		}
 	}
+	return bigmei
+}
+
+// 转换单位为枚
+func (bill *Amount) ToMei() float64 {
+	bigmei := bill.ToMeiBigFloat()
 	mei, _ := bigmei.Float64()
 	return mei
 }

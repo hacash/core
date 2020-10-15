@@ -34,6 +34,12 @@ func (elm *Action_2_OpenPaymentChannel) Size() uint32 {
 	return 2 + elm.ChannelId.Size() + ((elm.LeftAddress.Size() + elm.LeftAmount.Size()) * 2)
 }
 
+// json api
+func (elm *Action_2_OpenPaymentChannel) Describe() map[string]interface{} {
+	var data = map[string]interface{}{}
+	return data
+}
+
 func (elm *Action_2_OpenPaymentChannel) Serialize() ([]byte, error) {
 	var kindByte = make([]byte, 2)
 	binary.BigEndian.PutUint16(kindByte, elm.Kind())
@@ -150,6 +156,12 @@ func (elm *Action_3_ClosePaymentChannel) Kind() uint16 {
 
 func (elm *Action_3_ClosePaymentChannel) Size() uint32 {
 	return 2 + elm.ChannelId.Size()
+}
+
+// json api
+func (elm *Action_3_ClosePaymentChannel) Describe() map[string]interface{} {
+	var data = map[string]interface{}{}
+	return data
 }
 
 func (elm *Action_3_ClosePaymentChannel) Serialize() ([]byte, error) {

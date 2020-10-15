@@ -21,4 +21,5 @@ type Action interface {
 
 	// help func
 	SetBelongTransaction(Transaction)
+	Describe() map[string]interface{} // json api
 }

@@ -26,6 +26,12 @@ func (elm *Action_8_SimpleSatoshiTransfer) Kind() uint16 {
 	return 8
 }
 
+// json api
+func (elm *Action_8_SimpleSatoshiTransfer) Describe() map[string]interface{} {
+	var data = map[string]interface{}{}
+	return data
+}
+
 func (elm *Action_8_SimpleSatoshiTransfer) Serialize() ([]byte, error) {
 	var kindByte = make([]byte, 2)
 	binary.BigEndian.PutUint16(kindByte, elm.Kind())

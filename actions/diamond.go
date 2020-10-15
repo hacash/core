@@ -38,6 +38,12 @@ func (elm *Action_4_DiamondCreate) Kind() uint16 {
 	return 4
 }
 
+// json api
+func (elm *Action_4_DiamondCreate) Describe() map[string]interface{} {
+	var data = map[string]interface{}{}
+	return data
+}
+
 func (elm *Action_4_DiamondCreate) Size() uint32 {
 	size := 2 +
 		elm.Diamond.Size() +
@@ -240,6 +246,12 @@ func (elm *Action_5_DiamondTransfer) Kind() uint16 {
 	return 5
 }
 
+// json api
+func (elm *Action_5_DiamondTransfer) Describe() map[string]interface{} {
+	var data = map[string]interface{}{}
+	return data
+}
+
 func (elm *Action_5_DiamondTransfer) Size() uint32 {
 	return 2 + elm.Diamond.Size() + elm.Address.Size()
 }
@@ -346,6 +358,12 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) Size() uint32 {
 		elm.ToAddress.Size() +
 		elm.DiamondCount.Size() +
 		uint32(len(elm.Diamonds))*6
+}
+
+// json api
+func (elm *Action_6_OutfeeQuantityDiamondTransfer) Describe() map[string]interface{} {
+	var data = map[string]interface{}{}
+	return data
 }
 
 func (elm *Action_6_OutfeeQuantityDiamondTransfer) Serialize() ([]byte, error) {

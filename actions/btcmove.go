@@ -46,6 +46,12 @@ func (elm *Action_7_SatoshiGenesis) Size() uint32 {
 		elm.BitcoinTransferHash.Size()
 }
 
+// json api
+func (elm *Action_7_SatoshiGenesis) Describe() map[string]interface{} {
+	var data = map[string]interface{}{}
+	return data
+}
+
 func (elm *Action_7_SatoshiGenesis) Serialize() ([]byte, error) {
 	var kindByte = make([]byte, 2)
 	binary.BigEndian.PutUint16(kindByte, elm.Kind())

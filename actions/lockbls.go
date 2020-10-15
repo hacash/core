@@ -43,6 +43,12 @@ func (elm *Action_9_LockblsCreate) Size() uint32 {
 		elm.LinearReleaseAmount.Size()
 }
 
+// json api
+func (elm *Action_9_LockblsCreate) Describe() map[string]interface{} {
+	var data = map[string]interface{}{}
+	return data
+}
+
 func (elm *Action_9_LockblsCreate) Serialize() ([]byte, error) {
 	var kindByte = make([]byte, 2)
 	binary.BigEndian.PutUint16(kindByte, elm.Kind())
@@ -195,6 +201,12 @@ func NewAction_10_LockblsRelease() *Action_10_LockblsRelease {
 
 func (elm *Action_10_LockblsRelease) Kind() uint16 {
 	return 10
+}
+
+// json api
+func (elm *Action_10_LockblsRelease) Describe() map[string]interface{} {
+	var data = map[string]interface{}{}
+	return data
 }
 
 func (elm *Action_10_LockblsRelease) Serialize() ([]byte, error) {

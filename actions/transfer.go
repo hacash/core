@@ -9,8 +9,8 @@ import (
 )
 
 type Action_1_SimpleTransfer struct {
-	Address fields.Address
-	Amount  fields.Amount
+	ToAddress fields.Address
+	Amount    fields.Amount
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -18,8 +18,8 @@ type Action_1_SimpleTransfer struct {
 
 func NewAction_1_SimpleTransfer(addr fields.Address, amt *fields.Amount) *Action_1_SimpleTransfer {
 	return &Action_1_SimpleTransfer{
-		Address: addr,
-		Amount:  *amt,
+		ToAddress: addr,
+		Amount:    *amt,
 	}
 }
 
@@ -27,10 +27,16 @@ func (elm *Action_1_SimpleTransfer) Kind() uint16 {
 	return 1
 }
 
+// json api
+func (elm *Action_1_SimpleTransfer) Describe() map[string]interface{} {
+	var data = map[string]interface{}{}
+	return data
+}
+
 func (elm *Action_1_SimpleTransfer) Serialize() ([]byte, error) {
 	var kindByte = make([]byte, 2)
 	binary.BigEndian.PutUint16(kindByte, elm.Kind())
-	var addrBytes, _ = elm.Address.Serialize()
+	var addrBytes, _ = elm.ToAddress.Serialize()
 	var amtBytes, _ = elm.Amount.Serialize()
 	var buffer bytes.Buffer
 	buffer.Write(kindByte)
@@ -40,13 +46,13 @@ func (elm *Action_1_SimpleTransfer) Serialize() ([]byte, error) {
 }
 
 func (elm *Action_1_SimpleTransfer) Parse(buf []byte, seek uint32) (uint32, error) {
-	var moveseek, _ = elm.Address.Parse(buf, seek)
+	var moveseek, _ = elm.ToAddress.Parse(buf, seek)
 	var moveseek2, _ = elm.Amount.Parse(buf, moveseek)
 	return moveseek2, nil
 }
 
 func (elm *Action_1_SimpleTransfer) Size() uint32 {
-	return 2 + elm.Address.Size() + elm.Amount.Size()
+	return 2 + elm.ToAddress.Size() + elm.Amount.Size()
 }
 
 func (*Action_1_SimpleTransfer) RequestSignAddresses() []fields.Address {
@@ -63,7 +69,7 @@ func (act *Action_1_SimpleTransfer) WriteinChainState(state interfaces.ChainStat
 		return fmt.Errorf("Amount is not positive.")
 	}
 	// 转移
-	return DoSimpleTransferFromChainState(state, act.belong_trs.GetAddress(), act.Address, act.Amount)
+	return DoSimpleTransferFromChainState(state, act.belong_trs.GetAddress(), act.ToAddress, act.Amount)
 }
 
 func (act *Action_1_SimpleTransfer) RecoverChainState(state interfaces.ChainStateOperation) error {
@@ -71,7 +77,7 @@ func (act *Action_1_SimpleTransfer) RecoverChainState(state interfaces.ChainStat
 		panic("Action belong to transaction not be nil !")
 	}
 	// 回退
-	return DoSimpleTransferFromChainState(state, act.Address, act.belong_trs.GetAddress(), act.Amount)
+	return DoSimpleTransferFromChainState(state, act.ToAddress, act.belong_trs.GetAddress(), act.Amount)
 }
 
 // 设置所属 belone_trs
