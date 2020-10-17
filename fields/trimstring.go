@@ -53,13 +53,16 @@ func trimStringParse(elm interface{}, buf []byte, seek uint32, maxlen uint32) (u
 func trimStringSerialize(str string, maxlen int) ([]byte, error) {
 	//var str = string(*elm)
 	//fmt.Println("trimStringSerialize ---------", str, "===")
+	newbts := make([]byte, len(str))
+	copy(newbts, str)
+	newstr := string(newbts)
 	for {
-		if len(str) < maxlen {
-			str += " "
+		if len(newstr) < maxlen {
+			newstr += " "
 		} else {
 			break
 		}
 	}
 	//fmt.Println("trimStringSerialize  2222 ---------", str, "===")
-	return []byte(str), nil
+	return []byte(newstr), nil
 }

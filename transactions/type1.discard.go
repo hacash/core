@@ -59,7 +59,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Copy() interfaces.Transaction {
 	copy(newtrsbts, bodys)
 	// create
 	var newtrs = new(Transaction_1_DO_NOT_USE_WITH_BUG)
-	newtrs.Parse(newtrsbts, 0)
+	newtrs.Parse(newtrsbts, 1) // over type
 	return newtrs
 }
 

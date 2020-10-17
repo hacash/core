@@ -2,6 +2,7 @@ package transactions
 
 import (
 	"bytes"
+	"fmt"
 	"math/big"
 
 	"github.com/hacash/core/actions"
@@ -39,7 +40,7 @@ func (trs *Transaction_0_Coinbase) Copy() interfaces.Transaction {
 	copy(newtrsbts, bodys)
 	// create
 	var newtrs = new(Transaction_0_Coinbase)
-	newtrs.Parse(newtrsbts, 0)
+	newtrs.Parse(newtrsbts, 1) // over type
 	return newtrs
 	/*
 		return &Transaction_0_Coinbase{
@@ -49,7 +50,8 @@ func (trs *Transaction_0_Coinbase) Copy() interfaces.Transaction {
 			WitnessCount: trs.WitnessCount,
 			WitnessSigs:  append([]uint8{}, trs.WitnessSigs...),
 			Witnesses:    append([]fields.Sign{}, trs.Witnesses...),
-		}*/
+		}
+	*/
 }
 
 func (trs *Transaction_0_Coinbase) GetReward() *fields.Amount {
@@ -126,7 +128,9 @@ func (trs *Transaction_0_Coinbase) ParseHead(buf []byte, seek uint32) (uint32, e
 	if e != nil {
 		return 0, e
 	}
+	fmt.Println(buf, seek)
 	seek, e = trs.Reward.Parse(buf, seek)
+	fmt.Println(buf, seek)
 	if e != nil {
 		return 0, e
 	}

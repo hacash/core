@@ -59,7 +59,7 @@ func (trs *Transaction_2_Simple) Copy() interfaces.Transaction {
 	copy(newtrsbts, bodys)
 	// create
 	var newtrs = new(Transaction_2_Simple)
-	newtrs.Parse(newtrsbts, 0)
+	newtrs.Parse(newtrsbts, 1) // over type
 	return newtrs
 }
 
