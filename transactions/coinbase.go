@@ -2,7 +2,6 @@ package transactions
 
 import (
 	"bytes"
-	"fmt"
 	"math/big"
 
 	"github.com/hacash/core/actions"
@@ -128,9 +127,7 @@ func (trs *Transaction_0_Coinbase) ParseHead(buf []byte, seek uint32) (uint32, e
 	if e != nil {
 		return 0, e
 	}
-	fmt.Println(buf, seek)
 	seek, e = trs.Reward.Parse(buf, seek)
-	fmt.Println(buf, seek)
 	if e != nil {
 		return 0, e
 	}
