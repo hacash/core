@@ -443,8 +443,8 @@ func (trs *Transaction_2_Simple) SetAddress(addr fields.Address) {
 	trs.Address = addr
 }
 
-func (trs *Transaction_2_Simple) GetFee() fields.Amount {
-	return trs.Fee
+func (trs *Transaction_2_Simple) GetFee() *fields.Amount {
+	return &trs.Fee
 }
 
 func (trs *Transaction_2_Simple) SetFee(fee *fields.Amount) {

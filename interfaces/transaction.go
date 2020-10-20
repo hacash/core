@@ -36,7 +36,7 @@ type Transaction interface {
 	// get something
 	GetAddress() fields.Address
 	SetAddress(fields.Address)
-	GetFee() fields.Amount
+	GetFee() *fields.Amount
 	SetFee(*fields.Amount)
 	GetActions() []Action
 	GetTimestamp() uint64

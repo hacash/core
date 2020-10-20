@@ -26,19 +26,19 @@ type Bytes64 []byte
 
 ////////////////////////////////////////////////////////
 
-func (elm *Bytes3) Serialize() ([]byte, error)  { return bytesSerialize(string(*elm), 3) }
-func (elm *Bytes4) Serialize() ([]byte, error)  { return bytesSerialize(string(*elm), 4) }
-func (elm *Bytes5) Serialize() ([]byte, error)  { return bytesSerialize(string(*elm), 5) }
-func (elm *Bytes6) Serialize() ([]byte, error)  { return bytesSerialize(string(*elm), 6) }
-func (elm *Bytes8) Serialize() ([]byte, error)  { return bytesSerialize(string(*elm), 8) }
-func (elm *Bytes12) Serialize() ([]byte, error) { return bytesSerialize(string(*elm), 12) }
-func (elm *Bytes16) Serialize() ([]byte, error) { return bytesSerialize(string(*elm), 16) }
-func (elm *Bytes18) Serialize() ([]byte, error) { return bytesSerialize(string(*elm), 18) }
-func (elm *Bytes21) Serialize() ([]byte, error) { return bytesSerialize(string(*elm), 21) }
-func (elm *Bytes24) Serialize() ([]byte, error) { return bytesSerialize(string(*elm), 24) }
-func (elm *Bytes32) Serialize() ([]byte, error) { return bytesSerialize(string(*elm), 32) }
-func (elm *Bytes33) Serialize() ([]byte, error) { return bytesSerialize(string(*elm), 33) }
-func (elm *Bytes64) Serialize() ([]byte, error) { return bytesSerialize(string(*elm), 64) }
+func (elm *Bytes3) Serialize() ([]byte, error)  { return bytesSerialize(*elm, 3) }
+func (elm *Bytes4) Serialize() ([]byte, error)  { return bytesSerialize(*elm, 4) }
+func (elm *Bytes5) Serialize() ([]byte, error)  { return bytesSerialize(*elm, 5) }
+func (elm *Bytes6) Serialize() ([]byte, error)  { return bytesSerialize(*elm, 6) }
+func (elm *Bytes8) Serialize() ([]byte, error)  { return bytesSerialize(*elm, 8) }
+func (elm *Bytes12) Serialize() ([]byte, error) { return bytesSerialize(*elm, 12) }
+func (elm *Bytes16) Serialize() ([]byte, error) { return bytesSerialize(*elm, 16) }
+func (elm *Bytes18) Serialize() ([]byte, error) { return bytesSerialize(*elm, 18) }
+func (elm *Bytes21) Serialize() ([]byte, error) { return bytesSerialize(*elm, 21) }
+func (elm *Bytes24) Serialize() ([]byte, error) { return bytesSerialize(*elm, 24) }
+func (elm *Bytes32) Serialize() ([]byte, error) { return bytesSerialize(*elm, 32) }
+func (elm *Bytes33) Serialize() ([]byte, error) { return bytesSerialize(*elm, 33) }
+func (elm *Bytes64) Serialize() ([]byte, error) { return bytesSerialize(*elm, 64) }
 
 func (elm *Bytes3) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 3)
@@ -139,14 +139,9 @@ func bytesParse(elm interface{}, buf []byte, seek uint32, maxlen uint32) (uint32
 	return seek + maxlen, nil
 }
 
-func bytesSerialize(str string, maxlen uint32) ([]byte, error) {
+func bytesSerialize(src []byte, maxlen uint32) ([]byte, error) {
 	//var str = string(*elm)
-	for {
-		if uint32(len(str)) < maxlen {
-			str += string([]byte{0})
-		} else {
-			break
-		}
-	}
-	return []byte(str), nil
+	newbts := make([]byte, maxlen)
+	copy(newbts, src)
+	return newbts, nil
 }
