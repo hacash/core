@@ -190,11 +190,18 @@ func (bill *Amount) ToMeiOrFinString(usemei bool) string {
 	}
 }
 
-// 转换单位为枚
+// 转换单位为枚 保留 8 位小数，多余的舍去
 func (bill *Amount) ToMeiString() string {
 	bigmei := bill.ToMeiBigFloat()
-	meistr := bigmei.String()
-	return strings.TrimRight(meistr, ".0")
+	meistr := bigmei.Text('f', 9)
+	spx := strings.Split(meistr, ".")
+	if len(spx) == 2 {
+		if len(spx[1]) == 9 {
+			spx[1] = strings.TrimRight(spx[1], spx[1][8:])
+			meistr = strings.Join(spx, ".")
+		}
+	}
+	return strings.TrimRight(strings.TrimRight(meistr, "0"), ".")
 }
 
 // 转换单位为枚

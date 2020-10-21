@@ -1,10 +1,22 @@
 package fields
 
 import (
+	"bytes"
 	"fmt"
 	"math/big"
 	"testing"
 )
+
+func Test_amt_cut(t *testing.T) {
+
+	bigbts := bytes.Repeat([]byte{255}, 9)
+
+	bigamt := new(big.Int).SetBytes(bigbts)
+
+	fmt.Println(bigamt.String())
+	fmt.Println("3927027935805858720555")
+
+}
 
 func Test_t1(t *testing.T) {
 
