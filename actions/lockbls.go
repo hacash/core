@@ -118,7 +118,7 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfaces.ChainState
 	if mainblsamt == nil {
 		return fmt.Errorf("Balance cannot empty.")
 	}
-	if mainblsamt.Amount.LessThan(&act.TotalStockAmount) {
+	if mainblsamt.Hacash.LessThan(&act.TotalStockAmount) {
 		return fmt.Errorf("Balance not enough.")
 	}
 	// 步进不能大于存入额

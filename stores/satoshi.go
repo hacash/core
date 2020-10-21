@@ -1,5 +1,6 @@
 package stores
 
+/*
 import (
 	"bytes"
 	"github.com/hacash/core/fields"
@@ -41,3 +42,6 @@ func (this *Satoshi) Parse(buf []byte, seek uint32) (uint32, error) {
 	seek, _ = this.Amount.Parse(buf, seek)
 	return seek, nil
 }
+
+
+*/

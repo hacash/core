@@ -169,6 +169,12 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	if e3 != nil {
 		return e3
 	}
+	// 增加钻石余额 +1
+	e9 := DoAddDiamondFromChainState(state, act.Address, 1)
+	if e9 != nil {
+		return e9
+	}
+
 	// 设置矿工状态
 	//标记本区块已经包含钻石
 	var diamondstore = &stores.DiamondSmelt{
@@ -222,6 +228,11 @@ func (act *Action_4_DiamondCreate) RecoverChainState(state interfaces.ChainState
 	e3 := state.SetLastestDiamond(prevDiamond)
 	if e3 != nil {
 		return e3
+	}
+	// 扣除钻石余额 -1
+	e9 := DoSubDiamondFromChainState(state, act.Address, 1)
+	if e9 != nil {
+		return e9
 	}
 	return nil
 }
@@ -308,6 +319,11 @@ func (act *Action_5_DiamondTransfer) WriteinChainState(state interfaces.ChainSta
 	if err != nil {
 		return err
 	}
+	// 转移钻石余额
+	e9 := DoSimpleDiamondTransferFromChainState(state, trsMainAddress, act.Address, 1)
+	if e9 != nil {
+		return e9
+	}
 	return nil
 }
 
@@ -315,6 +331,7 @@ func (act *Action_5_DiamondTransfer) RecoverChainState(state interfaces.ChainSta
 	if act.trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
+	trsMainAddress := act.trs.GetAddress()
 	// get diamond
 	diaitem := state.Diamond(act.Diamond)
 	if diaitem == nil {
@@ -326,6 +343,11 @@ func (act *Action_5_DiamondTransfer) RecoverChainState(state interfaces.ChainSta
 	err := state.DiamondSet(act.Diamond, item)
 	if err != nil {
 		return err
+	}
+	// 回退钻石余额
+	e9 := DoSimpleDiamondTransferFromChainState(state, act.Address, trsMainAddress, 1)
+	if e9 != nil {
+		return e9
 	}
 	return nil
 }
@@ -439,6 +461,11 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 		item.Address = act.ToAddress
 		state.DiamondSet(diamond, item)
 	}
+	// 转移钻石余额
+	e9 := DoSimpleDiamondTransferFromChainState(state, act.FromAddress, act.ToAddress, fields.VarUint3(act.DiamondCount))
+	if e9 != nil {
+		return e9
+	}
 	return nil
 }
 
@@ -461,6 +488,11 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) RecoverChainState(state inter
 		if err != nil {
 			return err
 		}
+	}
+	// 回退钻石余额
+	e9 := DoSimpleDiamondTransferFromChainState(state, act.ToAddress, act.FromAddress, fields.VarUint3(act.DiamondCount))
+	if e9 != nil {
+		return e9
 	}
 	return nil
 }

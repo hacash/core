@@ -6,42 +6,46 @@ import (
 )
 
 const (
-	BalanceSize = 4 + 8 + 20 // len = 32
+	BalanceSize = 3 + 8 + 11 // len = 22
 )
 
 type Balance struct {
-	Config      fields.Bytes4
-	ExtendMarks fields.Bytes8
-	Amount      fields.Amount // max len = 20
+	Diamond fields.VarUint3
+	Satoshi fields.VarUint8
+	Hacash  fields.Amount // len = 11
 }
 
 func NewEmptyBalance() *Balance {
 	return &Balance{
-		Config:      []byte{0, 0, 0, 0},
-		ExtendMarks: []byte{0, 0, 0, 0, 0, 0, 0, 0},
-		Amount:      *fields.NewEmptyAmount(),
+		Diamond: 0,
+		Satoshi: 0,
+		Hacash: fields.Amount{
+			Unit:    0,
+			Dist:    0,
+			Numeral: nil,
+		},
 	}
 }
 
 func NewBalanceWithAmount(amt *fields.Amount) *Balance {
 	return &Balance{
-		Config:      []byte{0, 0, 0, 0},
-		ExtendMarks: []byte{0, 0, 0, 0, 0, 0, 0, 0},
-		Amount:      *amt,
+		Diamond: 0,
+		Satoshi: 0,
+		Hacash:  *amt,
 	}
 }
 
 ///////////////////////////////////////
 
 func (this *Balance) Size() uint32 {
-	return uint32(DiamondSize)
+	return uint32(BalanceSize)
 }
 
 func (this *Balance) Serialize() ([]byte, error) {
 	var buffer = new(bytes.Buffer)
-	b1, _ := this.Config.Serialize()
-	b2, _ := this.ExtendMarks.Serialize()
-	b3, _ := this.Amount.Serialize()
+	b1, _ := this.Diamond.Serialize()
+	b2, _ := this.Satoshi.Serialize()
+	b3, _ := this.Hacash.Serialize()
 	buffer.Write(b1)
 	buffer.Write(b2)
 	buffer.Write(b3)
@@ -49,8 +53,8 @@ func (this *Balance) Serialize() ([]byte, error) {
 }
 
 func (this *Balance) Parse(buf []byte, seek uint32) (uint32, error) {
-	seek, _ = this.Config.Parse(buf, seek)
-	seek, _ = this.ExtendMarks.Parse(buf, seek)
-	seek, _ = this.Amount.Parse(buf, seek)
+	seek, _ = this.Diamond.Parse(buf, seek)
+	seek, _ = this.Satoshi.Parse(buf, seek)
+	seek, _ = this.Hacash.Parse(buf, seek)
 	return seek, nil
 }

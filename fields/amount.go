@@ -388,9 +388,9 @@ func (bill *Amount) CompressForMainNumLen(numlen int, enlarge bool) (*Amount, bo
 	return newamt, true, nil
 }
 
-// 省略小数部分 为了存进 20 位空间里面
-func (bill *Amount) EllipsisDecimalFor20SizeStore() (*Amount, bool, error) {
-	maxnumlen := 20 - 1 - 1
+// 省略小数部分 为了存进 11 位空间里面
+func (bill *Amount) EllipsisDecimalFor11SizeStore() (*Amount, bool, error) {
+	maxnumlen := 11 - 1 - 1
 	if len(bill.Numeral) <= maxnumlen {
 		return bill, false, nil // 数据没变
 	}

@@ -39,7 +39,7 @@ type ChainStateOperation interface {
 	// query
 
 	Balance(fields.Address) *stores.Balance
-	Satoshi(fields.Address) *stores.Satoshi
+	//Satoshi(fields.Address) *stores.Satoshi
 	Lockbls(fields.Bytes18) *stores.Lockbls
 	Channel(fields.Bytes16) *stores.Channel
 	Diamond(fields.Bytes6) *stores.Diamond
@@ -49,8 +49,8 @@ type ChainStateOperation interface {
 	BalanceSet(fields.Address, *stores.Balance) error
 	BalanceDel(fields.Address) error
 
-	SatoshiSet(fields.Address, *stores.Satoshi) error
-	SatoshiDel(fields.Address) error
+	//SatoshiSet(fields.Address, *stores.Satoshi) error
+	//SatoshiDel(fields.Address) error
 
 	LockblsCreate(fields.Bytes18, *stores.Lockbls) error // 创建线性锁仓
 	LockblsUpdate(fields.Bytes18, *stores.Lockbls) error // 更新：释放（取出部分任意可取额度）
