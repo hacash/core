@@ -207,17 +207,10 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 		return fmt.Errorf("Payment Channel <%s> address signature verify fail.", hex.EncodeToString(act.ChannelId))
 	}
 	// 通过时间计算利息
-	leftAmount := paychan.LeftAmount
-	rightAmount := paychan.RightAmount
 	// 计算获得当前的区块高度
 	//var curheight uint64 = 1
 	curheight := state.GetPendingBlockHeight()
-	// 增加利息计算，复利次数：约 8.68 天增加一次万分之一的复利，少于8天忽略不计
-	insnum := (curheight - uint64(paychan.BelongHeight)) / 2500
-	if insnum > 0 {
-		a1, a2 := DoAppendCompoundInterest1Of10000By2500Height(&leftAmount, &rightAmount, insnum)
-		leftAmount, rightAmount = *a1, *a2
-	}
+	leftAmount, rightAmount := calculateChannelInterest(curheight, paychan)
 	// 增加余额（将锁定的金额和利息从通道中提取出来）
 	DoAddBalanceFromChainState(state, paychan.LeftAddress, leftAmount)
 	DoAddBalanceFromChainState(state, paychan.RightAddress, rightAmount)
@@ -240,17 +233,10 @@ func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.Chai
 	if paychan.IsClosed != 0 {
 		panic(fmt.Errorf("Payment Channel <%s> is be closed.", hex.EncodeToString(act.ChannelId)))
 	}
-	leftAmount := paychan.LeftAmount
-	rightAmount := paychan.RightAmount
 	// 计算差额
 	curheight := state.GetPendingBlockHeight()
-	// 增加利息计算，复利次数：约 8.68 天增加一次万分之一的复利，少于8天忽略不计
-	insnum := (curheight - uint64(paychan.BelongHeight)) / 2500
-	if insnum > 0 {
-		a1, a2 := DoAppendCompoundInterest1Of10000By2500Height(&leftAmount, &rightAmount, insnum)
-		leftAmount, rightAmount = *a1, *a2
-	}
-
+	// 计算利息
+	leftAmount, rightAmount := calculateChannelInterest(curheight, paychan)
 	// 减除余额（重新将金额放入通道）
 	DoSubBalanceFromChainState(state, paychan.LeftAddress, leftAmount)
 	DoSubBalanceFromChainState(state, paychan.RightAddress, rightAmount)
@@ -262,4 +248,26 @@ func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.Chai
 
 func (elm *Action_3_ClosePaymentChannel) SetBelongTransaction(t interfaces.Transaction) {
 	elm.belone_trs = t
+}
+
+// 计算通道利息
+func calculateChannelInterest(curheight uint64, paychan *stores.Channel) (fields.Amount, fields.Amount) {
+	leftAmount := paychan.LeftAmount
+	rightAmount := paychan.RightAmount
+	// 增加利息计算，复利次数：约 8.68 天增加一次万分之一的复利，少于8天忽略不计
+	//a1, a2 := DoAppendCompoundInterest1Of10000By2500Height(&leftAmount, &rightAmount, insnum)
+	var insnum = (curheight - uint64(paychan.BelongHeight)) / 2500
+	var wfzn uint64 = 1 // 万分之一
+	// 通过当前的区块高度，修改一次增发比例
+	if curheight > 200000 {
+		// 增加利息计算，复利次数：约 34 天增加一次千分之一的复利，少于34天忽略不计
+		insnum = (curheight - uint64(paychan.BelongHeight)) / 10000
+		wfzn = 10 // 千分之一
+	}
+	if insnum > 0 {
+		// 计算通道利息奖励
+		a1, a2 := DoAppendCompoundInterestProportionOfHeightV2(&leftAmount, &rightAmount, insnum, wfzn)
+		leftAmount, rightAmount = *a1, *a2
+	}
+	return leftAmount, rightAmount
 }

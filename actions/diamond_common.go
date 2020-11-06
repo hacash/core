@@ -62,7 +62,7 @@ func DoAddDiamondFromChainState(state interfaces.ChainStateOperation, addr field
 func DoSubDiamondFromChainState(state interfaces.ChainStateOperation, addr fields.Address, dia fields.VarUint3) error {
 	blssto := state.Balance(addr)
 	if blssto == nil {
-		return fmt.Errorf("address %s diamond %d not enough.")
+		return fmt.Errorf("address %s diamond need %d not enough.", addr.ToReadable(), dia)
 	}
 	basedia := blssto.Diamond
 	// 检查余额

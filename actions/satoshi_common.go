@@ -62,7 +62,7 @@ func DoAddSatoshiFromChainState(state interfaces.ChainStateOperation, addr field
 func DoSubSatoshiFromChainState(state interfaces.ChainStateOperation, addr fields.Address, sat fields.VarUint8) error {
 	blssto := state.Balance(addr)
 	if blssto == nil {
-		return fmt.Errorf("address %s satoshi %d not enough.")
+		return fmt.Errorf("address %s satoshi need %d not enough.", addr.ToReadable(), sat)
 	}
 	basesat := blssto.Satoshi
 	// 检查余额

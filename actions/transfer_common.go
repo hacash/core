@@ -118,7 +118,7 @@ func DoAddBalanceFromChainState(state interfaces.ChainStateOperation, addr field
 func DoSubBalanceFromChainState(state interfaces.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
 	blssto := state.Balance(addr)
 	if blssto == nil {
-		return fmt.Errorf("address %s amount %d not enough.")
+		return fmt.Errorf("address %s amount need %s not enough.", addr.ToReadable(), amt.ToFinString())
 	}
 	baseamt := blssto.Hacash
 	//fmt.Println("baseamt: " + baseamt.ToFinString())
@@ -151,6 +151,62 @@ func DoSubBalanceFromChainState(state interfaces.ChainStateOperation, addr field
 }
 
 /*************************************************************************/
+
+// 计算通道利息奖励 (amt1, amt2, 1, 0.001)
+func DoAppendCompoundInterestProportionOfHeightV2(amt1 *fields.Amount, amt2 *fields.Amount, caclnum uint64, wfzn uint64) (*fields.Amount, *fields.Amount) {
+	if caclnum == 0 {
+		//panic("insnum cannot be 0.")
+		return amt1, amt2
+	}
+	if len(amt1.Numeral) > 4 || len(amt2.Numeral) > 4 {
+		panic("amount numeral bytes too long.")
+	}
+
+	amts := []*fields.Amount{amt1, amt2}
+	coinnums := make([]*fields.Amount, 2)
+
+	for i := 0; i < 2; i++ {
+		//fmt.Println("----------")
+		// amt
+		coinnum := new(big.Int).SetBytes(amts[i].Numeral).Uint64()
+		//fmt.Println(coinnum)
+		var mulnum uint64 = coinnum * 100000000
+		for a := uint64(0); a < caclnum; a++ {
+			mulnum = (mulnum * (10000 + wfzn) / 10000)
+		}
+		//fmt.Println(mulnum)
+		mulnumint := int64(mulnum)
+		//fmt.Println(mulnumint)
+		newunit := int(amts[i].Unit) - 8
+		if newunit < 0 {
+			coinnums[i] = amts[i] // 数额极小， 忽略， 余额不变
+			continue
+		}
+		for {
+			if newunit < 255 && mulnumint%10 == 0 {
+				mulnumint /= 10
+				newunit++
+			} else {
+				break
+			}
+		}
+		newNumeral := big.NewInt(int64(mulnumint)).Bytes()
+		//fmt.Println(newNumeral)
+		if newunit > 0 && newunit <= 255 {
+			newamt := fields.NewAmount(uint8(newunit), newNumeral)
+			coinnums[i] = newamt // 正常情况
+		} else {
+			coinnums[i] = amts[i] // 计算错误， 余额不变
+		}
+	}
+
+	//fmt.Println("insnum: ", insnum)
+	//fmt.Println(amts[0].ToFinString(), " => ", coinnums[0].ToFinString())
+	//fmt.Println(amts[1].ToFinString(), " => ", coinnums[1].ToFinString())
+
+	return coinnums[0], coinnums[1]
+
+}
 
 // 2500个区块万分之一的复利计算
 func DoAppendCompoundInterest1Of10000By2500Height(amt1 *fields.Amount, amt2 *fields.Amount, insnum uint64) (*fields.Amount, *fields.Amount) {
