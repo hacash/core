@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	DiamondSmeltSize = 6 + 3 + 5 + 32 + 32 + fields.AddressSize + 8 + 32
+	DiamondSmeltSize = 6 + 3 + 5 + 32 + 32 + fields.AddressSize + 4 + 8 + 32
 )
 
 type DiamondSmelt struct {
@@ -16,6 +16,7 @@ type DiamondSmelt struct {
 	ContainBlockHash     fields.Hash // current pending block hash
 	PrevContainBlockHash fields.Hash // prev block hash
 	MinerAddress         fields.Address
+	ApproxFeeOffer       fields.Bytes4  // Fee Amount
 	Nonce                fields.Bytes8  // nonce
 	CustomMessage        fields.Bytes32 // msg
 }
@@ -32,8 +33,9 @@ func (this *DiamondSmelt) Serialize() ([]byte, error) {
 	b4, _ := this.ContainBlockHash.Serialize()
 	b5, _ := this.PrevContainBlockHash.Serialize()
 	b6, _ := this.MinerAddress.Serialize()
-	b7, _ := this.Nonce.Serialize()
-	b8, _ := this.CustomMessage.Serialize()
+	b7, _ := this.ApproxFeeOffer.Serialize()
+	b8, _ := this.Nonce.Serialize()
+	b9, _ := this.CustomMessage.Serialize()
 	buffer.Write(b1)
 	buffer.Write(b2)
 	buffer.Write(b3)
@@ -42,6 +44,7 @@ func (this *DiamondSmelt) Serialize() ([]byte, error) {
 	buffer.Write(b6)
 	buffer.Write(b7)
 	buffer.Write(b8)
+	buffer.Write(b9)
 	return buffer.Bytes(), nil
 }
 
@@ -52,6 +55,7 @@ func (this *DiamondSmelt) Parse(buf []byte, seek uint32) (uint32, error) {
 	seek, _ = this.ContainBlockHash.Parse(buf, seek)
 	seek, _ = this.PrevContainBlockHash.Parse(buf, seek)
 	seek, _ = this.MinerAddress.Parse(buf, seek)
+	seek, _ = this.ApproxFeeOffer.Parse(buf, seek)
 	seek, _ = this.Nonce.Parse(buf, seek)
 	seek, _ = this.CustomMessage.Parse(buf, seek)
 	return seek, nil

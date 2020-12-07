@@ -356,6 +356,7 @@ func (bill *Amount) ToFinStringWithMark(mark string) string {
 }
 
 // 省略小数部分 为了存进 4 位空间里面
+// enlarge 表示是否扩大（向上取整）
 func (bill *Amount) CompressForMainNumLen(numlen int, enlarge bool) (*Amount, bool, error) {
 	var bignum = new(big.Int)
 	bignum.SetBytes(bill.Numeral)

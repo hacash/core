@@ -107,6 +107,9 @@ func (elm *Action_4_DiamondCreate) RequestSignAddresses() []fields.Address {
 }
 
 func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainStateOperation) error {
+	if act.belone_trs == nil {
+		panic("Action belong to transaction not be nil !")
+	}
 	// 检查区块高度
 	blkhei := state.GetPendingBlockHeight()
 	// 检查区块高度值是否为5的倍数
@@ -177,6 +180,18 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 
 	// 设置矿工状态
 	//标记本区块已经包含钻石
+	feeoffer := act.belone_trs.GetFee()
+	approxfeeoffer, _, e11 := feeoffer.CompressForMainNumLen(4, true)
+	if e11 != nil {
+		return e11
+	}
+	approxfeeofferBytes, e12 := approxfeeoffer.Serialize()
+	if e12 != nil {
+		return e12
+	}
+	approxfeeofferBytesStores := make([]byte, 4)
+	copy(approxfeeofferBytesStores, approxfeeofferBytes)
+	// 存储对象
 	var diamondstore = &stores.DiamondSmelt{
 		Diamond:              act.Diamond,
 		Number:               act.Number,
@@ -184,6 +199,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		ContainBlockHash:     nil, // current block not exist !!!
 		PrevContainBlockHash: act.PrevHash,
 		MinerAddress:         act.Address,
+		ApproxFeeOffer:       fields.Bytes4(approxfeeofferBytesStores),
 		Nonce:                act.Nonce,
 		CustomMessage:        act.GetRealCustomMessage(),
 	}
