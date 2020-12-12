@@ -38,11 +38,25 @@ func CreateAccountByPassword(password string) *Account {
 	return genAccountByPrivateKey(*privite)
 }
 
-func CreateNewAccount() *Account {
+func CreateNewRandomAccount() *Account {
 	digest := make([]byte, 32)
 	rand.Read(digest)
 	privite, _ := btcec.PrivKeyFromBytes(btcec.S256(), digest)
 	return genAccountByPrivateKey(*privite)
+}
+
+func GetAccountByPrivateKeyOrPassword(password string) *Account {
+	// 私钥
+	if len(password) == 64 {
+		if bts, e1 := hex.DecodeString(password); e1 == nil {
+			if acc, e2 := GetAccountByPriviteKey(bts); e2 == nil {
+				return acc
+			}
+		}
+	}
+	// 密码
+	return CreateAccountByPassword(password)
+
 }
 
 func genAccountByPrivateKey(private btcec.PrivateKey) *Account {
