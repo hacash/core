@@ -1,10 +1,14 @@
 package transactions
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/actions"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
+	"github.com/hacash/x16rs"
+	"strings"
 )
 
 // 取出钻石创建的action
@@ -39,4 +43,84 @@ func CreateOneTxOfSimpleTransfer(payacc *account.Account, toaddr fields.Address,
 		return nil
 	}
 	return newTrs
+}
+
+// 创建一笔 BTC 转账交易
+func CreateOneTxOfBTCTransfer(payacc *account.Account, toaddr fields.Address, amount uint64,
+	feeacc *account.Account, fee *fields.Amount, timestamp int64) (*Transaction_2_Simple, error) {
+
+	// sign 私钥签名
+	allPrivateKeyBytes := make(map[string][]byte)
+	allPrivateKeyBytes[string(feeacc.Address)] = feeacc.PrivateKey
+
+	// 创建交易
+	newTrs, _ := NewEmptyTransaction_2_Simple(feeacc.Address) // 使用手续费地址为主地址
+	newTrs.Timestamp = fields.VarUint5(timestamp)             // 使用时间戳
+	newTrs.Fee = *fee                                         // set fee
+	var tranact interfaces.Action = nil
+	if bytes.Compare(payacc.Address, feeacc.Address) == 0 {
+		tranact = &actions.Action_8_SimpleSatoshiTransfer{
+			Address: toaddr,
+			Amount:  fields.VarUint8(amount),
+		}
+	} else {
+		tranact = &actions.Action_11_FromToSatoshiTransfer{
+			FromAddress: payacc.Address,
+			ToAddress:   toaddr,
+			Amount:      fields.VarUint8(amount),
+		}
+		// sign add
+		allPrivateKeyBytes[string(payacc.Address)] = payacc.PrivateKey
+	}
+	e9 := newTrs.AppendAction(tranact)
+	if e9 != nil {
+		return nil, e9
+	}
+	e9 = newTrs.FillNeedSigns(allPrivateKeyBytes, nil)
+	if e9 != nil {
+		return nil, e9
+	}
+	return newTrs, nil
+}
+
+// 创建一笔 HACD 转账交易
+func CreateOneTxOfOutfeeQuantityHACDTransfer(payacc *account.Account, toaddr fields.Address, hacdlistsplitcomma string,
+	feeacc *account.Account, fee *fields.Amount, timestamp int64) (*Transaction_2_Simple, error) {
+
+	diamonds := strings.Split(hacdlistsplitcomma, ",")
+	if len(diamonds) > 200 {
+		return nil, fmt.Errorf("too many diamond names")
+	}
+	diamondsbytes := make([]fields.Bytes6, len(diamonds))
+	for i, v := range diamonds {
+		dok := x16rs.IsDiamondValueString(v)
+		if !dok {
+			return nil, fmt.Errorf("<%s> not a valid diamond name", v)
+		}
+		diamondsbytes[i] = []byte(v)
+	}
+
+	// 创建交易
+	newTrs, _ := NewEmptyTransaction_2_Simple(feeacc.Address) // 使用手续费地址为主地址
+	newTrs.Timestamp = fields.VarUint5(timestamp)             // 使用时间戳
+	newTrs.Fee = *fee                                         // set fee
+	tranact := &actions.Action_6_OutfeeQuantityDiamondTransfer{
+		FromAddress:  payacc.Address,
+		ToAddress:    toaddr,
+		DiamondCount: fields.VarUint1(len(diamonds)),
+		Diamonds:     diamondsbytes,
+	}
+	e9 := newTrs.AppendAction(tranact)
+	if e9 != nil {
+		return nil, e9
+	}
+	// sign 私钥签名
+	allPrivateKeyBytes := make(map[string][]byte, 1)
+	allPrivateKeyBytes[string(payacc.Address)] = payacc.PrivateKey
+	allPrivateKeyBytes[string(feeacc.Address)] = feeacc.PrivateKey
+	e9 = newTrs.FillNeedSigns(allPrivateKeyBytes, nil)
+	if e9 != nil {
+		return nil, e9
+	}
+	return newTrs, nil
 }

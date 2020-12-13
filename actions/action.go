@@ -31,6 +31,8 @@ func NewActionByKind(kind uint16) (interfaces.Action, error) {
 		return new(Action_9_LockblsCreate), nil
 	case 10:
 		return new(Action_10_LockblsRelease), nil
+	case 11:
+		return new(Action_11_FromToSatoshiTransfer), nil
 	}
 	////////////////////    END      ////////////////////
 	return nil, fmt.Errorf("Cannot find Action kind of " + string(kind))
