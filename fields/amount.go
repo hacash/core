@@ -237,6 +237,15 @@ func (bill *Amount) ToMei() float64 {
 	return mei
 }
 
+// 从字符串建立数额
+func NewAmountFromString(numstr string) (*Amount, error) {
+	if strings.Contains(numstr, ":") {
+		return NewAmountFromFinString(numstr)
+	} else {
+		return NewAmountFromMeiString(numstr)
+	}
+}
+
 // create form readble string
 func NewAmountFromMeiString(meistr string) (*Amount, error) {
 	mei, e1 := strconv.ParseFloat(meistr, 0)
