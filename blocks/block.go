@@ -20,7 +20,7 @@ const (
 	BlockVersion    = fields.VarUint1(1)  // uint8
 	TransactionType = fields.VarUint1(2)  // uint8
 	ActionKind      = fields.VarUint2(11) // uint16
-	RepairVersion   = fields.VarUint2(1)  // uint16
+	RepairVersion   = fields.VarUint2(2)  // uint16
 )
 
 ////////////////////////////////////////////////////////////
