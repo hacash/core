@@ -5,6 +5,7 @@ type P2PManager interface {
 	SetMsgHandler(P2PMsgDataHandler)
 	AddKnowledge(KnowledgeKind string, KnowledgeKey string) bool   // 返回 false 为已经知晓
 	CheckKnowledge(KnowledgeKind string, KnowledgeKey string) bool // 返回 true 为已经知晓
+	GetConfigOfBootNodeFastSync() bool
 }
 
 type P2PMsgPeer interface {
