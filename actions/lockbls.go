@@ -72,13 +72,35 @@ func (elm *Action_9_LockblsCreate) Serialize() ([]byte, error) {
 }
 
 func (elm *Action_9_LockblsCreate) Parse(buf []byte, seek uint32) (uint32, error) {
-	sk1, _ := elm.LockblsId.Parse(buf, seek)
-	sk2, _ := elm.PaymentAddress.Parse(buf, sk1)
-	sk3, _ := elm.MasterAddress.Parse(buf, sk2)
-	sk4, _ := elm.EffectBlockHeight.Parse(buf, sk3)
-	sk5, _ := elm.LinearBlockNumber.Parse(buf, sk4)
-	sk6, _ := elm.TotalStockAmount.Parse(buf, sk5)
-	sk7, _ := elm.LinearReleaseAmount.Parse(buf, sk6)
+	var e error = nil
+	sk1, e := elm.LockblsId.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	sk2, e := elm.PaymentAddress.Parse(buf, sk1)
+	if e != nil {
+		return 0, e
+	}
+	sk3, e := elm.MasterAddress.Parse(buf, sk2)
+	if e != nil {
+		return 0, e
+	}
+	sk4, e := elm.EffectBlockHeight.Parse(buf, sk3)
+	if e != nil {
+		return 0, e
+	}
+	sk5, e := elm.LinearBlockNumber.Parse(buf, sk4)
+	if e != nil {
+		return 0, e
+	}
+	sk6, e := elm.TotalStockAmount.Parse(buf, sk5)
+	if e != nil {
+		return 0, e
+	}
+	sk7, e := elm.LinearReleaseAmount.Parse(buf, sk6)
+	if e != nil {
+		return 0, e
+	}
 	return sk7, nil
 }
 
@@ -222,8 +244,15 @@ func (elm *Action_10_LockblsRelease) Serialize() ([]byte, error) {
 }
 
 func (elm *Action_10_LockblsRelease) Parse(buf []byte, seek uint32) (uint32, error) {
-	var moveseek, _ = elm.LockblsId.Parse(buf, seek)
-	var moveseek2, _ = elm.ReleaseAmount.Parse(buf, moveseek)
+	var e error = nil
+	moveseek, e := elm.LockblsId.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	moveseek2, e := elm.ReleaseAmount.Parse(buf, moveseek)
+	if e != nil {
+		return 0, e
+	}
 	return moveseek2, nil
 }
 

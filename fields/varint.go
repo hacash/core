@@ -75,6 +75,9 @@ func varIntSerialize(val uint64, maxlen uint32) ([]byte, error) {
 
 func varIntParse(elm interface{}, buf []byte, seek uint32, maxlen uint32) (uint32, error) {
 	// fmt.Println("xxx",*buf)
+	if seek+maxlen > uint32(len(buf)) {
+		return 0, fmt.Errorf("[varIntParse] seek out of buf len.")
+	}
 	nnnold := buf[seek : seek+maxlen]
 	var intbytes = make([]byte, len(nnnold))
 	copy(intbytes, nnnold)

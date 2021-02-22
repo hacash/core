@@ -45,8 +45,15 @@ func (elm *Action_8_SimpleSatoshiTransfer) Serialize() ([]byte, error) {
 }
 
 func (elm *Action_8_SimpleSatoshiTransfer) Parse(buf []byte, seek uint32) (uint32, error) {
-	var moveseek, _ = elm.Address.Parse(buf, seek)
-	var moveseek2, _ = elm.Amount.Parse(buf, moveseek)
+	var e error = nil
+	moveseek, e := elm.Address.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	moveseek2, e := elm.Amount.Parse(buf, moveseek)
+	if e != nil {
+		return 0, e
+	}
 	return moveseek2, nil
 }
 
@@ -123,9 +130,18 @@ func (elm *Action_11_FromToSatoshiTransfer) Serialize() ([]byte, error) {
 }
 
 func (elm *Action_11_FromToSatoshiTransfer) Parse(buf []byte, seek uint32) (uint32, error) {
-	seek, _ = elm.FromAddress.Parse(buf, seek)
-	seek, _ = elm.ToAddress.Parse(buf, seek)
-	seek, _ = elm.Amount.Parse(buf, seek)
+	seek, e := elm.FromAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.ToAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.Amount.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
 	return seek, nil
 }
 

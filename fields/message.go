@@ -19,6 +19,9 @@ func (e *ExtendMessageMaxLen255) Serialize() ([]byte, error) {
 }
 
 func (e *ExtendMessageMaxLen255) Parse(buf []byte, seek uint32) (uint32, error) {
+	if seek >= uint32(len(buf)) {
+		return 0, fmt.Errorf("[ExtendMessageMaxLen255.Parse] seek out of buf len.")
+	}
 	e.Count = VarUint1(buf[int(seek)])
 	seek++
 	start := seek

@@ -39,6 +39,9 @@ func NewActionByKind(kind uint16) (interfaces.Action, error) {
 }
 
 func ParseAction(buf []byte, seek uint32) (interfaces.Action, uint32, error) {
+	if seek+2 >= uint32(len(buf)) {
+		return nil, 0, fmt.Errorf("[ParseAction] seek out of buf len.")
+	}
 	var kind = binary.BigEndian.Uint16(buf[seek : seek+2])
 	var act, e1 = NewActionByKind(kind)
 	if e1 != nil {

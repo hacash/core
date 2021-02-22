@@ -101,6 +101,9 @@ func bytesParse(elm interface{}, buf []byte, seek uint32, maxlen uint32) (uint32
 	//fmt.Println(seek)
 	//fmt.Println(seek+maxlen)
 	//fmt.Println("----------")
+	if seek+maxlen > uint32(len(buf)) {
+		return 0, fmt.Errorf("[bytesParse] seek out of buf len.")
+	}
 	var nnnold = buf[seek : seek+maxlen]
 	var addrbytes = make([]byte, len(nnnold))
 	copy(addrbytes, nnnold)

@@ -1,2 +1,4 @@
 # core
-Hacash  Core
+
+README DOC:
+[https://github.com/hacash/miner](https://github.com/hacash/miner)

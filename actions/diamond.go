@@ -90,14 +90,33 @@ func (elm *Action_4_DiamondCreate) Serialize() ([]byte, error) {
 }
 
 func (elm *Action_4_DiamondCreate) Parse(buf []byte, seek uint32) (uint32, error) {
-	var moveseek1, _ = elm.Diamond.Parse(buf, seek)
-	var moveseek2, _ = elm.Number.Parse(buf, moveseek1)
-	var moveseek3, _ = elm.PrevHash.Parse(buf, moveseek2)
-	var moveseek4, _ = elm.Nonce.Parse(buf, moveseek3)
-	var moveseek5, _ = elm.Address.Parse(buf, moveseek4)
+	var e error = nil
+	moveseek1, e := elm.Diamond.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	moveseek2, e := elm.Number.Parse(buf, moveseek1)
+	if e != nil {
+		return 0, e
+	}
+	moveseek3, e := elm.PrevHash.Parse(buf, moveseek2)
+	if e != nil {
+		return 0, e
+	}
+	moveseek4, e := elm.Nonce.Parse(buf, moveseek3)
+	if e != nil {
+		return 0, e
+	}
+	moveseek5, e := elm.Address.Parse(buf, moveseek4)
+	if e != nil {
+		return 0, e
+	}
 	// 加上 msg byte
 	if uint32(elm.Number) > DiamondCreateCustomMessageAboveNumber {
-		moveseek5, _ = elm.CustomMessage.Parse(buf, moveseek5)
+		moveseek5, e = elm.CustomMessage.Parse(buf, moveseek5)
+		if e != nil {
+			return 0, e
+		}
 	}
 	return moveseek5, nil
 }
@@ -426,13 +445,26 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) Serialize() ([]byte, error) {
 }
 
 func (elm *Action_6_OutfeeQuantityDiamondTransfer) Parse(buf []byte, seek uint32) (uint32, error) {
-	seek, _ = elm.FromAddress.Parse(buf, seek)
-	seek, _ = elm.ToAddress.Parse(buf, seek)
-	seek, _ = elm.DiamondCount.Parse(buf, seek)
+	var e error = nil
+	seek, e = elm.FromAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.ToAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.DiamondCount.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
 	elm.Diamonds = make([]fields.Bytes6, int(elm.DiamondCount))
 	for i := 0; i < int(elm.DiamondCount); i++ {
 		elm.Diamonds[i] = fields.Bytes6{}
-		seek, _ = elm.Diamonds[i].Parse(buf, seek)
+		seek, e = elm.Diamonds[i].Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
 	}
 	return seek, nil
 }

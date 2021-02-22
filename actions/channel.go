@@ -59,11 +59,27 @@ func (elm *Action_2_OpenPaymentChannel) Serialize() ([]byte, error) {
 }
 
 func (elm *Action_2_OpenPaymentChannel) Parse(buf []byte, seek uint32) (uint32, error) {
-	seek, _ = elm.ChannelId.Parse(buf, seek)
-	seek, _ = elm.LeftAddress.Parse(buf, seek)
-	seek, _ = elm.LeftAmount.Parse(buf, seek)
-	seek, _ = elm.RightAddress.Parse(buf, seek)
-	seek, _ = elm.RightAmount.Parse(buf, seek)
+	var e error = nil
+	seek, e = elm.ChannelId.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.LeftAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.LeftAmount.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.RightAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.RightAmount.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
 	return seek, nil
 }
 

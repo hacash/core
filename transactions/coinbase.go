@@ -2,6 +2,7 @@ package transactions
 
 import (
 	"bytes"
+	"fmt"
 	"math/big"
 
 	"github.com/hacash/core/actions"
@@ -102,14 +103,17 @@ func (trs *Transaction_0_Coinbase) Parse(buf []byte, seek uint32) (uint32, error
 		return 0, e
 	}
 	if trs.WitnessCount > 0 {
-		len := int(trs.WitnessCount)
-		trs.WitnessSigs = make([]uint8, len)
-		trs.Witnesses = make([]fields.Sign, len)
-		for i := 0; i < len; i++ {
+		lenwc := int(trs.WitnessCount)
+		trs.WitnessSigs = make([]uint8, lenwc)
+		trs.Witnesses = make([]fields.Sign, lenwc)
+		for i := 0; i < lenwc; i++ {
+			if seek >= uint32(len(buf)) {
+				return 0, fmt.Errorf("seek out of buf len.")
+			}
 			trs.WitnessSigs[i] = buf[seek]
 			seek++
 		}
-		for i := 0; i < len; i++ {
+		for i := 0; i < lenwc; i++ {
 			var sign fields.Sign
 			seek, e = sign.Parse(buf, seek)
 			if e != nil {

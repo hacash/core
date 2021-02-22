@@ -132,10 +132,22 @@ func (trs *Transaction_2_Simple) SerializeNoSignEx(hasfee bool) ([]byte, error) 
 }
 
 func (trs *Transaction_2_Simple) Parse(buf []byte, seek uint32) (uint32, error) {
-	m1, _ := trs.Timestamp.Parse(buf, seek)
-	m2, _ := trs.Address.Parse(buf, m1)
-	m3, _ := trs.Fee.Parse(buf, m2)
-	m4, _ := trs.ActionCount.Parse(buf, m3)
+	m1, e := trs.Timestamp.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	m2, e := trs.Address.Parse(buf, m1)
+	if e != nil {
+		return 0, e
+	}
+	m3, e := trs.Fee.Parse(buf, m2)
+	if e != nil {
+		return 0, e
+	}
+	m4, e := trs.ActionCount.Parse(buf, m3)
+	if e != nil {
+		return 0, e
+	}
 	iseek := m4
 	for i := 0; i < int(trs.ActionCount); i++ {
 		var act, sk, err = actions.ParseAction(buf, iseek)
@@ -145,7 +157,6 @@ func (trs *Transaction_2_Simple) Parse(buf []byte, seek uint32) (uint32, error) 
 			return 0, err
 		}
 	}
-	var e error
 	iseek, e = trs.SignCount.Parse(buf, iseek)
 	if e != nil {
 		return 0, e

@@ -77,14 +77,39 @@ func (elm *Action_7_SatoshiGenesis) Serialize() ([]byte, error) {
 }
 
 func (elm *Action_7_SatoshiGenesis) Parse(buf []byte, seek uint32) (uint32, error) {
-	sk1, _ := elm.TransferNo.Parse(buf, seek)
-	sk2, _ := elm.BitcoinBlockHeight.Parse(buf, sk1)
-	sk3, _ := elm.BitcoinBlockTimestamp.Parse(buf, sk2)
-	sk4, _ := elm.BitcoinEffectiveGenesis.Parse(buf, sk3)
-	sk5, _ := elm.BitcoinQuantity.Parse(buf, sk4)
-	sk6, _ := elm.AdditionalTotalHacAmount.Parse(buf, sk5)
-	sk7, _ := elm.OriginAddress.Parse(buf, sk6)
-	sk8, _ := elm.BitcoinTransferHash.Parse(buf, sk7)
+	var e error = nil
+	sk1, e := elm.TransferNo.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	sk2, e := elm.BitcoinBlockHeight.Parse(buf, sk1)
+	if e != nil {
+		return 0, e
+	}
+	sk3, e := elm.BitcoinBlockTimestamp.Parse(buf, sk2)
+	if e != nil {
+		return 0, e
+	}
+	sk4, e := elm.BitcoinEffectiveGenesis.Parse(buf, sk3)
+	if e != nil {
+		return 0, e
+	}
+	sk5, e := elm.BitcoinQuantity.Parse(buf, sk4)
+	if e != nil {
+		return 0, e
+	}
+	sk6, e := elm.AdditionalTotalHacAmount.Parse(buf, sk5)
+	if e != nil {
+		return 0, e
+	}
+	sk7, e := elm.OriginAddress.Parse(buf, sk6)
+	if e != nil {
+		return 0, e
+	}
+	sk8, e := elm.BitcoinTransferHash.Parse(buf, sk7)
+	if e != nil {
+		return 0, e
+	}
 	return sk8, nil
 }
 

@@ -191,25 +191,57 @@ func (block *Block_v1) ParseHead(buf []byte, seek uint32) (uint32, error) {
 	//fmt.Println(seek)
 	//fmt.Println((*buf)[seek:])
 	//m1, _ := block.Version.Parse(buf, seek)
-	m2, _ := block.Height.Parse(buf, seek)
-	m3, _ := block.Timestamp.Parse(buf, m2)
-	m4, _ := block.PrevHash.Parse(buf, m3)
-	m5, _ := block.MrklRoot.Parse(buf, m4)
-	m6, _ := block.TransactionCount.Parse(buf, m5)
+	m2, e := block.Height.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	m3, e := block.Timestamp.Parse(buf, m2)
+	if e != nil {
+		return 0, e
+	}
+	m4, e := block.PrevHash.Parse(buf, m3)
+	if e != nil {
+		return 0, e
+	}
+	m5, e := block.MrklRoot.Parse(buf, m4)
+	if e != nil {
+		return 0, e
+	}
+	m6, e := block.TransactionCount.Parse(buf, m5)
+	if e != nil {
+		return 0, e
+	}
 	iseek := m6
 	return iseek, nil
 }
 
 func (block *Block_v1) ParseMeta(buf []byte, seek uint32) (uint32, error) {
-	seek, _ = block.Nonce.Parse(buf, seek) // miner nonce
-	seek, _ = block.Difficulty.Parse(buf, seek)
-	seek, _ = block.WitnessStage.Parse(buf, seek)
+	var e error = nil
+	seek, e = block.Nonce.Parse(buf, seek) // miner nonce
+	if e != nil {
+		return 0, e
+	}
+	seek, e = block.Difficulty.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = block.WitnessStage.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
 	return seek, nil
 }
 
 func (block *Block_v1) ParseExcludeTransactions(buf []byte, seek uint32) (uint32, error) {
-	seek, _ = block.ParseHead(buf, seek)
-	seek, _ = block.ParseMeta(buf, seek)
+	var e error = nil
+	seek, e = block.ParseHead(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = block.ParseMeta(buf, seek)
+	if e != nil {
+		return 0, e
+	}
 	return seek, nil
 }
 
@@ -218,26 +250,39 @@ func (block *Block_v1) ParseTransactions(buf []byte, seek uint32) (uint32, error
 	block.Transactions = make([]interfaces.Transaction, length)
 	for i := 0; i < length; i++ {
 		var trx, sk, err = transactions.ParseTransaction(buf, seek)
-		block.Transactions[i] = trx
-		seek = sk
 		if err != nil {
 			return seek, err
 		}
+		block.Transactions[i] = trx
+		seek = sk
 	}
 	return seek, nil
 
 }
 
 func (block *Block_v1) ParseBody(buf []byte, seek uint32) (uint32, error) {
-	seek, _ = block.ParseMeta(buf, seek)
-	seek, _ = block.ParseTransactions(buf, seek)
+	var e error = nil
+	seek, e = block.ParseMeta(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = block.ParseTransactions(buf, seek)
+	if e != nil {
+		return 0, e
+	}
 	return seek, nil
 }
 
 func (block *Block_v1) Parse(buf []byte, seek uint32) (uint32, error) {
 	// head
-	iseek, _ := block.ParseHead(buf, seek)
-	iseek2, _ := block.ParseBody(buf, iseek)
+	iseek, e := block.ParseHead(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	iseek2, e := block.ParseBody(buf, iseek)
+	if e != nil {
+		return 0, e
+	}
 	return iseek2, nil
 }
 
