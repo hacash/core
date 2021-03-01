@@ -16,7 +16,11 @@ type Transaction_0_Coinbase struct {
 	Address fields.Address
 	Reward  fields.Amount
 	Message fields.TrimString16
-	// nonce fields.VarUint8
+	// 版本号
+	BodyVersion fields.VarUint1 // 220000高度之前都等于 0
+
+	// 当 BodyVersion >= 1 时 具有以下字段：
+	Nonce        fields.Bytes32
 	WitnessCount fields.VarUint1 // 投票见证人数量
 	WitnessSigs  []uint8         // 见证人指定哈希尾数
 	Witnesses    []fields.Sign   // 对prev区块hash的签名，投票分叉
@@ -27,8 +31,16 @@ type Transaction_0_Coinbase struct {
 	TotalFee fields.Amount // 区块总交易手续费
 }
 
-func NewTransaction_0_Coinbase() *Transaction_0_Coinbase {
+func NewTransaction_0_CoinbaseV0() *Transaction_0_Coinbase {
 	return &Transaction_0_Coinbase{
+		BodyVersion: 0,
+	}
+}
+
+func NewTransaction_0_CoinbaseV1() *Transaction_0_Coinbase {
+	return &Transaction_0_Coinbase{
+		BodyVersion:  1,
+		Nonce:        make([]byte, 32),
 		WitnessCount: 0,
 	}
 }
@@ -68,25 +80,37 @@ func (trs *Transaction_0_Coinbase) Serialize() ([]byte, error) {
 	b1, _ := trs.Address.Serialize()
 	b2, _ := trs.Reward.Serialize()
 	b3, _ := trs.Message.Serialize()
+	b4, _ := trs.BodyVersion.Serialize()
 	// fmt.Println("trs.Message=", trs.Message)
 	buffer.Write([]byte{trs.Type()}) // type
 	buffer.Write(b1)
 	buffer.Write(b2)
 	buffer.Write(b3)
-	// 见证人
-	witnessCount := uint8(trs.WitnessCount)
-	buffer.Write([]byte{witnessCount})
-	for i := uint8(0); i < witnessCount; i++ {
-		b := trs.WitnessSigs[i]
-		buffer.Write([]byte{b})
+	buffer.Write(b4)
+	// 版本号
+	version := uint8(trs.BodyVersion)
+	// ----------- 按版本区分 ----------- //
+	if version == 0 {
+		// 没有后续字段
 	}
-	for i := uint8(0); i < witnessCount; i++ {
-		b := trs.Witnesses[i]
-		s1, e := b.Serialize()
-		if e != nil {
-			return nil, e
+	if version >= 1 {
+		// 附加的 nonce 值
+		buffer.Write(trs.Nonce)
+		// 见证人
+		witnessCount := uint8(trs.WitnessCount)
+		buffer.Write([]byte{witnessCount})
+		for i := uint8(0); i < witnessCount; i++ {
+			b := trs.WitnessSigs[i]
+			buffer.Write([]byte{b})
 		}
-		buffer.Write(s1)
+		for i := uint8(0); i < witnessCount; i++ {
+			b := trs.Witnesses[i]
+			s1, e := b.Serialize()
+			if e != nil {
+				return nil, e
+			}
+			buffer.Write(s1)
+		}
 	}
 	return buffer.Bytes(), nil
 }
@@ -97,29 +121,46 @@ func (trs *Transaction_0_Coinbase) Parse(buf []byte, seek uint32) (uint32, error
 	if e != nil {
 		return 0, e
 	}
-	// 见证人
-	seek, e = trs.WitnessCount.Parse(buf, seek)
+	seek, e = trs.BodyVersion.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
-	if trs.WitnessCount > 0 {
-		lenwc := int(trs.WitnessCount)
-		trs.WitnessSigs = make([]uint8, lenwc)
-		trs.Witnesses = make([]fields.Sign, lenwc)
-		for i := 0; i < lenwc; i++ {
-			if seek >= uint32(len(buf)) {
-				return 0, fmt.Errorf("seek out of buf len.")
-			}
-			trs.WitnessSigs[i] = buf[seek]
-			seek++
+	// ----------- 按版本区分 ----------- //
+	// 判断版本号
+	version := uint8(trs.BodyVersion)
+	if version == 0 {
+		// 没有后续字段
+	}
+	if version >= 1 {
+		// nonce值
+		seek, e = trs.Nonce.Parse(buf, seek)
+		if e != nil {
+			return 0, e
 		}
-		for i := 0; i < lenwc; i++ {
-			var sign fields.Sign
-			seek, e = sign.Parse(buf, seek)
-			if e != nil {
-				return 0, e
+		// 见证人
+		seek, e = trs.WitnessCount.Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
+		if trs.WitnessCount > 0 {
+			lenwc := int(trs.WitnessCount)
+			trs.WitnessSigs = make([]uint8, lenwc)
+			trs.Witnesses = make([]fields.Sign, lenwc)
+			for i := 0; i < lenwc; i++ {
+				if seek >= uint32(len(buf)) {
+					return 0, fmt.Errorf("seek out of buf len.")
+				}
+				trs.WitnessSigs[i] = buf[seek]
+				seek++
 			}
-			trs.Witnesses[i] = sign
+			for i := 0; i < lenwc; i++ {
+				var sign fields.Sign
+				seek, e = sign.Parse(buf, seek)
+				if e != nil {
+					return 0, e
+				}
+				trs.Witnesses[i] = sign
+			}
 		}
 	}
 	return seek, nil
@@ -143,11 +184,25 @@ func (trs *Transaction_0_Coinbase) ParseHead(buf []byte, seek uint32) (uint32, e
 }
 
 func (trs *Transaction_0_Coinbase) Size() uint32 {
-	base := 1 + trs.Address.Size() + trs.Reward.Size() + trs.Message.Size()
-	length := int(trs.WitnessCount)
-	base += uint32(length)
-	for i := 0; i < length; i++ {
-		base += trs.Witnesses[i].Size()
+	base := 1 +
+		trs.Address.Size() +
+		trs.Reward.Size() +
+		trs.Message.Size() +
+		trs.BodyVersion.Size()
+	// ----------- 按版本区分 ----------- //
+	// 判断版本号
+	version := uint8(trs.BodyVersion)
+	if version == 0 {
+		// 没有后续字段
+	}
+	if version >= 1 {
+		base += 32 // nonce
+		base += 1  // WitnessCount
+		length := int(trs.WitnessCount)
+		base += uint32(length)
+		for i := 0; i < length; i++ {
+			base += trs.Witnesses[i].Size()
+		}
 	}
 	return base
 }

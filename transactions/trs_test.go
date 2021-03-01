@@ -8,7 +8,7 @@ import (
 
 func Test_coinbaseCopy(t *testing.T) {
 
-	cbtrs := NewTransaction_0_Coinbase()
+	cbtrs := NewTransaction_0_CoinbaseV0()
 	addr, _ := fields.CheckReadableAddress("1AVRuFXNFi3rdMrPH4hdqSgFrEBnWisWaS")
 	cbtrs.Address = *addr
 	reward := fields.NewAmountNumSmallCoin(1)

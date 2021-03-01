@@ -288,11 +288,17 @@ func (block *Block_v1) Parse(buf []byte, seek uint32) (uint32, error) {
 
 func (block *Block_v1) Size() uint32 {
 	totalsize := 1 +
+		// head
 		block.Height.Size() +
 		block.Timestamp.Size() +
 		block.PrevHash.Size() +
 		block.MrklRoot.Size() +
-		block.TransactionCount.Size()
+		block.TransactionCount.Size() +
+		// meta
+		block.Nonce.Size() +
+		block.Difficulty.Size() +
+		block.WitnessStage.Size()
+	// trs
 	for i := uint32(0); i < uint32(block.TransactionCount); i++ {
 		totalsize += block.Transactions[i].Size()
 	}

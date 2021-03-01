@@ -38,7 +38,7 @@ func GetGenesisBlock() interfaces.Block {
 		panic(e0)
 	}
 	reward := fields.NewAmountNumSmallCoin(1)
-	coinbase := transactions.NewTransaction_0_Coinbase()
+	coinbase := transactions.NewTransaction_0_CoinbaseV0()
 	coinbase.Address = *addr
 	coinbase.Reward = *reward
 	coinbase.Message = "hardertodobetter"
