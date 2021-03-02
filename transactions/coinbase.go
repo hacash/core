@@ -20,7 +20,7 @@ type Transaction_0_Coinbase struct {
 	BodyVersion fields.VarUint1 // 220000高度之前都等于 0
 
 	// 当 BodyVersion >= 1 时 具有以下字段：
-	Nonce        fields.Bytes32
+	MinerNonce   fields.Bytes32
 	WitnessCount fields.VarUint1 // 投票见证人数量
 	WitnessSigs  []uint8         // 见证人指定哈希尾数
 	Witnesses    []fields.Sign   // 对prev区块hash的签名，投票分叉
@@ -40,7 +40,7 @@ func NewTransaction_0_CoinbaseV0() *Transaction_0_Coinbase {
 func NewTransaction_0_CoinbaseV1() *Transaction_0_Coinbase {
 	return &Transaction_0_Coinbase{
 		BodyVersion:  1,
-		Nonce:        make([]byte, 32),
+		MinerNonce:   make([]byte, 32),
 		WitnessCount: 0,
 	}
 }
@@ -95,7 +95,7 @@ func (trs *Transaction_0_Coinbase) Serialize() ([]byte, error) {
 	}
 	if version >= 1 {
 		// 附加的 nonce 值
-		buffer.Write(trs.Nonce)
+		buffer.Write(trs.MinerNonce)
 		// 见证人
 		witnessCount := uint8(trs.WitnessCount)
 		buffer.Write([]byte{witnessCount})
@@ -133,7 +133,7 @@ func (trs *Transaction_0_Coinbase) Parse(buf []byte, seek uint32) (uint32, error
 	}
 	if version >= 1 {
 		// nonce值
-		seek, e = trs.Nonce.Parse(buf, seek)
+		seek, e = trs.MinerNonce.Parse(buf, seek)
 		if e != nil {
 			return 0, e
 		}
@@ -155,6 +155,9 @@ func (trs *Transaction_0_Coinbase) Parse(buf []byte, seek uint32) (uint32, error
 			}
 			for i := 0; i < lenwc; i++ {
 				var sign fields.Sign
+				if seek >= uint32(len(buf)) {
+					return 0, fmt.Errorf("seek out of buf len.")
+				}
 				seek, e = sign.Parse(buf, seek)
 				if e != nil {
 					return 0, e
@@ -196,9 +199,9 @@ func (trs *Transaction_0_Coinbase) Size() uint32 {
 		// 没有后续字段
 	}
 	if version >= 1 {
-		base += 32 // nonce
-		base += 1  // WitnessCount
-		length := int(trs.WitnessCount)
+		base += 32                      // nonce
+		base += 1                       // WitnessCount
+		length := int(trs.WitnessCount) // WitnessSigs size
 		base += uint32(length)
 		for i := 0; i < length; i++ {
 			base += trs.Witnesses[i].Size()
@@ -269,6 +272,10 @@ func (trs *Transaction_0_Coinbase) GetAddress() fields.Address {
 
 func (trs *Transaction_0_Coinbase) SetAddress(addr fields.Address) {
 	trs.Address = addr
+}
+
+func (trs *Transaction_0_Coinbase) GetFeeOfMinerRealReceived() *fields.Amount {
+	return &trs.TotalFee
 }
 
 func (trs *Transaction_0_Coinbase) GetFee() *fields.Amount {

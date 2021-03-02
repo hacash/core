@@ -454,6 +454,23 @@ func (trs *Transaction_2_Simple) SetAddress(addr fields.Address) {
 	trs.Address = addr
 }
 
+func (trs *Transaction_2_Simple) GetFeeOfMinerRealReceived() *fields.Amount {
+	for _, act := range trs.Actions {
+		if act.IsBurning90PersentTxFees() {
+			// 销毁 90% 的tx费用
+			minerReceivedFee := trs.Fee.Copy()
+			if minerReceivedFee.Unit > 0 {
+				// 单位下降一位（例如248变247），大小变为原来的 10%， 而销毁了 90% 。
+				minerReceivedFee.Unit -= 1
+			}
+			// 返回矿工真实收到的竞价费，为原来的 90%
+			return minerReceivedFee
+		}
+	}
+
+	return &trs.Fee
+}
+
 func (trs *Transaction_2_Simple) GetFee() *fields.Amount {
 	return &trs.Fee
 }

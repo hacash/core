@@ -36,6 +36,9 @@ type Transaction interface {
 	// get something
 	GetAddress() fields.Address
 	SetAddress(fields.Address)
+	// 矿工实际拿到的交易费用
+	// 如果某些交易拿到手续费的比原本付出的少，则剩下的被销毁了
+	GetFeeOfMinerRealReceived() *fields.Amount
 	GetFee() *fields.Amount
 	SetFee(*fields.Amount)
 	GetActions() []Action

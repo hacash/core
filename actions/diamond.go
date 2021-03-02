@@ -19,6 +19,9 @@ import (
 // 第 20001 个钻石开始，启用 32 位的 msg byte
 const DiamondCreateCustomMessageAboveNumber uint32 = 20000
 
+// 第 90001 个钻石开始，销毁 90% 的竞价费用
+const DiamondCreateBurning90PercentTxFeesAboveNumber uint32 = 90000
+
 // 挖出钻石
 type Action_4_DiamondCreate struct {
 	Diamond  fields.Bytes6   // 钻石字面量 WTYUIAHXVMEKBSZN
@@ -276,6 +279,15 @@ func (elm *Action_4_DiamondCreate) SetBelongTransaction(t interfaces.Transaction
 	elm.belone_trs = t
 }
 
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_4_DiamondCreate) IsBurning90PersentTxFees() bool {
+	if uint32(act.Number) > DiamondCreateBurning90PercentTxFeesAboveNumber {
+		// 从第 90001 钻石开始，销毁本笔交易的 90% 的费用
+		return true
+	}
+	return false
+}
+
 ///////////////////////////////////////////////////////////////
 
 // 转移钻石
@@ -389,6 +401,11 @@ func (act *Action_5_DiamondTransfer) RecoverChainState(state interfaces.ChainSta
 
 func (elm *Action_5_DiamondTransfer) SetBelongTransaction(t interfaces.Transaction) {
 	elm.trs = t
+}
+
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_5_DiamondTransfer) IsBurning90PersentTxFees() bool {
+	return false
 }
 
 ///////////////////////////////////////////////////////////////
@@ -547,4 +564,9 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) RecoverChainState(state inter
 
 func (elm *Action_6_OutfeeQuantityDiamondTransfer) SetBelongTransaction(t interfaces.Transaction) {
 	elm.trs = t
+}
+
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_6_OutfeeQuantityDiamondTransfer) IsBurning90PersentTxFees() bool {
+	return false
 }

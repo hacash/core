@@ -156,6 +156,11 @@ func (elm *Action_2_OpenPaymentChannel) SetBelongTransaction(t interfaces.Transa
 	elm.belong_trs = t
 }
 
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_2_OpenPaymentChannel) IsBurning90PersentTxFees() bool {
+	return false
+}
+
 /////////////////////////////////////////////////////////////////
 
 // 关闭、结算 支付通道（资金分配不变的情况）
@@ -264,6 +269,11 @@ func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.Chai
 
 func (elm *Action_3_ClosePaymentChannel) SetBelongTransaction(t interfaces.Transaction) {
 	elm.belone_trs = t
+}
+
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_3_ClosePaymentChannel) IsBurning90PersentTxFees() bool {
+	return false
 }
 
 // 计算通道利息

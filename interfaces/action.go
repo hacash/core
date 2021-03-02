@@ -22,4 +22,7 @@ type Action interface {
 	// help func
 	SetBelongTransaction(Transaction)
 	Describe() map[string]interface{} // json api
+
+	// burning fees
+	IsBurning90PersentTxFees() bool // 是否销毁本笔交易的 90% 的交易费用
 }

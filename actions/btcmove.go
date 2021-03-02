@@ -268,6 +268,11 @@ func (act *Action_7_SatoshiGenesis) SetBelongTransaction(trs interfaces.Transact
 	act.belong_trs = trs
 }
 
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_7_SatoshiGenesis) IsBurning90PersentTxFees() bool {
+	return false
+}
+
 func (act Action_7_SatoshiGenesis) powf2(n int) int64 {
 	res := math.Pow(2.0, float64(n))
 	return int64(res)

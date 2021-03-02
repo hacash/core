@@ -207,6 +207,11 @@ func (act *Action_9_LockblsCreate) SetBelongTransaction(trs interfaces.Transacti
 	act.belong_trs = trs
 }
 
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_9_LockblsCreate) IsBurning90PersentTxFees() bool {
+	return false
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 type Action_10_LockblsRelease struct {
@@ -372,4 +377,9 @@ func (act *Action_10_LockblsRelease) RecoverChainState(state interfaces.ChainSta
 // 设置所属 belone_trs
 func (act *Action_10_LockblsRelease) SetBelongTransaction(trs interfaces.Transaction) {
 	act.belong_trs = trs
+}
+
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_10_LockblsRelease) IsBurning90PersentTxFees() bool {
+	return false
 }

@@ -86,6 +86,11 @@ func (act *Action_8_SimpleSatoshiTransfer) SetBelongTransaction(trs interfaces.T
 	act.belong_trs = trs
 }
 
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_8_SimpleSatoshiTransfer) IsBurning90PersentTxFees() bool {
+	return false
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 type Action_11_FromToSatoshiTransfer struct {
@@ -174,4 +179,9 @@ func (act *Action_11_FromToSatoshiTransfer) RecoverChainState(state interfaces.C
 // 设置所属 belone_trs
 func (act *Action_11_FromToSatoshiTransfer) SetBelongTransaction(trs interfaces.Transaction) {
 	act.belong_trs = trs
+}
+
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_11_FromToSatoshiTransfer) IsBurning90PersentTxFees() bool {
+	return false
 }

@@ -389,7 +389,7 @@ func (block *Block_v1) WriteinChainState(blockstate interfaces.ChainStateOperati
 		if e != nil {
 			return e // 验证失败
 		}
-		var fee = tx.GetFee()
+		var fee = tx.GetFeeOfMinerRealReceived()
 		totalfee, e = totalfee.Add(fee)
 	}
 	// coinbase
@@ -427,7 +427,7 @@ func (block *Block_v1) RecoverChainState(blockstate interfaces.ChainStateOperati
 		if e != nil {
 			return e // 失败
 		}
-		var fee = tx.GetFee()
+		var fee = tx.GetFeeOfMinerRealReceived()
 		totalfee, e = totalfee.Add(fee)
 		// delete tx from db
 		delerr := store.DeleteTransactionByHash(tx.Hash())

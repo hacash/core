@@ -90,3 +90,8 @@ func (act *Action_1_SimpleTransfer) RecoverChainState(state interfaces.ChainStat
 func (act *Action_1_SimpleTransfer) SetBelongTransaction(trs interfaces.Transaction) {
 	act.belong_trs = trs
 }
+
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_1_SimpleTransfer) IsBurning90PersentTxFees() bool {
+	return false
+}
