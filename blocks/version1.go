@@ -381,7 +381,8 @@ func (block *Block_v1) VerifyNeedSigns() (bool, error) {
 // 修改 / 恢复 状态数据库
 func (block *Block_v1) WriteinChainState(blockstate interfaces.ChainStateOperation) error {
 	txlen := len(block.Transactions)
-	totalfee := fields.NewEmptyAmount()
+	totalfeeuserpay := fields.NewEmptyAmount()
+	totalfeeminergot := fields.NewEmptyAmount()
 	// 第一条交易为coinbase交易，客户交易从第二条开始
 	for i := 1; i < txlen; i++ {
 		tx := block.Transactions[i]
@@ -389,8 +390,16 @@ func (block *Block_v1) WriteinChainState(blockstate interfaces.ChainStateOperati
 		if e != nil {
 			return e // 验证失败
 		}
-		var fee = tx.GetFeeOfMinerRealReceived()
-		totalfee, e = totalfee.Add(fee)
+		var feepay = tx.GetFee()
+		var feegot = tx.GetFeeOfMinerRealReceived()
+		totalfeeuserpay, e = totalfeeuserpay.Add(feepay)
+		if e != nil {
+			return e // 验证失败
+		}
+		totalfeeminergot, e = totalfeeminergot.Add(feegot)
+		if e != nil {
+			return e // 验证失败
+		}
 	}
 	// coinbase
 	if txlen < 1 {
@@ -404,7 +413,8 @@ func (block *Block_v1) WriteinChainState(blockstate interfaces.ChainStateOperati
 	if !ok {
 		return fmt.Errorf("transaction[0] not coinbase tx")
 	}
-	coinbase.TotalFee = *totalfee
+	coinbase.TotalFeeUserPayed = *totalfeeuserpay      // 支付总手续费
+	coinbase.TotalFeeMinerReceived = *totalfeeminergot // 收到总手续费
 	// coinbase change state
 	e3 := coinbase.WriteinChainState(blockstate)
 	if e3 != nil {
@@ -418,7 +428,7 @@ func (block *Block_v1) WriteinChainState(blockstate interfaces.ChainStateOperati
 
 func (block *Block_v1) RecoverChainState(blockstate interfaces.ChainStateOperation) error {
 	txlen := len(block.Transactions)
-	totalfee := fields.NewEmptyAmount()
+	totalfeeminergot := fields.NewEmptyAmount()
 	store := blockstate.BlockStore()
 	// 倒序从最后一笔交易开始 Recover
 	for i := txlen - 1; i > 0; i-- {
@@ -428,7 +438,10 @@ func (block *Block_v1) RecoverChainState(blockstate interfaces.ChainStateOperati
 			return e // 失败
 		}
 		var fee = tx.GetFeeOfMinerRealReceived()
-		totalfee, e = totalfee.Add(fee)
+		totalfeeminergot, e = totalfeeminergot.Add(fee)
+		if e != nil {
+			return e // 失败
+		}
 		// delete tx from db
 		delerr := store.DeleteTransactionByHash(tx.Hash())
 		if delerr != nil {
@@ -436,7 +449,7 @@ func (block *Block_v1) RecoverChainState(blockstate interfaces.ChainStateOperati
 		}
 	}
 	coinbase, _ := block.Transactions[0].(*transactions.Transaction_0_Coinbase)
-	coinbase.TotalFee = *totalfee
+	coinbase.TotalFeeMinerReceived = *totalfeeminergot
 	// coinbase change state
 	e3 := coinbase.RecoverChainState(blockstate)
 	if e3 != nil {

@@ -28,7 +28,8 @@ type Transaction_0_Coinbase struct {
 	/* -------- -------- */
 
 	// cache data
-	TotalFee fields.Amount // 区块总交易手续费
+	TotalFeeUserPayed     fields.Amount // 区块总交易手续费
+	TotalFeeMinerReceived fields.Amount // 区块总交易手续费
 }
 
 func NewTransaction_0_CoinbaseV0() *Transaction_0_Coinbase {
@@ -233,7 +234,7 @@ func (trs *Transaction_0_Coinbase) CleanSigns() {
 
 // 填充签名
 func (trs *Transaction_0_Coinbase) FillNeedSigns(map[string][]byte, []fields.Address) error {
-	return nil
+	panic("cannot FillNeedSigns for Transaction_0_Coinbase")
 }
 
 // 验证需要的签名
@@ -250,19 +251,19 @@ func (trs *Transaction_0_Coinbase) RequestAddressBalance() ([][]byte, []big.Int,
 func (trs *Transaction_0_Coinbase) WriteinChainState(state interfaces.ChainStateOperation) error {
 
 	// fmt.Printf("trs.TotalFee = %s\n", trs.TotalFee.ToFinString())
-	rwd, _ := trs.Reward.Add(&trs.TotalFee)
+	rwd_and_txfee, _ := trs.Reward.Add(&trs.TotalFeeMinerReceived)
 	// addr, _ := base58check.Encode(trs.Address)
 	// fmt.Printf("coinbase.ChangeChainState,  %s  +=  %s\n", addr, rwd.ToFinString())
-	return actions.DoAddBalanceFromChainState(state, trs.Address, *rwd)
+	return actions.DoAddBalanceFromChainState(state, trs.Address, *rwd_and_txfee)
 }
 
 func (trs *Transaction_0_Coinbase) RecoverChainState(state interfaces.ChainStateOperation) error {
-	rwd, _ := trs.Reward.Add(&trs.TotalFee)
-	return actions.DoSubBalanceFromChainState(state, trs.Address, *rwd)
+	rwd_and_txfee, _ := trs.Reward.Add(&trs.TotalFeeMinerReceived)
+	return actions.DoSubBalanceFromChainState(state, trs.Address, *rwd_and_txfee)
 }
 
 func (trs *Transaction_0_Coinbase) FeePurity() uint64 {
-	return 0
+	panic("cannot GetFeePurity for Transaction_0_Coinbase")
 }
 
 // 查询
@@ -275,14 +276,15 @@ func (trs *Transaction_0_Coinbase) SetAddress(addr fields.Address) {
 }
 
 func (trs *Transaction_0_Coinbase) GetFeeOfMinerRealReceived() *fields.Amount {
-	return &trs.TotalFee
+	return &trs.TotalFeeMinerReceived
 }
 
 func (trs *Transaction_0_Coinbase) GetFee() *fields.Amount {
-	return &trs.TotalFee
+	return &trs.TotalFeeUserPayed
 }
 
 func (trs *Transaction_0_Coinbase) SetFee(fee *fields.Amount) {
+	panic("cannot SetFee for Transaction_0_Coinbase")
 }
 
 func (trs *Transaction_0_Coinbase) GetActions() []interfaces.Action {
@@ -290,7 +292,7 @@ func (trs *Transaction_0_Coinbase) GetActions() []interfaces.Action {
 }
 
 func (trs *Transaction_0_Coinbase) GetTimestamp() uint64 { // 时间戳
-	return 0
+	panic("cannot GetTimestamp for Transaction_0_Coinbase")
 }
 
 func (trs *Transaction_0_Coinbase) SetMessage(msg fields.TrimString16) {
