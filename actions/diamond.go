@@ -19,8 +19,8 @@ import (
 // 第 20001 个钻石开始，启用 32 位的 msg byte
 const DiamondCreateCustomMessageAboveNumber uint32 = 20000
 
-// 第 90001 个钻石开始，销毁 90% 的竞价费用
-const DiamondCreateBurning90PercentTxFeesAboveNumber uint32 = 90000
+// 第 30001 个钻石开始，销毁 90% 的竞价费用
+const DiamondCreateBurning90PercentTxFeesAboveNumber uint32 = 30000
 
 // 挖出钻石
 type Action_4_DiamondCreate struct {
@@ -282,7 +282,7 @@ func (elm *Action_4_DiamondCreate) SetBelongTransaction(t interfaces.Transaction
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用
 func (act *Action_4_DiamondCreate) IsBurning90PersentTxFees() bool {
 	if uint32(act.Number) > DiamondCreateBurning90PercentTxFeesAboveNumber {
-		// 从第 90001 钻石开始，销毁本笔交易的 90% 的费用
+		// 从第 30001 钻石开始，销毁本笔交易的 90% 的费用
 		return true
 	}
 	return false
