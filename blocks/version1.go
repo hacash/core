@@ -56,7 +56,7 @@ func NewEmptyBlock_v1(prevBlockHead interfaces.Block) *Block_v1 {
 }
 
 // copy
-func (block *Block_v1) CopyForMining() interfaces.Block {
+func (block *Block_v1) CopyHeadMetaForMining() interfaces.Block {
 	newblock := NewEmptyBlock_v1(nil)
 	newblock.Height = block.Height
 	newblock.Timestamp = block.Timestamp
@@ -66,7 +66,15 @@ func (block *Block_v1) CopyForMining() interfaces.Block {
 	newblock.Nonce = block.Nonce
 	newblock.Difficulty = block.Difficulty
 	newblock.WitnessStage = block.WitnessStage
-	// copy coinbase
+	// ok
+	return newblock
+}
+
+// copy
+func (block *Block_v1) CopyForMining() interfaces.Block {
+	// copy head and meta
+	newblock := block.CopyHeadMetaForMining()
+	// copy coinbase and txs
 	trs := block.GetTransactions()
 	newtrs := trs
 	if len(trs) > 0 {

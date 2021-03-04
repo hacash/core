@@ -93,5 +93,10 @@ func (act *Action_1_SimpleTransfer) SetBelongTransaction(trs interfaces.Transact
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用
 func (act *Action_1_SimpleTransfer) IsBurning90PersentTxFees() bool {
+	///////////// TEST CODE START /////////////
+	//if act.Amount.ToMeiString() == "2" { // 测试转账为 2 枚时，手续费减半
+	//	return true
+	//}
+	///////////// TEST CODE END   /////////////
 	return false
 }

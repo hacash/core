@@ -11,6 +11,7 @@ type Block interface {
 	SetOriginMark(string)
 
 	// copy
+	CopyHeadMetaForMining() Block
 	CopyForMining() Block
 
 	// delete cache data

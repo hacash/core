@@ -116,15 +116,48 @@ func hashMerge(hashs []fields.Hash) []fields.Hash {
 	}
 	var mergehashs = make([]fields.Hash, mgsize)
 	for m := 0; m < length; m += 2 {
-		var b1 bytes.Buffer
-		b1.Write(hashs[m])
-		h2 := hashs[m]
+		var buf bytes.Buffer
+		h1 := hashs[m]
+		buf.Write(hashs[m])
 		if m+1 < length {
-			h2 = hashs[m+1]
+			h2 := hashs[m+1]
+			buf.Write(h2)
+		} else {
+			buf.Write(h1) // repeat h1
 		}
-		b1.Write(h2)
-		digest := sha3.Sum256(b1.Bytes())
+		digest := sha3.Sum256(buf.Bytes())
 		mergehashs[m/2] = digest[:]
 	}
 	return mergehashs
+}
+
+// 通过修改 coinbase tx 哈希 来重新计算默克尔根
+func CalculateMrklRootByCoinbaseTxModify(coinbasetxhx fields.Hash, mdftree []fields.Hash) fields.Hash {
+	mrklroot := append([]byte{}, coinbasetxhx...)
+	for i := 0; i < len(mdftree); i++ {
+		mghx := hashMerge([]fields.Hash{mrklroot, mdftree[i]})
+		mrklroot = mghx[0]
+	}
+	return mrklroot
+}
+
+// 计算并获得与 coinbase tx 修改有关的默克尔相关哈希列表
+func PickMrklListForCoinbaseTxModify(transactions []interfaces.Transaction) []fields.Hash {
+	hxlist := make([]fields.Hash, 0)
+	trslen := len(transactions)
+	if trslen == 0 {
+		panic("len(transactions) must not be empty") // 不能为空
+	}
+	if trslen == 1 {
+		return hxlist
+	}
+	if trslen == 2 {
+		hxlist = append(hxlist, transactions[1].HashWithFee())
+		return hxlist
+	}
+
+	// TODO: hashMerge
+
+	return hxlist
+
 }
