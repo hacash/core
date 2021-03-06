@@ -117,6 +117,8 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfaces.ChainState
 
 	// 检查key值合法性
 	if act.LockblsId[0] == 0 || act.LockblsId[stores.LockblsIdLength-1] == 0 {
+		// 用户创建的 锁仓ID， 第一位和最后一位不能为零
+		// 第一位为零的ID是比特币单向转移的锁仓id
 		return fmt.Errorf("LockblsId format error.")
 	}
 	// 检查是否key已经存在
@@ -126,10 +128,10 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfaces.ChainState
 	}
 	// 检查 步进 block number
 	if act.LinearBlockNumber < 288 {
-		return fmt.Errorf("LinearBlockNumber less 288.")
+		return fmt.Errorf("LinearBlockNumber cannot less 288.")
 	}
 	if act.LinearBlockNumber > 1700*10000 {
-		return fmt.Errorf("LinearBlockNumber over 17000000.")
+		return fmt.Errorf("LinearBlockNumber cannot over 17000000.")
 	}
 	// 检查数额
 	if !act.TotalStockAmount.IsPositive() || !act.LinearReleaseAmount.IsPositive() {
@@ -285,6 +287,7 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfaces.ChainSta
 		return fmt.Errorf("EffectBlockHeight be set %d", lockbls.EffectBlockHeight)
 	}
 	// 计算提取额度
+	// rlsnum == 可提取次数
 	rlsnum := (currentBlockHeight - uint64(lockbls.EffectBlockHeight)) / uint64(lockbls.LinearBlockNumber)
 	if rlsnum == 0 {
 		return fmt.Errorf("first release Block Height is %d, ", uint64(lockbls.EffectBlockHeight)+uint64(lockbls.LinearBlockNumber))
@@ -297,7 +300,7 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfaces.ChainSta
 	if e1 != nil {
 		return e1
 	}
-	// 有效余额
+	// 有效可提余额
 	lockblsamt, e2 := lockbls.GetAmount(&lockbls.BalanceAmountBytes)
 	if e2 != nil {
 		return e2
@@ -337,10 +340,32 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfaces.ChainSta
 	if newBalanceAmount.IsEmpty() {
 		// 锁仓已经全部提取，删除
 		// 为了回退暂不删除，而是为区块回退而暂时保存
-		state.LockblsUpdate(act.LockblsId, lockbls)
+		e := state.LockblsUpdate(act.LockblsId, lockbls)
+		if e != nil {
+			return e
+		}
 	} else {
 		// 扣除 储存
-		state.LockblsUpdate(act.LockblsId, lockbls)
+		e := state.LockblsUpdate(act.LockblsId, lockbls)
+		if e != nil {
+			return e
+		}
+	}
+	// total supply 统计
+	isbtcmoveunlock := act.LockblsId[0] == 0 // 第一位为 0 则是比特币转移的锁定
+	if isbtcmoveunlock {
+		totalsupply, e2 := state.ReadTotalSupply()
+		if e2 != nil {
+			return e2
+		}
+		// 累加解锁的HAC
+		addamt := act.ReleaseAmount.ToMei()
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed, addamt)
+		// update total supply
+		e3 := state.UpdateSetTotalSupply(totalsupply)
+		if e3 != nil {
+			return e3
+		}
 	}
 	// 加上余额
 	return DoAddBalanceFromChainState(state, lockbls.MasterAddress, act.ReleaseAmount)
@@ -370,6 +395,22 @@ func (act *Action_10_LockblsRelease) RecoverChainState(state interfaces.ChainSta
 	}
 	// 扣除 储存
 	state.LockblsUpdate(act.LockblsId, lockbls)
+	// total supply 统计
+	isbtcmoveunlock := act.LockblsId[0] == 0 // 第一位为 0 则是比特币转移的锁定
+	if isbtcmoveunlock {
+		totalsupply, e2 := state.ReadTotalSupply()
+		if e2 != nil {
+			return e2
+		}
+		// 累加解锁的HAC
+		addamt := act.ReleaseAmount.ToMei()
+		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed, addamt)
+		// update total supply
+		e3 := state.UpdateSetTotalSupply(totalsupply)
+		if e3 != nil {
+			return e3
+		}
+	}
 	// 回退余额
 	return DoSubBalanceFromChainState(state, lockbls.MasterAddress, act.ReleaseAmount)
 }

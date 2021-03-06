@@ -105,16 +105,16 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	}
 	// 不能为零或负数
 	if !act.LeftAmount.IsPositive() || !act.RightAmount.IsPositive() {
-		return fmt.Errorf("Payment Channel create error: left or right Amount is not positive.")
+		return fmt.Errorf("Action_2_OpenPaymentChannel Payment Channel create error: left or right Amount is not positive.")
 	}
 	// 检查余额是否充足
 	bls1 := state.Balance(act.LeftAddress)
 	if bls1 == nil {
-		return fmt.Errorf("Address %s Balance is not enough.", act.LeftAddress.ToReadable())
+		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance cannot empty.", act.LeftAddress.ToReadable())
 	}
 	amt1 := bls1.Hacash
 	if amt1.LessThan(&act.LeftAmount) {
-		return fmt.Errorf("Address %s Balance is not enough.", act.LeftAddress.ToReadable())
+		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.RightAddress.ToReadable(), act.LeftAmount.ToFinString(), amt1.ToFinString())
 	}
 	bls2 := state.Balance(act.RightAddress)
 	if bls2 == nil {
@@ -122,7 +122,7 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	}
 	amt2 := bls2.Hacash
 	if amt2.LessThan(&act.RightAmount) {
-		return fmt.Errorf("Address %s Balance is not enough.", act.RightAddress.ToReadable())
+		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.RightAddress.ToReadable(), act.RightAmount.ToFinString(), amt2.ToFinString())
 	}
 	curheight := state.GetPendingBlockHeight()
 	// 创建 channel
@@ -139,6 +139,19 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	DoSubBalanceFromChainState(state, act.RightAddress, act.RightAmount)
 	// 储存通道
 	state.ChannelCreate(act.ChannelId, &storeItem)
+	// total supply 统计
+	totalsupply, e2 := state.ReadTotalSupply()
+	if e2 != nil {
+		return e2
+	}
+	// 累加解锁的HAC
+	addamt := act.LeftAmount.ToMei() + act.RightAmount.ToMei()
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedInChannel, addamt)
+	// update total supply
+	e3 := state.UpdateSetTotalSupply(totalsupply)
+	if e3 != nil {
+		return e3
+	}
 	//
 	return nil
 }
@@ -149,6 +162,19 @@ func (act *Action_2_OpenPaymentChannel) RecoverChainState(state interfaces.Chain
 	// 恢复余额
 	DoAddBalanceFromChainState(state, act.LeftAddress, act.LeftAmount)
 	DoAddBalanceFromChainState(state, act.RightAddress, act.RightAmount)
+	// total supply 统计
+	totalsupply, e2 := state.ReadTotalSupply()
+	if e2 != nil {
+		return e2
+	}
+	// 回退解锁的HAC
+	addamt := act.LeftAmount.ToMei() + act.RightAmount.ToMei()
+	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfLocatedInChannel, addamt)
+	// update total supply
+	e3 := state.UpdateSetTotalSupply(totalsupply)
+	if e3 != nil {
+		return e3
+	}
 	return nil
 }
 
@@ -206,6 +232,7 @@ func (elm *Action_3_ClosePaymentChannel) RequestSignAddresses() []fields.Address
 }
 
 func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.ChainStateOperation) error {
+	var e error = nil
 	if act.belone_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -231,18 +258,56 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 	// 计算获得当前的区块高度
 	//var curheight uint64 = 1
 	curheight := state.GetPendingBlockHeight()
-	leftAmount, rightAmount := calculateChannelInterest(curheight, paychan)
+	leftAmount, rightAmount, haveinterest, e11 := calculateChannelInterest(curheight, paychan)
+	if e11 != nil {
+		return e11
+	}
 	// 增加余额（将锁定的金额和利息从通道中提取出来）
-	DoAddBalanceFromChainState(state, paychan.LeftAddress, leftAmount)
-	DoAddBalanceFromChainState(state, paychan.RightAddress, rightAmount)
+	e = DoAddBalanceFromChainState(state, paychan.LeftAddress, *leftAmount)
+	if e != nil {
+		return e
+	}
+	e = DoAddBalanceFromChainState(state, paychan.RightAddress, *rightAmount)
+	if e != nil {
+		return e
+	}
 	// 暂时保留通道用于数据回退
 	paychan.IsClosed = fields.VarUint1(1) // 标记通道已经关闭了
-	state.ChannelUpdate(act.ChannelId, paychan)
+	e = state.ChannelUpdate(act.ChannelId, paychan)
+	if e != nil {
+		return e
+	}
 	//
+	// total supply 统计
+	totalsupply, e2 := state.ReadTotalSupply()
+	if e2 != nil {
+		return e2
+	}
+	// 减少解锁的HAC
+	lockamt := paychanptr.LeftAmount.ToMei() + paychanptr.RightAmount.ToMei()
+	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfLocatedInChannel, lockamt)
+	// 增加通道利息统计
+	if haveinterest {
+		releaseamt := leftAmount.ToMei() + rightAmount.ToMei()
+		//fmt.Println("(act *Action_3_ClosePaymentChannel) WriteinChainState", releaseamt, lockamt, releaseamt - lockamt, )
+		//fmt.Println(paychanptr.LeftAddress.ToReadable(), paychanptr.LeftAmount.ToFinString(), paychanptr.LeftAmount.ToMei())
+		//fmt.Println(paychanptr.RightAddress.ToReadable(), paychanptr.RightAmount.ToFinString(), paychanptr.RightAmount.ToMei())
+		//fmt.Println(leftAmount.ToFinString(), leftAmount.ToMei(), rightAmount.ToFinString(), rightAmount.ToMei())
+		if releaseamt-lockamt < 0 {
+			return fmt.Errorf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+		}
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfChannelInterest, releaseamt-lockamt)
+	}
+	// update total supply
+	e3 := state.UpdateSetTotalSupply(totalsupply)
+	if e3 != nil {
+		return e3
+	}
 	return nil
 }
 
 func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.ChainStateOperation) error {
+	var e error = nil
 	// 查询通道
 	paychanptr := state.Channel(act.ChannelId)
 	if paychanptr == nil {
@@ -257,13 +322,43 @@ func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.Chai
 	// 计算差额
 	curheight := state.GetPendingBlockHeight()
 	// 计算利息
-	leftAmount, rightAmount := calculateChannelInterest(curheight, paychan)
+	leftAmount, rightAmount, haveinterest, e11 := calculateChannelInterest(curheight, paychan)
+	if e11 != nil {
+		return e11
+	}
 	// 减除余额（重新将金额放入通道）
-	DoSubBalanceFromChainState(state, paychan.LeftAddress, leftAmount)
-	DoSubBalanceFromChainState(state, paychan.RightAddress, rightAmount)
+	e = DoSubBalanceFromChainState(state, paychan.LeftAddress, *leftAmount)
+	if e != nil {
+		return e
+	}
+	e = DoSubBalanceFromChainState(state, paychan.RightAddress, *rightAmount)
+	if e != nil {
+		return e
+	}
 	// 恢复通道状态
 	paychan.IsClosed = fields.VarUint1(0) // 重新标记通道为开启状态
-	state.ChannelUpdate(act.ChannelId, paychan)
+	e = state.ChannelUpdate(act.ChannelId, paychan)
+	if e != nil {
+		return e
+	}
+	// total supply 统计
+	totalsupply, e2 := state.ReadTotalSupply()
+	if e2 != nil {
+		return e2
+	}
+	// 回退解锁的HAC
+	lockamt := paychanptr.LeftAmount.ToMei() + paychanptr.RightAmount.ToMei()
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedInChannel, lockamt)
+	// 回退通道利息统计
+	if haveinterest {
+		releaseamt := leftAmount.ToMei() + rightAmount.ToMei()
+		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfChannelInterest, releaseamt-lockamt)
+	}
+	// update total supply
+	e3 := state.UpdateSetTotalSupply(totalsupply)
+	if e3 != nil {
+		return e3
+	}
 	return nil
 }
 
@@ -277,23 +372,27 @@ func (act *Action_3_ClosePaymentChannel) IsBurning90PersentTxFees() bool {
 }
 
 // 计算通道利息
-func calculateChannelInterest(curheight uint64, paychan *stores.Channel) (fields.Amount, fields.Amount) {
+// bool 是否有利息
+func calculateChannelInterest(curheight uint64, paychan *stores.Channel) (*fields.Amount, *fields.Amount, bool, error) {
 	leftAmount := paychan.LeftAmount
 	rightAmount := paychan.RightAmount
-	// 增加利息计算，复利次数：约 8.68 天增加一次万分之一的复利，少于8天忽略不计
+	// 增加利息计算，复利次数：约 2500 个区块 8.68 天增加一次万分之一的复利，少于8天忽略不计，年复合利息约 0.42%
 	//a1, a2 := DoAppendCompoundInterest1Of10000By2500Height(&leftAmount, &rightAmount, insnum)
 	var insnum = (curheight - uint64(paychan.BelongHeight)) / 2500
-	var wfzn uint64 = 1 // 万分之一
+	var wfzn uint64 = 1 // 万分之一 1/10000
 	// 通过当前的区块高度，修改一次增发比例
 	if curheight > 200000 {
-		// 增加利息计算，复利次数：约 34 天增加一次千分之一的复利，少于34天忽略不计
+		// 增加利息计算，复利次数：约 10000 个区块 34 天增加一次千分之一的复利，少于34天忽略不计，年复合利息约 1.06%
 		insnum = (curheight - uint64(paychan.BelongHeight)) / 10000
-		wfzn = 10 // 千分之一
+		wfzn = 10 // 千分之一 10/10000
 	}
 	if insnum > 0 {
 		// 计算通道利息奖励
-		a1, a2 := DoAppendCompoundInterestProportionOfHeightV2(&leftAmount, &rightAmount, insnum, wfzn)
+		a1, a2, e := DoAppendCompoundInterestProportionOfHeightV2(&leftAmount, &rightAmount, insnum, wfzn)
+		if e != nil {
+			return nil, nil, false, e
+		}
 		leftAmount, rightAmount = *a1, *a2
 	}
-	return leftAmount, rightAmount
+	return &leftAmount, &rightAmount, insnum > 0, nil
 }

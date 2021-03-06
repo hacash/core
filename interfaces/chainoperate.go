@@ -30,6 +30,9 @@ type ChainStateOperation interface {
 	SetLastestDiamond(*stores.DiamondSmelt) error
 	ReadLastestDiamond() (*stores.DiamondSmelt, error)
 
+	UpdateSetTotalSupply(totalobj *stores.TotalSupply) error
+	ReadTotalSupply() (*stores.TotalSupply, error)
+
 	// store
 	BlockStore() BlockStore
 	SetBlockStore(BlockStore) error

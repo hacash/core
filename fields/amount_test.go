@@ -7,6 +7,14 @@ import (
 	"testing"
 )
 
+func Test_bbb1(t *testing.T) {
+
+	amt, _ := NewAmountFromFinString("2:248")
+
+	fmt.Println(amt.GetValue().String())
+
+}
+
 func Test_amt_cut(t *testing.T) {
 
 	bigbts := bytes.Repeat([]byte{255}, 9)
@@ -39,8 +47,8 @@ func Test_t2(t *testing.T) {
 	fmt.Println(amount.Serialize())
 	fmt.Println(amount.ToFinString())
 
-	new_amount, changeok, err := amount.EllipsisDecimalFor20SizeStore()
-	fmt.Println(new_amount, changeok, err)
+	new_amount, ischg, err := amount.EllipsisDecimalFor11SizeStore()
+	fmt.Println(new_amount, ischg, err)
 
 	if new_amount != nil {
 		fmt.Println(len(new_amount.Numeral))

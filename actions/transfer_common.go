@@ -53,15 +53,15 @@ func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 
 		return e2
 	}
 	//fmt.Println("EllipsisDecimalFor23SizeStore: ")
-	amtsub_1, ec1, ederr1 := amtsub.EllipsisDecimalFor11SizeStore()
-	amtadd_1, ec2, ederr2 := amtadd.EllipsisDecimalFor11SizeStore()
+	amtsub_1, ischg1, ederr1 := amtsub.EllipsisDecimalFor11SizeStore()
+	amtadd_1, ischg2, ederr2 := amtadd.EllipsisDecimalFor11SizeStore()
 	if ederr1 != nil {
 		return ederr1
 	}
 	if ederr2 != nil {
 		return ederr2
 	}
-	if ec1 || ec2 {
+	if ischg1 || ischg2 {
 		return fmt.Errorf("amount can not to store")
 	}
 	amtsub = amtsub_1
@@ -97,11 +97,11 @@ func DoAddBalanceFromChainState(state interfaces.ChainStateOperation, addr field
 	if e1 != nil {
 		return e1
 	}
-	amtsave, cgok, ec1 := amtnew.EllipsisDecimalFor11SizeStore()
+	amtsave, ischg, ec1 := amtnew.EllipsisDecimalFor11SizeStore()
 	if ec1 != nil {
 		return ec1
 	}
-	if cgok {
+	if ischg {
 		return fmt.Errorf("amount can not to store")
 	}
 	//addrrr, _ := base58check.Encode(addr)
@@ -133,11 +133,11 @@ func DoSubBalanceFromChainState(state interfaces.ChainStateOperation, addr field
 	if e1 != nil {
 		return e1
 	}
-	amtnew1, chok, ec1 := amtnew.EllipsisDecimalFor11SizeStore()
+	amtnew1, ischg, ec1 := amtnew.EllipsisDecimalFor11SizeStore()
 	if ec1 != nil {
 		return ec1
 	}
-	if chok {
+	if ischg {
 		return fmt.Errorf("amount can not to store")
 	}
 	//fmt.Println("amtnew1: " + amtnew1.ToFinString())
@@ -153,13 +153,14 @@ func DoSubBalanceFromChainState(state interfaces.ChainStateOperation, addr field
 /*************************************************************************/
 
 // 计算通道利息奖励 (amt1, amt2, 1, 0.001)
-func DoAppendCompoundInterestProportionOfHeightV2(amt1 *fields.Amount, amt2 *fields.Amount, caclnum uint64, wfzn uint64) (*fields.Amount, *fields.Amount) {
+// uint64 溢出 bug 导致 1BjbnHwh....MGRNS3f 地址余额计算错误
+func DoAppendCompoundInterestProportionOfHeightV2(amt1 *fields.Amount, amt2 *fields.Amount, caclnum uint64, wfzn uint64) (*fields.Amount, *fields.Amount, error) {
 	if caclnum == 0 {
 		//panic("insnum cannot be 0.")
-		return amt1, amt2
+		return amt1, amt2, nil
 	}
 	if len(amt1.Numeral) > 4 || len(amt2.Numeral) > 4 {
-		panic("amount numeral bytes too long.")
+		return nil, nil, fmt.Errorf("amount numeral bytes too long.")
 	}
 
 	amts := []*fields.Amount{amt1, amt2}
@@ -168,12 +169,14 @@ func DoAppendCompoundInterestProportionOfHeightV2(amt1 *fields.Amount, amt2 *fie
 	for i := 0; i < 2; i++ {
 		//fmt.Println("----------")
 		// amt
-		coinnum := new(big.Int).SetBytes(amts[i].Numeral).Uint64()
-		//fmt.Println(coinnum)
-		var mulnum uint64 = coinnum * 100000000
+		coinnum := new(big.Int).SetBytes(amts[i].Numeral)
+		coinnum = new(big.Int).Mul(coinnum, big.NewInt(100000000))
 		for a := uint64(0); a < caclnum; a++ {
-			mulnum = (mulnum * (10000 + wfzn) / 10000)
+			coinnum = new(big.Int).Mul(coinnum, big.NewInt((10000 + int64(wfzn))))
+			coinnum = new(big.Int).Div(coinnum, big.NewInt(10000))
 		}
+		//fmt.Println(".....")
+		mulnum := coinnum.Uint64()
 		//fmt.Println(mulnum)
 		mulnumint := int64(mulnum)
 		//fmt.Println(mulnumint)
@@ -197,14 +200,16 @@ func DoAppendCompoundInterestProportionOfHeightV2(amt1 *fields.Amount, amt2 *fie
 			coinnums[i] = newamt // 正常情况
 		} else {
 			coinnums[i] = amts[i] // 计算错误， 余额不变
+			// 返回错误
+			return nil, nil, fmt.Errorf("DoAppendCompoundInterestProportionOfHeightV2 error")
 		}
 	}
 
-	//fmt.Println("insnum: ", insnum)
+	//fmt.Println("caclnum: ", caclnum)
 	//fmt.Println(amts[0].ToFinString(), " => ", coinnums[0].ToFinString())
 	//fmt.Println(amts[1].ToFinString(), " => ", coinnums[1].ToFinString())
 
-	return coinnums[0], coinnums[1]
+	return coinnums[0], coinnums[1], nil
 
 }
 

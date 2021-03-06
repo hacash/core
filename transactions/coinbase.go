@@ -3,6 +3,7 @@ package transactions
 import (
 	"bytes"
 	"fmt"
+	"github.com/hacash/core/stores"
 	"math/big"
 
 	"github.com/hacash/core/actions"
@@ -250,6 +251,27 @@ func (trs *Transaction_0_Coinbase) RequestAddressBalance() ([][]byte, []big.Int,
 // 修改 / 恢复 状态数据库
 func (trs *Transaction_0_Coinbase) WriteinChainState(state interfaces.ChainStateOperation) error {
 
+	// total supply 统计
+	// reward
+	totalsupply, e2 := state.ReadTotalSupply()
+	if e2 != nil {
+		return e2
+	}
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBlockMinerReward, trs.Reward.ToMei())
+	// feeBurning
+	if trs.TotalFeeMinerReceived.Equal(&trs.TotalFeeUserPayed) == false {
+		// 有销毁
+		burnamt, e := trs.TotalFeeUserPayed.Sub(&trs.TotalFeeMinerReceived)
+		if e != nil {
+			return e
+		}
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningFee, burnamt.ToMei())
+	}
+	// update total supply
+	e3 := state.UpdateSetTotalSupply(totalsupply)
+	if e3 != nil {
+		return e3
+	}
 	// fmt.Printf("trs.TotalFee = %s\n", trs.TotalFee.ToFinString())
 	rwd_and_txfee, _ := trs.Reward.Add(&trs.TotalFeeMinerReceived)
 	// addr, _ := base58check.Encode(trs.Address)
@@ -258,6 +280,29 @@ func (trs *Transaction_0_Coinbase) WriteinChainState(state interfaces.ChainState
 }
 
 func (trs *Transaction_0_Coinbase) RecoverChainState(state interfaces.ChainStateOperation) error {
+
+	// total supply 统计
+	// reward
+	totalsupply, e2 := state.ReadTotalSupply()
+	if e2 != nil {
+		return e2
+	}
+	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBlockMinerReward, trs.Reward.ToMei())
+	// feeBurning
+	if trs.TotalFeeMinerReceived.Equal(&trs.TotalFeeUserPayed) == false {
+		// 有销毁
+		burnamt, e := trs.TotalFeeUserPayed.Sub(&trs.TotalFeeMinerReceived)
+		if e != nil {
+			return e
+		}
+		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBurningFee, burnamt.ToMei())
+	}
+	// update total supply
+	e3 := state.UpdateSetTotalSupply(totalsupply)
+	if e3 != nil {
+		return e3
+	}
+	// 地址余额
 	rwd_and_txfee, _ := trs.Reward.Add(&trs.TotalFeeMinerReceived)
 	return actions.DoSubBalanceFromChainState(state, trs.Address, *rwd_and_txfee)
 }

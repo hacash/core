@@ -196,11 +196,8 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	if lockweek > 0 {
 
 		// 线性锁仓（周）
-		// 自己创建的 lockbls key 不允许创建这样的的前面全为0的key!!!
-		lockbleid := bytes.Repeat([]byte{0}, 4) // key size = 18
-		binary.BigEndian.PutUint32(lockbleid, uint32(act.TransferNo))
-		lockbleidbytes := bytes.NewBuffer(bytes.Repeat([]byte{0}, stores.LockblsIdLength-4))
-		lockbleidbytes.Write(lockbleid)
+		lkblsid := gainLockblsIdByBtcMove(uint32(act.TransferNo))
+
 		// 存储
 		lockbls := stores.NewEmptyLockbls(act.OriginAddress)
 		lockbls.EffectBlockHeight = fields.VarUint5(state.GetPendingBlockHeight())
@@ -228,7 +225,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		}
 		// stores
 		// 创建线性锁仓
-		state.LockblsCreate(lockbleidbytes.Bytes(), lockbls)
+		state.LockblsCreate(lkblsid, lockbls)
 
 	} else {
 
@@ -237,6 +234,21 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		if e1 != nil {
 			return e1
 		}
+
+		// 直接加到解锁的统计
+		totalsupply, e2 := state.ReadTotalSupply()
+		if e2 != nil {
+			return e2
+		}
+		// 累加解锁的HAC
+		addamt := totaladdhacamt.ToMei()
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed, addamt)
+		// update total supply
+		e3 := state.UpdateSetTotalSupply(totalsupply)
+		if e3 != nil {
+			return e3
+		}
+
 	}
 
 	// 发行 btc 到地址
@@ -250,13 +262,45 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStat
 	}
 	// 回退 hac
 	hacmeibig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount))
-	addhacamt, err := fields.NewAmountByBigIntWithUnit(hacmeibig, 248)
-	if err != nil {
-		return err
+	// 锁仓时间按最先一枚计算
+	// 判断是否线性锁仓至 lockbls
+	lockweek, weekhei := act.moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
+	if weekhei > 17000000 {
+		return fmt.Errorf("moveBtcLockWeekByIdx weekhei overflow.")
 	}
-	e1 := DoSubBalanceFromChainState(state, act.OriginAddress, *addhacamt)
-	if e1 != nil {
-		return e1
+	if lockweek > 0 {
+
+		// 回退锁仓
+		lkblsid := gainLockblsIdByBtcMove(uint32(act.TransferNo))
+		// 删除线性锁仓
+		state.LockblsDelete(lkblsid)
+
+	} else {
+
+		// 回退 HAC 增发
+		addhacamt, err := fields.NewAmountByBigIntWithUnit(hacmeibig, 248)
+		if err != nil {
+			return err
+		}
+		e1 := DoSubBalanceFromChainState(state, act.OriginAddress, *addhacamt)
+		if e1 != nil {
+			return e1
+		}
+
+		// 回退解锁的统计
+		totalsupply, e2 := state.ReadTotalSupply()
+		if e2 != nil {
+			return e2
+		}
+		// 减去解锁的HAC
+		addamt := addhacamt.ToMei()
+		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed, addamt)
+		// update total supply
+		e3 := state.UpdateSetTotalSupply(totalsupply)
+		if e3 != nil {
+			return e3
+		}
+
 	}
 	// 扣除 btc
 	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位 聪
@@ -320,4 +364,17 @@ func (act Action_7_SatoshiGenesis) moveBtcLockWeekByIdx(btcidx int64) (int64, in
 		}
 	}
 	return lockweek, oneweekhei
+}
+
+///////////////////////////
+
+func gainLockblsIdByBtcMove(btcTransferNo uint32) []byte {
+
+	// 自己创建的 lockbls key 不允许创建这样的的前面全为0的key!!!
+	lockbleid := bytes.Repeat([]byte{0}, 4) // key size = 18
+	binary.BigEndian.PutUint32(lockbleid, uint32(btcTransferNo))
+	lockbleidbytes := bytes.NewBuffer(bytes.Repeat([]byte{0}, stores.LockblsIdLength-4))
+	lockbleidbytes.Write(lockbleid)
+	lkblsid := lockbleidbytes.Bytes()
+	return lkblsid
 }

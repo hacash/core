@@ -60,7 +60,7 @@ func NewAmountByBigInt(bignum *big.Int) (*Amount, error) {
 	strlen := len(longnumstrary)
 	unit := 0
 	for i := strlen - 1; i >= 0; i-- {
-		if string(longnumstrary[i]) == "0" {
+		if longnumstrary[i] == '0' {
 			unit++
 			if unit == 255 {
 				break

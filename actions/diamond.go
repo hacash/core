@@ -234,6 +234,18 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		return e5
 	}
 
+	// total supply 统计
+	totalsupply, e2 := state.ReadTotalSupply()
+	if e2 != nil {
+		return e2
+	}
+	totalsupply.Set(stores.TotalSupplyStoreTypeOfDiamond, float64(act.Number))
+	// update total supply
+	e7 := state.UpdateSetTotalSupply(totalsupply)
+	if e7 != nil {
+		return e7
+	}
+
 	//fmt.Println("Action_4_DiamondCreate:", diamondstore.Number, string(diamondstore.Diamond), diamondstore.MinerAddress.ToReadable())
 	//fmt.Print(string(diamondstore.Diamond)+",")
 
@@ -272,6 +284,18 @@ func (act *Action_4_DiamondCreate) RecoverChainState(state interfaces.ChainState
 	if e9 != nil {
 		return e9
 	}
+	// total supply 统计
+	totalsupply, e2 := state.ReadTotalSupply()
+	if e2 != nil {
+		return e2
+	}
+	totalsupply.Set(stores.TotalSupplyStoreTypeOfDiamond, float64(uint32(act.Number)-1))
+	// update total supply
+	e7 := state.UpdateSetTotalSupply(totalsupply)
+	if e7 != nil {
+		return e7
+	}
+
 	return nil
 }
 
