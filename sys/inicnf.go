@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const BlockChainStateDatabaseVersion = 2
+
 type Inicnf struct {
 	inicnf.File
 
@@ -61,7 +63,7 @@ func (i *Inicnf) MustDataDir() string {
 		dir = os.Getenv("HOME") + string([]byte(dir)[1:])
 	}
 	dir = AbsDir(dir)
-	dir = path.Join(dir, fmt.Sprintf("v%d", 1))
+	dir = path.Join(dir, fmt.Sprintf("v%d", BlockChainStateDatabaseVersion))
 	i.mustDataDir = dir
 	fmt.Println("[Inicnf] Must data dir: \"" + dir + "\"")
 	return dir
