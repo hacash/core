@@ -9,21 +9,22 @@ import (
 
 const (
 	typeSizeMax   int = 20
-	typeSizeValid int = 6 // 当前可用的
+	typeSizeValid int = 7 // 当前可用的
 
 	// 钻石
-	TotalSupplyStoreTypeOfDiamond uint8 = 0 // 已挖掘出的钻石数量
+	TotalSupplyStoreTypeOfDiamond         uint8 = 0 // 已挖掘出的钻石数量
+	TotalSupplyStoreTypeOfTransferBitcoin uint8 = 1 // 已成功转移过来的 BTC 枚数
 
 	// 流通数量
-	TotalSupplyStoreTypeOfBlockMinerReward               uint8 = 1 // 区块奖励HAC累计
-	TotalSupplyStoreTypeOfChannelInterest                uint8 = 2 // 通道利息HAC累计
-	TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed uint8 = 3 // 比特币转移增发成功解锁的HAC累计
+	TotalSupplyStoreTypeOfBlockMinerReward               uint8 = 2 // 区块奖励HAC累计
+	TotalSupplyStoreTypeOfChannelInterest                uint8 = 3 // 通道利息HAC累计
+	TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed uint8 = 4 // 比特币转移增发成功解锁的HAC累计
 
 	// 数据统计
-	TotalSupplyStoreTypeOfLocatedInChannel uint8 = 4 // 当前有效锁定在通道内的HAC数量
+	TotalSupplyStoreTypeOfLocatedInChannel uint8 = 5 // 当前有效锁定在通道内的HAC数量
 
 	// 销毁
-	TotalSupplyStoreTypeOfBurningFee uint8 = 5 // 手续费燃烧销毁HAC累计
+	TotalSupplyStoreTypeOfBurningFee uint8 = 6 // 手续费燃烧销毁HAC累计
 )
 
 type TotalSupply struct {

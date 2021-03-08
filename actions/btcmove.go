@@ -174,6 +174,14 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		}
 		// 检查成功！！！
 	}
+	// 直接加到解锁的统计
+	totalsupply, e2 := state.ReadTotalSupply()
+	if e2 != nil {
+		return e2
+	}
+
+	// 统计比特币转移数量
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfTransferBitcoin, float64(act.BitcoinQuantity))
 
 	// 记录 标记 已完成的 转移增发
 	stoerr := state.SaveMoveBTCBelongTxHash(uint32(act.TransferNo), act.belong_trs.Hash())
@@ -235,20 +243,16 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 			return e1
 		}
 
-		// 直接加到解锁的统计
-		totalsupply, e2 := state.ReadTotalSupply()
-		if e2 != nil {
-			return e2
-		}
 		// 累加解锁的HAC
 		addamt := totaladdhacamt.ToMei()
 		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed, addamt)
-		// update total supply
-		e3 := state.UpdateSetTotalSupply(totalsupply)
-		if e3 != nil {
-			return e3
-		}
 
+	}
+
+	// update total supply
+	e3 := state.UpdateSetTotalSupply(totalsupply)
+	if e3 != nil {
+		return e3
 	}
 
 	// 发行 btc 到地址
@@ -260,6 +264,16 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStat
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
+
+	// 回退解锁的统计
+	totalsupply, e2 := state.ReadTotalSupply()
+	if e2 != nil {
+		return e2
+	}
+
+	// 回退比特币转移数量
+	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfTransferBitcoin, float64(act.BitcoinQuantity))
+
 	// 回退 hac
 	hacmeibig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount))
 	// 锁仓时间按最先一枚计算
@@ -286,22 +300,18 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStat
 		if e1 != nil {
 			return e1
 		}
-
-		// 回退解锁的统计
-		totalsupply, e2 := state.ReadTotalSupply()
-		if e2 != nil {
-			return e2
-		}
 		// 减去解锁的HAC
 		addamt := addhacamt.ToMei()
 		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed, addamt)
-		// update total supply
-		e3 := state.UpdateSetTotalSupply(totalsupply)
-		if e3 != nil {
-			return e3
-		}
 
 	}
+
+	// update total supply
+	e3 := state.UpdateSetTotalSupply(totalsupply)
+	if e3 != nil {
+		return e3
+	}
+
 	// 扣除 btc
 	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位 聪
 	return DoSubSatoshiFromChainState(state, act.OriginAddress, fields.VarUint8(satBTC))
