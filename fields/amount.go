@@ -514,6 +514,18 @@ func (bill *Amount) LessThan(amt *Amount) bool {
 }
 
 // compare
+func (bill *Amount) MoreThan(amt *Amount) bool {
+	add1 := bill.GetValue()
+	add2 := amt.GetValue()
+	res := add1.Cmp(add2)
+	if res == 1 {
+		return true
+	} else {
+		return false
+	}
+}
+
+// compare
 func (bill *Amount) Equal(amt *Amount) bool {
 	//
 	if bill.Unit != amt.Unit ||
