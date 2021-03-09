@@ -161,7 +161,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		}
 		var ttHac int64 = 0
 		for i := act.BitcoinEffectiveGenesis + 1; i <= act.BitcoinEffectiveGenesis+act.BitcoinQuantity; i++ {
-			ttHac += act.moveBtcCoinRewardByIdx(int64(i))
+			ttHac += moveBtcCoinRewardByIdx(int64(i)) // 累加总共HAC奖励
 		}
 		if ttHac != int64(act.AdditionalTotalHacAmount) {
 			// 增发的 HAC 数量不对
@@ -197,7 +197,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	}
 	// 锁仓时间按最先一枚计算
 	// 判断是否线性锁仓至 lockbls
-	lockweek, weekhei := act.moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
+	lockweek, weekhei := moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
 	if weekhei > 17000000 {
 		return fmt.Errorf("moveBtcLockWeekByIdx weekhei overflow.")
 	}
@@ -278,7 +278,7 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStat
 	hacmeibig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount))
 	// 锁仓时间按最先一枚计算
 	// 判断是否线性锁仓至 lockbls
-	lockweek, weekhei := act.moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
+	lockweek, weekhei := moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
 	if weekhei > 17000000 {
 		return fmt.Errorf("moveBtcLockWeekByIdx weekhei overflow.")
 	}
@@ -327,34 +327,36 @@ func (act *Action_7_SatoshiGenesis) IsBurning90PersentTxFees() bool {
 	return false
 }
 
-func (act Action_7_SatoshiGenesis) powf2(n int) int64 {
+//////////////////////////////
+
+func powf2(n int) int64 {
 	res := math.Pow(2.0, float64(n))
 	return int64(res)
 }
 
 // 第几枚BTC增发HAC数量（单位：枚）
-func (act Action_7_SatoshiGenesis) moveBtcCoinRewardByIdx(btcidx int64) int64 {
+func moveBtcCoinRewardByIdx(btcidx int64) int64 {
 	var lvn = 21
 	if btcidx == 1 {
-		return act.powf2(lvn - 1)
+		return powf2(lvn - 1)
 	}
-	if btcidx > act.powf2(lvn)-1 {
+	if btcidx > powf2(lvn)-1 {
 		return 1 // 最后始终增发一枚
 	}
 	var tarlv int
 	for i := 0; i < lvn; i++ {
-		l := act.powf2(i) - 1
-		r := act.powf2(i+1) - 1
+		l := powf2(i) - 1
+		r := powf2(i+1) - 1
 		if btcidx > l && btcidx <= r {
 			tarlv = i + 1
 			break
 		}
 	}
-	return act.powf2(lvn - tarlv)
+	return powf2(lvn - tarlv)
 }
 
 // 第几枚BTC锁仓信息
-func (act Action_7_SatoshiGenesis) moveBtcLockWeekByIdx(btcidx int64) (int64, int64) {
+func moveBtcLockWeekByIdx(btcidx int64) (int64, int64) {
 	var oneweekhei int64 = 2000   // 2000 / 288 = 6.9444天
 	var mostlockweek int64 = 1024 // 1024周约等于 20 年
 	if btcidx == 1 {
@@ -363,8 +365,8 @@ func (act Action_7_SatoshiGenesis) moveBtcLockWeekByIdx(btcidx int64) (int64, in
 	var lvn = 21
 	var lockweek = mostlockweek
 	for i := 0; i < lvn; i++ {
-		l := act.powf2(i) - 1
-		r := act.powf2(i+1) - 1
+		l := powf2(i) - 1
+		r := powf2(i+1) - 1
 		if btcidx > l && btcidx <= r {
 			break
 		}
