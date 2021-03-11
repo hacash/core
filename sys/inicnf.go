@@ -65,7 +65,7 @@ func (i *Inicnf) MustDataDir() string {
 	dir = AbsDir(dir)
 	dir = path.Join(dir, fmt.Sprintf("v%d", BlockChainStateDatabaseVersion))
 	i.mustDataDir = dir
-	fmt.Println("[Inicnf] Must data dir: \"" + dir + "\"")
+	fmt.Println("[Inicnf] Block chain state data dir: \"" + dir + "\"")
 	return dir
 }
 
