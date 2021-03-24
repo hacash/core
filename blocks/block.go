@@ -155,9 +155,22 @@ func PickMrklListForCoinbaseTxModify(transactions []interfaces.Transaction) []fi
 		hxlist = append(hxlist, transactions[1].HashWithFee())
 		return hxlist
 	}
-
-	// TODO: hashMerge
-
+	// 计算哈希关系树
+	hashs := make([]fields.Hash, trslen)
+	for i := 0; i < trslen; i++ {
+		hashs[i] = transactions[i].HashWithFee()
+	}
+	for true {
+		lhx := len(hashs)
+		if lhx == 1 {
+			break
+		}
+		if lhx >= 2 {
+			hxlist = append(hxlist, hashs[1]) // 获取关系哈希
+		}
+		hashs = hashMerge(hashs) // 两两归并
+	}
+	// ok
 	return hxlist
 
 }
