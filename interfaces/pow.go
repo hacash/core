@@ -26,5 +26,6 @@ type PowWorker interface {
 	InitStart() error  // 初始化
 	CloseUploadPower() // 关闭算力统计
 	Excavate(miningStuffCh chan PowWorkerMiningStuffItem, resultCh chan PowWorkerMiningStuffItem)
-	NextMining(nextheight uint64) // stop all to do next
+	NextMining(nextheight uint64) // to do next
+	StopAllMining()               // stop all
 }
