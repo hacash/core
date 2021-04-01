@@ -55,6 +55,7 @@ type Block interface {
 	SetTransactions([]Transaction)
 	SetMrklRoot(fields.Hash)
 	SetNonce(uint32)
+	SetNonceByte(nonce []byte)
 
 	// verify signatures
 	VerifyNeedSigns() (bool, error)
@@ -65,6 +66,7 @@ type Block interface {
 	GetHeight() uint64
 	GetDifficulty() uint32
 	GetNonce() uint32
+	GetNonceByte() []byte
 	GetPrevHash() fields.Hash
 	GetTimestamp() uint64
 	GetTransactionCount() uint32

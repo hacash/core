@@ -2,6 +2,7 @@ package blocks
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -345,6 +346,11 @@ func (block *Block_v1) GetDifficulty() uint32 {
 func (block *Block_v1) GetNonce() uint32 {
 	return uint32(block.Nonce)
 }
+func (block *Block_v1) GetNonceByte() []byte {
+	nnbts := make([]byte, 4)
+	binary.BigEndian.PutUint32(nnbts, uint32(block.Nonce))
+	return nnbts
+}
 func (block *Block_v1) GetTransactionCount() uint32 {
 	return uint32(block.TransactionCount)
 }
@@ -361,6 +367,9 @@ func (block *Block_v1) SetMrklRoot(root fields.Hash) {
 }
 func (block *Block_v1) SetNonce(n uint32) {
 	block.Nonce = fields.VarUint4(n)
+}
+func (block *Block_v1) SetNonceByte(nonce []byte) {
+	block.Nonce = fields.VarUint4(binary.BigEndian.Uint32(nonce))
 }
 
 func (block *Block_v1) SetTransactions(trs []interfaces.Transaction) {
