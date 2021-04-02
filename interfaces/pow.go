@@ -24,7 +24,7 @@ type PowWorkerMiningStuffItem interface {
 // 执行端
 type PowWorker interface {
 	InitStart() error              // 初始化
-	CloseUploadPower()             // 关闭算力统计
+	CloseUploadHashrate()          // 关闭算力统计
 	SetPowDevice(device PowDevice) // 设置挖矿设备端
 	Excavate(miningStuffCh chan PowWorkerMiningStuffItem, resultCh chan PowWorkerMiningStuffItem)
 	DoNextMining(nextheight uint64) // to do next
@@ -33,8 +33,8 @@ type PowWorker interface {
 
 // 设备端
 type PowDevice interface {
-	Init() error                                                                                                                            // 初始化
-	CloseUploadPower()                                                                                                                      // 关闭算力统计
-	GetSuperveneWide() int                                                                                                                  // 并发数
-	DoMining(blockHeight uint64, uploadpower bool, stopmark *byte, tarhashvalue []byte, blockheadmeta [][]byte) (bool, int, []byte, []byte) // 执行一次挖矿
+	Init() error                                                                                                                               // 初始化
+	CloseUploadHashrate()                                                                                                                      // 关闭算力统计
+	GetSuperveneWide() int                                                                                                                     // 并发数
+	DoMining(blockHeight uint64, reporthashrate bool, stopmark *byte, tarhashvalue []byte, blockheadmeta [][]byte) (bool, int, []byte, []byte) // 执行一次挖矿
 }
