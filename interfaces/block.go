@@ -65,6 +65,7 @@ type Block interface {
 	GetTransactions() []Transaction
 	GetHeight() uint64
 	GetDifficulty() uint32
+	GetWitnessStage() uint16
 	GetNonce() uint32
 	GetNonceByte() []byte
 	GetPrevHash() fields.Hash

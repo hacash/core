@@ -2,6 +2,7 @@ package transactions
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"github.com/hacash/core/stores"
 	"math/big"
@@ -45,6 +46,36 @@ func NewTransaction_0_CoinbaseV1() *Transaction_0_Coinbase {
 		MinerNonce:   make([]byte, 32),
 		WitnessCount: 0,
 	}
+}
+
+func (trs *Transaction_0_Coinbase) Describe(isUnitMei, isForMining bool) map[string]interface{} {
+	cbinfo := make(map[string]interface{})
+	cbinfo["address"] = trs.Address.ToReadable()
+	cbinfo["reward"] = trs.Reward.ToMeiOrFinString(isUnitMei)
+	msg, _ := trs.Message.Serialize()
+	if isForMining {
+		cbinfo["message_hex"] = hex.EncodeToString(msg)
+	}
+	cbinfo["message"] = trs.Message
+	bodyVersion := uint8(trs.BodyVersion)
+	cbinfo["body_version"] = bodyVersion
+	if bodyVersion >= 1 {
+		if !isForMining {
+			cbinfo["miner_nonce"] = trs.MinerNonce.ToHex() // 不需要
+		}
+		wcnum := int(trs.WitnessCount)
+		cbinfo["witness_count"] = wcnum
+		wtnum := make([]int, wcnum)
+		wtsig := make([]string, wcnum)
+		for i := 0; i < wcnum; i++ {
+			wtnum[i] = int(trs.WitnessSigs[i])
+			sigbts, _ := trs.Witnesses[i].Serialize()
+			wtsig[i] = hex.EncodeToString(sigbts)
+		}
+		cbinfo["witness_sigs"] = wtnum
+		cbinfo["witnesses"] = wtsig
+	}
+	return cbinfo
 }
 
 func (trs *Transaction_0_Coinbase) Copy() interfaces.Transaction {

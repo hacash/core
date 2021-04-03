@@ -17,10 +17,11 @@ import (
 func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, amt fields.Amount) error {
 
 	//fmt.Println("addr1:", addr1.ToReadable(), "addr2:", addr2.ToReadable(), "amt:", amt.ToFinString())
-
-	if bytes.Compare(addr1, addr2) == 0 {
+	if state.GetPendingBlockHeight() < 200000 && bytes.Compare(addr1, addr2) == 0 {
+		// 高度 20万 之后，不允许出现自己转给自己的数额大于可用余额的情况！
 		return nil // 可以自己转给自己，不改变状态，白费手续费
 	}
+	// 判断余额是否充足
 	bls1 := state.Balance(addr1)
 	if bls1 == nil {
 		// test
@@ -35,6 +36,11 @@ func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 
 		//fmt.Println("[balance not enough]", "addr1: ", addr1.ToReadable(), "amt: " + amt.ToFinString(), "amt1: " + amt1.ToFinString())
 		return fmt.Errorf("address %s balance %s not enough， need %s.", addr1.ToReadable(), amt1.ToFinString(), amt.ToFinString())
 	}
+	// 判断是否为自己转给自己
+	if bytes.Compare(addr1, addr2) == 0 {
+		return nil // 可以自己转给自己，不改变状态，白费手续费
+	}
+	// 查询收款方余额
 	bls2 := state.Balance(addr2)
 	if bls2 == nil {
 		bls2 = stores.NewEmptyBalance() // create balance store

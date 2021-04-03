@@ -343,6 +343,9 @@ func (block *Block_v1) GetPrevHash() fields.Hash {
 func (block *Block_v1) GetDifficulty() uint32 {
 	return uint32(block.Difficulty)
 }
+func (block *Block_v1) GetWitnessStage() uint16 {
+	return uint16(block.WitnessStage)
+}
 func (block *Block_v1) GetNonce() uint32 {
 	return uint32(block.Nonce)
 }
