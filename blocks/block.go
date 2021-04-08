@@ -58,6 +58,9 @@ func ParseBlockHead(buf []byte, seek uint32) (interfaces.Block, uint32, error) {
 	return blk, mv, err
 }
 func ParseExcludeTransactions(buf []byte, seek uint32) (interfaces.Block, uint32, error) {
+	if buf == nil || len(buf) < 1 {
+		return nil, 0, fmt.Errorf("buf is too short")
+	}
 	version := uint8(buf[seek])
 	var blk, ee = NewBlockByVersion(version)
 	if ee != nil {
