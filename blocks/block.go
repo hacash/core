@@ -53,6 +53,7 @@ func ParseBlockHead(buf []byte, seek uint32) (interfaces.Block, uint32, error) {
 	var blk, ee = NewBlockByVersion(version)
 	if ee != nil {
 		fmt.Println("Block not Find. Version:", version)
+		return nil, 0, ee
 	}
 	var mv, err = blk.ParseHead(buf, seek+1)
 	return blk, mv, err
@@ -65,6 +66,7 @@ func ParseExcludeTransactions(buf []byte, seek uint32) (interfaces.Block, uint32
 	var blk, ee = NewBlockByVersion(version)
 	if ee != nil {
 		fmt.Println("Block not Find. Version:", version)
+		return nil, 0, ee
 	}
 	var mv, err = blk.ParseExcludeTransactions(buf, seek+1)
 	return blk, mv, err
