@@ -2,6 +2,7 @@ package fields
 
 import (
 	"bytes"
+	"fmt"
 )
 
 //////////////////////////////////////////////////////////////////
@@ -63,6 +64,9 @@ func (this *Multisign) Serialize() ([]byte, error) {
 }
 
 func (this *Multisign) Parse(buf []byte, seek uint32) (uint32, error) {
+	if int(seek)+2 > len(buf) {
+		return 0, fmt.Errorf("buf len too short.")
+	}
 	this.CondElem = buf[seek]
 	this.CondBase = buf[seek+1]
 	seek = seek + 2
@@ -82,6 +86,9 @@ func (this *Multisign) Parse(buf []byte, seek uint32) (uint32, error) {
 		seek += b.Size()
 	}
 	for i := 0; i < length1; i++ {
+		if int(seek) >= len(buf) {
+			return 0, fmt.Errorf("buf len too short.")
+		}
 		this.SignatureInds[i] = buf[seek]
 		seek += 1
 	}

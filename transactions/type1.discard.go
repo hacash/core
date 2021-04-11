@@ -135,20 +135,31 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) SerializeNoSignEx(nofee bool) ([]b
 }
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Parse(buf []byte, seek uint32) (uint32, error) {
-	m1, _ := trs.Timestamp.Parse(buf, seek)
-	m2, _ := trs.Address.Parse(buf, m1)
-	m3, _ := trs.Fee.Parse(buf, m2)
-	m4, _ := trs.ActionCount.Parse(buf, m3)
+	m1, e := trs.Timestamp.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	m2, e := trs.Address.Parse(buf, m1)
+	if e != nil {
+		return 0, e
+	}
+	m3, e := trs.Fee.Parse(buf, m2)
+	if e != nil {
+		return 0, e
+	}
+	m4, e := trs.ActionCount.Parse(buf, m3)
+	if e != nil {
+		return 0, e
+	}
 	iseek := m4
 	for i := 0; i < int(trs.ActionCount); i++ {
 		var act, sk, err = actions.ParseAction(buf, iseek)
-		trs.Actions = append(trs.Actions, act)
-		iseek = sk
 		if err != nil {
 			return 0, err
 		}
+		trs.Actions = append(trs.Actions, act)
+		iseek = sk
 	}
-	var e error
 	iseek, e = trs.SignCount.Parse(buf, iseek)
 	if e != nil {
 		return 0, e
