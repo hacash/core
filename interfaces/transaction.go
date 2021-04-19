@@ -18,13 +18,14 @@ type Transaction interface {
 	HashWithFee() fields.Hash // inclued fee amount
 
 	// Addresses that need to verify signatures
-	RequestSignAddresses([]fields.Address) ([]fields.Address, error)
+	RequestSignAddresses(appends []fields.Address, dropfeeaddr bool) ([]fields.Address, error)
 
 	CleanSigns()
 	// fill signatures
 	FillNeedSigns(map[string][]byte, []fields.Address) error
 	// verify signatures
 	VerifyNeedSigns([]fields.Address) (bool, error)
+	VerifyTargetSign(reqaddr fields.Address) (bool, error)
 
 	// change chain state
 	WriteinChainState(ChainStateOperation) error

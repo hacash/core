@@ -244,7 +244,7 @@ func (trs *Transaction_2_Simple) AppendAction(action interfaces.Action) error {
 }
 
 // 从 actions 拿出需要签名的地址
-func (trs *Transaction_2_Simple) RequestSignAddresses(reqs []fields.Address) ([]fields.Address, error) {
+func (trs *Transaction_2_Simple) RequestSignAddresses(reqs []fields.Address, dropfeeaddr bool) ([]fields.Address, error) {
 	if !trs.Address.IsValid() {
 		return nil, fmt.Errorf("Master Address is InValid ")
 	}
@@ -263,7 +263,11 @@ func (trs *Transaction_2_Simple) RequestSignAddresses(reqs []fields.Address) ([]
 	// 去重
 	results := make([]fields.Address, 0, len(requests))
 	has := make(map[string]bool)
-	has[string(trs.Address)] = true // 费用方去除
+	if dropfeeaddr {
+		has[string(trs.Address)] = true // 费用方/主地址去除
+	} else {
+		results = append(results, trs.Address) // 加上主地址
+	}
 	for i := 0; i < len(requests); i++ {
 		strkey := string(requests[i])
 		if _, ok := has[strkey]; !ok {
@@ -285,7 +289,7 @@ func (trs *Transaction_2_Simple) CleanSigns() {
 func (trs *Transaction_2_Simple) FillNeedSigns(addrPrivateKeys map[string][]byte, appendReqs []fields.Address) error {
 	hashWithFee := trs.HashWithFeeFresh()
 	hashNoFee := trs.Hash()
-	requests, e0 := trs.RequestSignAddresses(appendReqs)
+	requests, e0 := trs.RequestSignAddresses(appendReqs, true)
 	if e0 != nil {
 		return e0
 	}
@@ -349,11 +353,36 @@ func (trs *Transaction_2_Simple) addOneSign(hash []byte, addrPrivates map[string
 	return nil
 }
 
+// 单独验证其中一个签名
+func (trs *Transaction_2_Simple) VerifyTargetSign(reqaddr fields.Address) (bool, error) {
+	tarhash := trs.Hash()
+	hashWithFee := trs.HashWithFee()
+	isMainAddr := trs.Address.Equal(reqaddr)
+	if isMainAddr {
+		tarhash = hashWithFee
+	}
+	// 开始判断
+	allSigns := make(map[string]fields.Sign)
+	for i := 0; i < len(trs.Signs); i++ {
+		sig := trs.Signs[i]
+		addrbts := account.NewAddressFromPublicKey([]byte{0}, sig.PublicKey)
+		addr := fields.Address(addrbts)
+		allSigns[string(addr)] = sig
+		if addr.Equal(reqaddr) {
+			ok, e := verifyOneSignature(allSigns, trs.Address, tarhash)
+			return ok, e // 验证结果
+		}
+	}
+	// 验证失败
+	return false, nil
+}
+
 // 验证需要的签名
+// reqs 附加的另外要验证的
 func (trs *Transaction_2_Simple) VerifyNeedSigns(reqs []fields.Address) (bool, error) {
-	hash := trs.HashWithFeeFresh()
+	hash := trs.HashWithFee()
 	hashNoFee := trs.Hash()
-	requests, e0 := trs.RequestSignAddresses(reqs)
+	requests, e0 := trs.RequestSignAddresses(reqs, true)
 	if e0 != nil {
 		return false, e0
 	}

@@ -246,7 +246,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) AppendAction(action interfaces.Act
 }
 
 // 从 actions 拿出需要签名的地址
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RequestSignAddresses([]fields.Address) ([]fields.Address, error) {
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RequestSignAddresses(appends []fields.Address, dropfeeaddr bool) ([]fields.Address, error) {
 	if !trs.Address.IsValid() {
 		return nil, fmt.Errorf("Master Address is InValid ")
 	}
@@ -258,7 +258,11 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RequestSignAddresses([]fields.Addr
 	// 去重
 	results := make([][]byte, len(requests))
 	has := make(map[string]bool)
-	has[string(trs.Address)] = true // 费用方去除
+	if dropfeeaddr {
+		has[string(trs.Address)] = true // 费用方、主地址去除
+	} else {
+		results = append(results, trs.Address) // 加上主地址
+	}
 	for i := 0; i < len(requests); i++ {
 		strkey := string(requests[i])
 		if _, ok := has[strkey]; !ok {
@@ -279,7 +283,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) CleanSigns() {
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) FillNeedSigns(addrPrivates map[string][]byte, reqs []fields.Address) error {
 	// hash := trs.HashWithFeeFresh()
 	hashNoFee := trs.Hash()
-	requests, e0 := trs.RequestSignAddresses(nil)
+	requests, e0 := trs.RequestSignAddresses(nil, true)
 	if e0 != nil {
 		return e0
 	}
@@ -326,7 +330,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyNeedSigns(requests []fields.
 	//hash := trs.HashWithFeeFresh()
 	hashNoFee := trs.Hash()
 	if requests == nil {
-		reqs, e0 := trs.RequestSignAddresses(nil)
+		reqs, e0 := trs.RequestSignAddresses(nil, true)
 		if e0 != nil {
 			return false, e0
 		}
@@ -352,6 +356,27 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyNeedSigns(requests []fields.
 	}
 	// 验证成功
 	return true, nil
+}
+
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyTargetSign(reqaddr fields.Address) (bool, error) {
+
+	hashNoFee := trs.Hash()
+	// 开始判断
+	// 验证主签名 /// BUG ///
+	allSigns := make(map[string]fields.Sign)
+	for i := 0; i < len(trs.Signs); i++ {
+		sig := trs.Signs[i]
+		addrbts := account.NewAddressFromPublicKey([]byte{0}, sig.PublicKey)
+		addr := fields.Address(addrbts)
+		allSigns[string(addr)] = sig
+		if addr.Equal(reqaddr) {
+			// /// BUG ///
+			ok, e := verifyOneSignature_not_use_with_bug(allSigns, trs.Address, hashNoFee)
+			return ok, e // 验证结果
+		}
+	}
+	// 验证失败
+	return false, nil
 }
 
 func verifyOneSignature_not_use_with_bug(allSigns map[string]fields.Sign, address fields.Address, hash []byte) (bool, error) {

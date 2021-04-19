@@ -96,6 +96,14 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	if sto != nil {
 		return fmt.Errorf("Payment Channel Id <%s> already exist.", hex.EncodeToString(act.ChannelId))
 	}
+	// 通道id合法性
+	if len(act.ChannelId) != 16 || act.ChannelId[0] == 0 || act.ChannelId[15] == 0 {
+		return fmt.Errorf("Payment Channel Id <%s> format error.", hex.EncodeToString(act.ChannelId))
+	}
+	// 两个地址不能相同
+	if act.LeftAddress.Equal(act.RightAddress) {
+		return fmt.Errorf("Left address cannot equal with right address.")
+	}
 	// 检查金额储存的位数
 	labt, _ := act.LeftAmount.Serialize()
 	rabt, _ := act.RightAmount.Serialize()

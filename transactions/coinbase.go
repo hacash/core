@@ -256,8 +256,13 @@ func (trs *Transaction_0_Coinbase) Hash() fields.Hash {
 
 // 从 actions 拿出需要签名的地址
 
-func (trs *Transaction_0_Coinbase) RequestSignAddresses([]fields.Address) ([]fields.Address, error) {
+func (trs *Transaction_0_Coinbase) RequestSignAddresses([]fields.Address, bool) ([]fields.Address, error) {
+	panic("never call Transaction_0_Coinbase.RequestSignAddresses")
 	return []fields.Address{}, nil
+}
+func (trs *Transaction_0_Coinbase) VerifyTargetSign(fields.Address) (bool, error) {
+	panic("never call Transaction_0_Coinbase.VerifyTargetSign")
+	return true, nil
 }
 
 // 清除所有签名
