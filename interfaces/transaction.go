@@ -1,6 +1,9 @@
 package interfaces
 
-import "github.com/hacash/core/fields"
+import (
+	"github.com/hacash/core/account"
+	"github.com/hacash/core/fields"
+)
 
 type Transaction interface {
 	Copy() Transaction
@@ -20,9 +23,13 @@ type Transaction interface {
 	// Addresses that need to verify signatures
 	RequestSignAddresses(appends []fields.Address, dropfeeaddr bool) ([]fields.Address, error)
 
+	// sign
 	CleanSigns()
+	GetSigns() []fields.Sign // 返回所有签名数据
+	SetSigns([]fields.Sign)  // 设置签名数据
 	// fill signatures
-	FillNeedSigns(map[string][]byte, []fields.Address) error
+	FillTargetSign(signacc *account.Account) error           // 指定账户签名
+	FillNeedSigns(map[string][]byte, []fields.Address) error // 全部签名
 	// verify signatures
 	VerifyNeedSigns([]fields.Address) (bool, error)
 	VerifyTargetSign(reqaddr fields.Address) (bool, error)

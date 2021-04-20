@@ -286,9 +286,38 @@ func (trs *Transaction_2_Simple) CleanSigns() {
 	trs.Signs = []fields.Sign{}
 }
 
-// 填充签名
+// 返回所有签名
+func (trs *Transaction_2_Simple) GetSigns() []fields.Sign {
+	return trs.Signs
+}
+
+// 设置签名数据
+func (trs *Transaction_2_Simple) SetSigns(allsigns []fields.Sign) {
+	num := len(allsigns)
+	if num > 65535 {
+		panic("Sign is too much.")
+	}
+	trs.SignCount = fields.VarUint2(num)
+	trs.Signs = make([]fields.Sign, 0)
+	trs.Signs = append(trs.Signs, allsigns...) // copy
+}
+
+// 填充单个需要的签名
+func (trs *Transaction_2_Simple) FillTargetSign(signacc *account.Account) error {
+	signaddr := fields.Address(signacc.Address)
+	tarhash := trs.Hash()
+	if signaddr.Equal(trs.Address) {
+		tarhash = trs.HashWithFee() // 主地址使用hash不同
+	}
+	addrPrivateKeys := map[string][]byte{}
+	addrPrivateKeys[string(signacc.Address)] = signacc.PrivateKey
+	// 执行一个签名
+	return trs.addOneSign(tarhash, addrPrivateKeys, signacc.Address)
+}
+
+// 填充全部需要的签名
 func (trs *Transaction_2_Simple) FillNeedSigns(addrPrivateKeys map[string][]byte, appendReqs []fields.Address) error {
-	hashWithFee := trs.HashWithFeeFresh()
+	hashWithFee := trs.HashWithFee()
 	hashNoFee := trs.Hash()
 	requests, e0 := trs.RequestSignAddresses(appendReqs, true)
 	if e0 != nil {
@@ -338,6 +367,7 @@ func (trs *Transaction_2_Simple) addOneSign(hash []byte, addrPrivates map[string
 		Signature: signature.Serialize64(),
 	}
 	if alreadly > -1 {
+		// replace
 		trs.Signs[alreadly] = sigObjSave
 	} else {
 		// append
@@ -357,10 +387,9 @@ func (trs *Transaction_2_Simple) addOneSign(hash []byte, addrPrivates map[string
 // 单独验证其中一个签名
 func (trs *Transaction_2_Simple) VerifyTargetSign(reqaddr fields.Address) (bool, error) {
 	tarhash := trs.Hash()
-	hashWithFee := trs.HashWithFee()
 	isMainAddr := trs.Address.Equal(reqaddr)
 	if isMainAddr {
-		tarhash = hashWithFee
+		tarhash = trs.HashWithFee()
 	}
 	// 开始判断
 	allSigns := make(map[string]fields.Sign)
@@ -368,9 +397,9 @@ func (trs *Transaction_2_Simple) VerifyTargetSign(reqaddr fields.Address) (bool,
 		sig := trs.Signs[i]
 		addrbts := account.NewAddressFromPublicKey([]byte{0}, sig.PublicKey)
 		addr := fields.Address(addrbts)
-		allSigns[string(addr)] = sig
 		if addr.Equal(reqaddr) {
-			ok, e := verifyOneSignature(allSigns, trs.Address, tarhash)
+			allSigns[string(reqaddr)] = sig
+			ok, e := verifyOneSignature(allSigns, reqaddr, tarhash)
 			return ok, e // 验证结果
 		}
 	}

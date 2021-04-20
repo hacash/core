@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/hacash/core/account"
 	"github.com/hacash/core/stores"
 	"math/big"
 
@@ -267,6 +268,22 @@ func (trs *Transaction_0_Coinbase) VerifyTargetSign(fields.Address) (bool, error
 
 // 清除所有签名
 func (trs *Transaction_0_Coinbase) CleanSigns() {
+	panic("cannot CleanSigns for Transaction_0_Coinbase")
+}
+
+// 返回所有签名
+func (trs *Transaction_0_Coinbase) GetSigns() []fields.Sign {
+	panic("cannot GetSigns for Transaction_0_Coinbase")
+}
+
+// 设置签名
+func (trs *Transaction_0_Coinbase) SetSigns([]fields.Sign) {
+	panic("cannot SetSigns for Transaction_0_Coinbase")
+}
+
+// 填充全部需要的签名
+func (trs *Transaction_0_Coinbase) FillTargetSign(*account.Account) error {
+	panic("cannot FillTargetSign for Transaction_0_Coinbase")
 }
 
 // 填充签名

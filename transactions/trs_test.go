@@ -13,20 +13,20 @@ func Test_alltx(t *testing.T) {
 
 	// 全类别交易 测试
 	feeamt, _ := fields.NewAmountFromFinString("ㄜ1234:246")
-	mainaddr, _ := fields.CheckReadableAddress("1AVRuFXNFi3rdMrPH4hdqSgFrEBnWisWaS")
+	mainaddr, _ := fields.CheckReadableAddress("1MzNY1oA3kfgYi75zquj3SRUPYztzXHzK9")
 	tx, _ := NewEmptyTransaction_2_Simple(*mainaddr)
 	tx.Fee = *feeamt
 	tx.Timestamp = 1618839281
 
 	// 1 普通转账
-	addr1, _ := fields.CheckReadableAddress("1EDUeK8NAjrgYhgDFv9NJecn8dNyJJsu3y")
+	addr1, _ := fields.CheckReadableAddress("1AVRuFXNFi3rdMrPH4hdqSgFrEBnWisWaS")
 	amt1, _ := fields.NewAmountFromFinString("ㄜ500:248")
 	act1 := actions.NewAction_1_SimpleTransfer(*addr1, amt1)
 	tx.AppendAction(act1)
 
 	// 2 开启通道
-	addr2_1, _ := fields.CheckReadableAddress("1AVRuFXNFi3rdMrPH4hdqSgFrEBnWisWaS")
-	addr2_2, _ := fields.CheckReadableAddress("12ReveJGzDHZJKWikCuFqCFR27ioP7JjbE")
+	addr2_1, _ := fields.CheckReadableAddress("1EDUeK8NAjrgYhgDFv9NJecn8dNyJJsu3y")
+	addr2_2, _ := fields.CheckReadableAddress("1MzNY1oA3kfgYi75zquj3SRUPYztzXHzK9")
 	channelid, _ := hex.DecodeString("277095b321f3ffe7e80f3dd328e2f338")
 	amt2_1, _ := fields.NewAmountFromFinString("ㄜ500:248")
 	amt2_2, _ := fields.NewAmountFromFinString("ㄜ239:248")

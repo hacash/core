@@ -280,6 +280,31 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) CleanSigns() {
 	trs.Signs = []fields.Sign{}
 }
 
+// 返回所有签名
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetSigns() []fields.Sign {
+	return trs.Signs
+}
+
+// 设置签名
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) SetSigns(allsigns []fields.Sign) {
+	num := len(allsigns)
+	if num > 65535 {
+		panic("Sign is too much.")
+	}
+	trs.SignCount = fields.VarUint2(num)
+	trs.Signs = make([]fields.Sign, 0)
+	trs.Signs = append(trs.Signs, allsigns...) // copy
+}
+
+// 填充全部需要的签名
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) FillTargetSign(signacc *account.Account) error {
+	hashNoFee := trs.Hash()
+	addrPrivateKeys := map[string][]byte{}
+	addrPrivateKeys[string(signacc.Address)] = signacc.PrivateKey
+	// 执行一个签名 // BUG !!! 主地址和其他地址错误的都使用 hashNoFee !!!
+	return trs.addOneSign(hashNoFee, addrPrivateKeys, signacc.Address)
+}
+
 // 填充签名
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) FillNeedSigns(addrPrivates map[string][]byte, reqs []fields.Address) error {
 	// hash := trs.HashWithFeeFresh()
@@ -369,10 +394,10 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyTargetSign(reqaddr fields.Ad
 		sig := trs.Signs[i]
 		addrbts := account.NewAddressFromPublicKey([]byte{0}, sig.PublicKey)
 		addr := fields.Address(addrbts)
-		allSigns[string(addr)] = sig
 		if addr.Equal(reqaddr) {
 			// /// BUG ///
-			ok, e := verifyOneSignature_not_use_with_bug(allSigns, trs.Address, hashNoFee)
+			allSigns[string(reqaddr)] = sig
+			ok, e := verifyOneSignature_not_use_with_bug(allSigns, reqaddr, hashNoFee)
 			return ok, e // 验证结果
 		}
 	}
