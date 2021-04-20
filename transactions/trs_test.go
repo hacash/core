@@ -24,6 +24,23 @@ func Test_alltx(t *testing.T) {
 	act1 := actions.NewAction_1_SimpleTransfer(*addr1, amt1)
 	tx.AppendAction(act1)
 
+	// 2 开启通道
+	addr2_1, _ := fields.CheckReadableAddress("1AVRuFXNFi3rdMrPH4hdqSgFrEBnWisWaS")
+	addr2_2, _ := fields.CheckReadableAddress("12ReveJGzDHZJKWikCuFqCFR27ioP7JjbE")
+	channelid, _ := hex.DecodeString("277095b321f3ffe7e80f3dd328e2f338")
+	amt2_1, _ := fields.NewAmountFromFinString("ㄜ500:248")
+	amt2_2, _ := fields.NewAmountFromFinString("ㄜ239:248")
+	act2 := actions.Action_2_OpenPaymentChannel{
+		ChannelId:    channelid,
+		LeftAddress:  *addr2_1,
+		LeftAmount:   *amt2_1,
+		RightAddress: *addr2_2,
+		RightAmount:  *amt2_2,
+	}
+	tx.AppendAction(&act2)
+
+	// 3 关闭通道
+
 	// 打印
 	fmt.Println("tx hash:", tx.Hash().ToHex())
 	fmt.Println("tx hash with fee:", tx.HashWithFee().ToHex())

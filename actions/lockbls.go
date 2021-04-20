@@ -106,7 +106,7 @@ func (elm *Action_9_LockblsCreate) Parse(buf []byte, seek uint32) (uint32, error
 
 func (act *Action_9_LockblsCreate) RequestSignAddresses() []fields.Address {
 	return []fields.Address{
-		act.PaymentAddress, // 主账户需要签名
+		act.PaymentAddress, // 锁仓支付账户需要签名
 	}
 }
 
@@ -276,6 +276,7 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfaces.ChainSta
 		panic("Action belong to transaction not be nil !")
 	}
 
+	// 因为只能提取到指定地址，所以任何人都能提取，不需要锁仓地址的签名
 	// 查询
 	lockbls := state.Lockbls(act.LockblsId)
 	if lockbls == nil {

@@ -594,3 +594,12 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) SetBelongTransaction(t interf
 func (act *Action_6_OutfeeQuantityDiamondTransfer) IsBurning90PersentTxFees() bool {
 	return false
 }
+
+// 获取区块钻石的名称列表
+func (elm *Action_6_OutfeeQuantityDiamondTransfer) GetDiamondNamesSplitByComma() string {
+	var names = make([]string, len(elm.Diamonds))
+	for i, v := range elm.Diamonds {
+		names[i] = string(v)
+	}
+	return strings.Join(names, ",")
+}

@@ -263,11 +263,12 @@ func (trs *Transaction_2_Simple) RequestSignAddresses(reqs []fields.Address, dro
 	// 去重
 	results := make([]fields.Address, 0, len(requests))
 	has := make(map[string]bool)
-	if dropfeeaddr {
-		has[string(trs.Address)] = true // 费用方/主地址去除
-	} else {
-		results = append(results, trs.Address) // 加上主地址
+	if !dropfeeaddr {
+		// 不去掉，加上主地址
+		results = append(results, trs.Address)
 	}
+	// 费用方/主地址  去重
+	has[string(trs.Address)] = true
 	for i := 0; i < len(requests); i++ {
 		strkey := string(requests[i])
 		if _, ok := has[strkey]; !ok {
