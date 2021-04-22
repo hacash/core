@@ -455,7 +455,7 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) Size() uint32 {
 		elm.FromAddress.Size() +
 		elm.ToAddress.Size() +
 		elm.DiamondCount.Size() +
-		uint32(len(elm.Diamonds))*6
+		uint32(elm.DiamondCount)*6 // 每个钻石长6位
 }
 
 // json api

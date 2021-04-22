@@ -182,6 +182,18 @@ func (bill *Amount) IsPositive() bool {
 	return true
 }
 
+// 判断必须小于零，且不能为零
+func (bill *Amount) IsNegative() bool {
+	if bill.Unit == 0 {
+		return false
+	}
+	if bill.Dist >= 0 {
+		return false
+	}
+	// 满足要求
+	return true
+}
+
 func (bill *Amount) ToMeiOrFinString(usemei bool) string {
 	if usemei {
 		return bill.ToMeiString()

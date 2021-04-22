@@ -31,7 +31,11 @@ func (elm *Action_2_OpenPaymentChannel) Kind() uint16 {
 }
 
 func (elm *Action_2_OpenPaymentChannel) Size() uint32 {
-	return 2 + elm.ChannelId.Size() + ((elm.LeftAddress.Size() + elm.LeftAmount.Size()) * 2)
+	return 2 + elm.ChannelId.Size() +
+		elm.LeftAddress.Size() +
+		elm.LeftAmount.Size() +
+		elm.RightAddress.Size() +
+		elm.RightAmount.Size()
 }
 
 // json api
@@ -262,11 +266,12 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 	}
 
 	// 写入状态
-	return closePaymentChannelWriteinChainState(state, act.ChannelId, paychan)
+	// 使用存入的金额计算通道利息
+	return closePaymentChannelWriteinChainState(state, act.ChannelId, paychan, nil, nil)
 }
 
 func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.ChainStateOperation) error {
-	return closePaymentChannelRecoverChainState(state, act.ChannelId)
+	return closePaymentChannelRecoverChainState(state, act.ChannelId, nil, nil)
 }
 
 func (elm *Action_3_ClosePaymentChannel) SetBelongTransaction(t interfaces.Transaction) {
@@ -280,47 +285,55 @@ func (act *Action_3_ClosePaymentChannel) IsBurning90PersentTxFees() bool {
 
 /////////////////////////////////////////////////////////////////
 
-// 关闭、结算 支付通道（资金分配不变的情况）
-type Action_12_ClosePaymentChannelByAddress struct {
+// 关闭、结算 支付通道（资金分配改变）
+type Action_12_ClosePaymentChannelBySetupAmount struct {
 	ChannelId    fields.Bytes16 // 通道id
 	LeftAddress  fields.Address // 左侧账户
+	LeftAmount   fields.Amount  // 左侧最终分配金额
 	RightAddress fields.Address // 右侧账户
+	RightAmount  fields.Amount  // 右侧最终分配金额
 
 	// data ptr
 	belone_trs interfaces.Transaction
 }
 
-func (elm *Action_12_ClosePaymentChannelByAddress) Kind() uint16 {
+func (elm *Action_12_ClosePaymentChannelBySetupAmount) Kind() uint16 {
 	return 12
 }
 
-func (elm *Action_12_ClosePaymentChannelByAddress) Size() uint32 {
+func (elm *Action_12_ClosePaymentChannelBySetupAmount) Size() uint32 {
 	return 2 + elm.ChannelId.Size() +
 		elm.LeftAddress.Size() +
-		elm.RightAddress.Size()
+		elm.LeftAmount.Size() +
+		elm.RightAddress.Size() +
+		elm.RightAmount.Size()
 }
 
 // json api
-func (elm *Action_12_ClosePaymentChannelByAddress) Describe() map[string]interface{} {
+func (elm *Action_12_ClosePaymentChannelBySetupAmount) Describe() map[string]interface{} {
 	var data = map[string]interface{}{}
 	return data
 }
 
-func (elm *Action_12_ClosePaymentChannelByAddress) Serialize() ([]byte, error) {
+func (elm *Action_12_ClosePaymentChannelBySetupAmount) Serialize() ([]byte, error) {
 	var kindByte = make([]byte, 2)
 	binary.BigEndian.PutUint16(kindByte, elm.Kind())
 	var bt1, _ = elm.ChannelId.Serialize()
 	var bt2, _ = elm.LeftAddress.Serialize()
-	var bt3, _ = elm.RightAddress.Serialize()
+	var bt3, _ = elm.LeftAmount.Serialize()
+	var bt4, _ = elm.RightAddress.Serialize()
+	var bt5, _ = elm.RightAmount.Serialize()
 	var buffer bytes.Buffer
 	buffer.Write(kindByte)
 	buffer.Write(bt1)
 	buffer.Write(bt2)
 	buffer.Write(bt3)
+	buffer.Write(bt4)
+	buffer.Write(bt5)
 	return buffer.Bytes(), nil
 }
 
-func (elm *Action_12_ClosePaymentChannelByAddress) Parse(buf []byte, seek uint32) (uint32, error) {
+func (elm *Action_12_ClosePaymentChannelBySetupAmount) Parse(buf []byte, seek uint32) (uint32, error) {
 	var e error
 	seek, e = elm.ChannelId.Parse(buf, seek)
 	if e != nil {
@@ -330,14 +343,22 @@ func (elm *Action_12_ClosePaymentChannelByAddress) Parse(buf []byte, seek uint32
 	if e != nil {
 		return 0, e
 	}
+	seek, e = elm.LeftAmount.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
 	seek, e = elm.RightAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.RightAmount.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
 	return seek, nil
 }
 
-func (elm *Action_12_ClosePaymentChannelByAddress) RequestSignAddresses() []fields.Address {
+func (elm *Action_12_ClosePaymentChannelBySetupAmount) RequestSignAddresses() []fields.Address {
 	// 必须签名
 	return []fields.Address{
 		elm.LeftAddress,
@@ -345,7 +366,7 @@ func (elm *Action_12_ClosePaymentChannelByAddress) RequestSignAddresses() []fiel
 	}
 }
 
-func (act *Action_12_ClosePaymentChannelByAddress) WriteinChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_12_ClosePaymentChannelBySetupAmount) WriteinChainState(state interfaces.ChainStateOperation) error {
 	if act.belone_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -360,27 +381,45 @@ func (act *Action_12_ClosePaymentChannelByAddress) WriteinChainState(state inter
 		// 地址检查失败
 		return fmt.Errorf("Payment Channel <%s> address not match.")
 	}
+	// 分配金额可以为零但不能为负
+	if act.LeftAmount.IsNegative() || act.RightAmount.IsNegative() {
+		return fmt.Errorf("Payment channel distribution amount cannot be negative.")
+	}
+	// 检查分配金额是否与存入金额相等
+	tt1, e1 := act.LeftAmount.Add(&act.RightAmount)
+	if e1 != nil {
+		return e1
+	}
+	tt2, e2 := paychan.LeftAmount.Add(&paychan.RightAmount)
+	if e2 != nil {
+		return e2
+	}
+	if tt1.Equal(tt2) == false {
+		// 不相等
+		return fmt.Errorf("Payment channel distribution amount must equal with lock in.")
+	}
 	// 写入状态
-	return closePaymentChannelWriteinChainState(state, act.ChannelId, paychan)
+	return closePaymentChannelWriteinChainState(state, act.ChannelId,
+		paychan, &act.LeftAmount, &act.RightAmount)
 }
 
-func (act *Action_12_ClosePaymentChannelByAddress) RecoverChainState(state interfaces.ChainStateOperation) error {
-	return closePaymentChannelRecoverChainState(state, act.ChannelId)
+func (act *Action_12_ClosePaymentChannelBySetupAmount) RecoverChainState(state interfaces.ChainStateOperation) error {
+	return closePaymentChannelRecoverChainState(state, act.ChannelId, &act.LeftAmount, &act.RightAmount)
 }
 
-func (elm *Action_12_ClosePaymentChannelByAddress) SetBelongTransaction(t interfaces.Transaction) {
+func (elm *Action_12_ClosePaymentChannelBySetupAmount) SetBelongTransaction(t interfaces.Transaction) {
 	elm.belone_trs = t
 }
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用
-func (act *Action_12_ClosePaymentChannelByAddress) IsBurning90PersentTxFees() bool {
+func (act *Action_12_ClosePaymentChannelBySetupAmount) IsBurning90PersentTxFees() bool {
 	return false
 }
 
 //////////////////////////////////////////////////////////
 
 // 关闭通道状态写入
-func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, channelId []byte, paychan *stores.Channel) error {
+func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, channelId []byte, paychan *stores.Channel, newLeftAmt *fields.Amount, newRightAmt *fields.Amount) error {
 	var e error
 	// 判断通道已经关闭
 	if paychan == nil {
@@ -390,10 +429,16 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 		return fmt.Errorf("Payment Channel <%s> is be closed.", hex.EncodeToString(channelId))
 	}
 	// 通过时间计算利息
+	if newLeftAmt == nil || newRightAmt == nil {
+		// 自动使用存入的金额计算利息
+		newLeftAmt = &paychan.LeftAmount
+		newRightAmt = &paychan.RightAmount
+	}
 	// 计算获得当前的区块高度
 	//var curheight uint64 = 1
 	curheight := state.GetPendingBlockHeight()
-	leftAmount, rightAmount, haveinterest, e11 := calculateChannelInterest(curheight, paychan)
+	leftAmount, rightAmount, haveinterest, e11 := calculateChannelInterest(
+		curheight, uint64(paychan.BelongHeight), newLeftAmt, newRightAmt)
 	if e11 != nil {
 		return e11
 	}
@@ -443,7 +488,7 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 }
 
 // 关闭通道状态回退
-func closePaymentChannelRecoverChainState(state interfaces.ChainStateOperation, channelId []byte) error {
+func closePaymentChannelRecoverChainState(state interfaces.ChainStateOperation, channelId []byte, newLeftAmt *fields.Amount, newRightAmt *fields.Amount) error {
 
 	var e error = nil
 	// 查询通道
@@ -456,10 +501,15 @@ func closePaymentChannelRecoverChainState(state interfaces.ChainStateOperation, 
 	if paychan.IsClosed != 0 {
 		panic(fmt.Errorf("Payment Channel <%s> is be closed.", hex.EncodeToString(channelId)))
 	}
+	if newLeftAmt == nil || newRightAmt == nil {
+		// 自动使用存入的金额计算利息
+		newLeftAmt = &paychan.LeftAmount
+		newRightAmt = &paychan.RightAmount
+	}
 	// 计算差额
 	curheight := state.GetPendingBlockHeight()
 	// 计算利息
-	leftAmount, rightAmount, haveinterest, e11 := calculateChannelInterest(curheight, paychan)
+	leftAmount, rightAmount, haveinterest, e11 := calculateChannelInterest(curheight, uint64(paychan.BelongHeight), newLeftAmt, newRightAmt)
 	if e11 != nil {
 		return e11
 	}
@@ -501,26 +551,26 @@ func closePaymentChannelRecoverChainState(state interfaces.ChainStateOperation, 
 
 // 计算通道利息
 // bool 是否有利息
-func calculateChannelInterest(curheight uint64, paychan *stores.Channel) (*fields.Amount, *fields.Amount, bool, error) {
-	leftAmount := paychan.LeftAmount
-	rightAmount := paychan.RightAmount
+func calculateChannelInterest(curheight uint64, openBelongHeight uint64, leftAmount *fields.Amount, rightAmount *fields.Amount) (*fields.Amount, *fields.Amount, bool, error) {
 	// 增加利息计算，复利次数：约 2500 个区块 8.68 天增加一次万分之一的复利，少于8天忽略不计，年复合利息约 0.42%
 	//a1, a2 := DoAppendCompoundInterest1Of10000By2500Height(&leftAmount, &rightAmount, insnum)
-	var insnum = (curheight - uint64(paychan.BelongHeight)) / 2500
+	var insnum = (curheight - openBelongHeight) / 2500
 	var wfzn uint64 = 1 // 万分之一 1/10000
 	// 通过当前的区块高度，修改一次增发比例
 	if curheight > 200000 {
 		// 增加利息计算，复利次数：约 10000 个区块 34 天增加一次千分之一的复利，少于34天忽略不计，年复合利息约 1.06%
-		insnum = (curheight - uint64(paychan.BelongHeight)) / 10000
+		insnum = (curheight - openBelongHeight) / 10000
 		wfzn = 10 // 千分之一 10/10000
 	}
 	if insnum > 0 {
 		// 计算通道利息奖励
-		a1, a2, e := DoAppendCompoundInterestProportionOfHeightV2(&leftAmount, &rightAmount, insnum, wfzn)
+		a1, a2, e := DoAppendCompoundInterestProportionOfHeightV2(leftAmount, rightAmount, insnum, wfzn)
 		if e != nil {
 			return nil, nil, false, e
 		}
-		leftAmount, rightAmount = *a1, *a2
+		// 加上了利息
+		return a1, a2, true, nil
 	}
-	return &leftAmount, &rightAmount, insnum > 0, nil
+	// 没有利息
+	return leftAmount, rightAmount, false, nil
 }
