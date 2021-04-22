@@ -61,7 +61,7 @@ func GetAccountByPrivateKeyOrPassword(password string) *Account {
 
 func genAccountByPrivateKey(private btcec.PrivateKey) *Account {
 	compressedPublic := private.PubKey().SerializeCompressed()
-	addr := NewAddressFromPublicKey([]byte{0}, compressedPublic)
+	addr := NewAddressFromPublicKeyV0(compressedPublic)
 	readable := NewAddressReadableFromAddress(addr)
 	return &Account{
 		AddressReadable: readable,

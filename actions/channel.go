@@ -240,27 +240,154 @@ func (elm *Action_3_ClosePaymentChannel) RequestSignAddresses() []fields.Address
 }
 
 func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.ChainStateOperation) error {
-	var e error = nil
 	if act.belone_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
 	// 查询通道
-	paychanptr := state.Channel(act.ChannelId)
-	if paychanptr == nil {
+	paychan := state.Channel(act.ChannelId)
+	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
-	paychan := paychanptr
 	// 判断通道已经关闭
 	if paychan.IsClosed > 0 {
 		return fmt.Errorf("Payment Channel <%s> is be closed.", hex.EncodeToString(act.ChannelId))
 	}
-	// 检查两个账户的签名
-	signok, e1 := act.belone_trs.VerifyNeedSigns([]fields.Address{paychan.LeftAddress, paychan.RightAddress})
+	// 检查两个账户的签名 // 仅仅验证这两个地址
+	signok, e1 := act.belone_trs.VerifyTargetSigns([]fields.Address{paychan.LeftAddress, paychan.RightAddress})
 	if e1 != nil {
 		return e1
 	}
 	if !signok { // 签名检查失败
 		return fmt.Errorf("Payment Channel <%s> address signature verify fail.", hex.EncodeToString(act.ChannelId))
+	}
+
+	// 写入状态
+	return closePaymentChannelWriteinChainState(state, act.ChannelId, paychan)
+}
+
+func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.ChainStateOperation) error {
+	return closePaymentChannelRecoverChainState(state, act.ChannelId)
+}
+
+func (elm *Action_3_ClosePaymentChannel) SetBelongTransaction(t interfaces.Transaction) {
+	elm.belone_trs = t
+}
+
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_3_ClosePaymentChannel) IsBurning90PersentTxFees() bool {
+	return false
+}
+
+/////////////////////////////////////////////////////////////////
+
+// 关闭、结算 支付通道（资金分配不变的情况）
+type Action_12_ClosePaymentChannelByAddress struct {
+	ChannelId    fields.Bytes16 // 通道id
+	LeftAddress  fields.Address // 左侧账户
+	RightAddress fields.Address // 右侧账户
+
+	// data ptr
+	belone_trs interfaces.Transaction
+}
+
+func (elm *Action_12_ClosePaymentChannelByAddress) Kind() uint16 {
+	return 12
+}
+
+func (elm *Action_12_ClosePaymentChannelByAddress) Size() uint32 {
+	return 2 + elm.ChannelId.Size() +
+		elm.LeftAddress.Size() +
+		elm.RightAddress.Size()
+}
+
+// json api
+func (elm *Action_12_ClosePaymentChannelByAddress) Describe() map[string]interface{} {
+	var data = map[string]interface{}{}
+	return data
+}
+
+func (elm *Action_12_ClosePaymentChannelByAddress) Serialize() ([]byte, error) {
+	var kindByte = make([]byte, 2)
+	binary.BigEndian.PutUint16(kindByte, elm.Kind())
+	var bt1, _ = elm.ChannelId.Serialize()
+	var bt2, _ = elm.LeftAddress.Serialize()
+	var bt3, _ = elm.RightAddress.Serialize()
+	var buffer bytes.Buffer
+	buffer.Write(kindByte)
+	buffer.Write(bt1)
+	buffer.Write(bt2)
+	buffer.Write(bt3)
+	return buffer.Bytes(), nil
+}
+
+func (elm *Action_12_ClosePaymentChannelByAddress) Parse(buf []byte, seek uint32) (uint32, error) {
+	var e error
+	seek, e = elm.ChannelId.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.LeftAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.RightAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	return seek, nil
+}
+
+func (elm *Action_12_ClosePaymentChannelByAddress) RequestSignAddresses() []fields.Address {
+	// 必须签名
+	return []fields.Address{
+		elm.LeftAddress,
+		elm.RightAddress,
+	}
+}
+
+func (act *Action_12_ClosePaymentChannelByAddress) WriteinChainState(state interfaces.ChainStateOperation) error {
+	if act.belone_trs == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+	// 查询通道
+	paychan := state.Channel(act.ChannelId)
+	if paychan == nil {
+		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
+	}
+	// 检查两个账户是否匹配
+	if paychan.LeftAddress.Equal(act.LeftAddress) == false ||
+		paychan.RightAddress.Equal(act.RightAddress) == false {
+		// 地址检查失败
+		return fmt.Errorf("Payment Channel <%s> address not match.")
+	}
+	// 写入状态
+	return closePaymentChannelWriteinChainState(state, act.ChannelId, paychan)
+}
+
+func (act *Action_12_ClosePaymentChannelByAddress) RecoverChainState(state interfaces.ChainStateOperation) error {
+	return closePaymentChannelRecoverChainState(state, act.ChannelId)
+}
+
+func (elm *Action_12_ClosePaymentChannelByAddress) SetBelongTransaction(t interfaces.Transaction) {
+	elm.belone_trs = t
+}
+
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_12_ClosePaymentChannelByAddress) IsBurning90PersentTxFees() bool {
+	return false
+}
+
+//////////////////////////////////////////////////////////
+
+// 关闭通道状态写入
+func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, channelId []byte, paychan *stores.Channel) error {
+	var e error
+	// 判断通道已经关闭
+	if paychan == nil {
+		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(channelId))
+	}
+	if paychan.IsClosed > 0 {
+		return fmt.Errorf("Payment Channel <%s> is be closed.", hex.EncodeToString(channelId))
 	}
 	// 通过时间计算利息
 	// 计算获得当前的区块高度
@@ -281,7 +408,7 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 	}
 	// 暂时保留通道用于数据回退
 	paychan.IsClosed = fields.VarUint1(1) // 标记通道已经关闭了
-	e = state.ChannelUpdate(act.ChannelId, paychan)
+	e = state.ChannelUpdate(channelId, paychan)
 	if e != nil {
 		return e
 	}
@@ -292,7 +419,7 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 		return e2
 	}
 	// 减少解锁的HAC
-	lockamt := paychanptr.LeftAmount.ToMei() + paychanptr.RightAmount.ToMei()
+	lockamt := paychan.LeftAmount.ToMei() + paychan.RightAmount.ToMei()
 	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfLocatedInChannel, lockamt)
 	// 增加通道利息统计
 	if haveinterest {
@@ -312,20 +439,22 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 		return e3
 	}
 	return nil
+
 }
 
-func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.ChainStateOperation) error {
+// 关闭通道状态回退
+func closePaymentChannelRecoverChainState(state interfaces.ChainStateOperation, channelId []byte) error {
+
 	var e error = nil
 	// 查询通道
-	paychanptr := state.Channel(act.ChannelId)
-	if paychanptr == nil {
+	paychan := state.Channel(channelId)
+	if paychan == nil {
 		// 通道必须被保存，才能被回退
-		panic(fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId)))
+		panic(fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(channelId)))
 	}
-	paychan := paychanptr
 	// 判断通道必须是已经关闭的状态
 	if paychan.IsClosed != 0 {
-		panic(fmt.Errorf("Payment Channel <%s> is be closed.", hex.EncodeToString(act.ChannelId)))
+		panic(fmt.Errorf("Payment Channel <%s> is be closed.", hex.EncodeToString(channelId)))
 	}
 	// 计算差额
 	curheight := state.GetPendingBlockHeight()
@@ -345,7 +474,7 @@ func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.Chai
 	}
 	// 恢复通道状态
 	paychan.IsClosed = fields.VarUint1(0) // 重新标记通道为开启状态
-	e = state.ChannelUpdate(act.ChannelId, paychan)
+	e = state.ChannelUpdate(channelId, paychan)
 	if e != nil {
 		return e
 	}
@@ -355,7 +484,7 @@ func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.Chai
 		return e2
 	}
 	// 回退解锁的HAC
-	lockamt := paychanptr.LeftAmount.ToMei() + paychanptr.RightAmount.ToMei()
+	lockamt := paychan.LeftAmount.ToMei() + paychan.RightAmount.ToMei()
 	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedInChannel, lockamt)
 	// 回退通道利息统计
 	if haveinterest {
@@ -368,15 +497,6 @@ func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.Chai
 		return e3
 	}
 	return nil
-}
-
-func (elm *Action_3_ClosePaymentChannel) SetBelongTransaction(t interfaces.Transaction) {
-	elm.belone_trs = t
-}
-
-// burning fees  // 是否销毁本笔交易的 90% 的交易费用
-func (act *Action_3_ClosePaymentChannel) IsBurning90PersentTxFees() bool {
-	return false
 }
 
 // 计算通道利息

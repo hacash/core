@@ -352,20 +352,21 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) addOneSign(hash []byte, addrPrivat
 }
 
 // 验证需要的签名
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyNeedSigns(requests []fields.Address) (bool, error) {
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyAllNeedSigns() (bool, error) {
 	//hash := trs.HashWithFeeFresh()
 	hashNoFee := trs.Hash()
-	if requests == nil {
-		reqs, e0 := trs.RequestSignAddresses(nil, true)
-		if e0 != nil {
-			return false, e0
-		}
-		requests = reqs
+	// 验证所有需要验证的签名
+	requests, e := trs.RequestSignAddresses(nil, true)
+	if e != nil {
+		return false, e
+	}
+	if requests == nil || len(requests) == 0 {
+		return true, nil // 什么都不验证，直接通过
 	}
 	allSigns := make(map[string]fields.Sign)
 	for i := 0; i < len(trs.Signs); i++ {
 		sig := trs.Signs[i]
-		addr := account.NewAddressFromPublicKey([]byte{0}, sig.PublicKey)
+		addr := account.NewAddressFromPublicKeyV0(sig.PublicKey)
 		allSigns[string(addr)] = sig
 	}
 	// 验证主签名 /// BUG ///
@@ -384,25 +385,34 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyNeedSigns(requests []fields.
 	return true, nil
 }
 
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyTargetSign(reqaddr fields.Address) (bool, error) {
-
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyTargetSigns(reqaddrs []fields.Address) (bool, error) {
 	hashNoFee := trs.Hash()
 	// 开始判断
 	// 验证主签名 /// BUG ///
 	allSigns := make(map[string]fields.Sign)
 	for i := 0; i < len(trs.Signs); i++ {
 		sig := trs.Signs[i]
-		addrbts := account.NewAddressFromPublicKey([]byte{0}, sig.PublicKey)
+		addrbts := account.NewAddressFromPublicKeyV0(sig.PublicKey)
 		addr := fields.Address(addrbts)
-		if addr.Equal(reqaddr) {
+		allSigns[string(addr)] = sig
+	}
+	// 以此验证
+	for _, v := range reqaddrs {
+		if _, hav := allSigns[string(v)]; hav {
 			// /// BUG ///
-			allSigns[string(reqaddr)] = sig
-			ok, e := verifyOneSignature_not_use_with_bug(allSigns, reqaddr, hashNoFee)
-			return ok, e // 验证结果
+			ok, e := verifyOneSignature_not_use_with_bug(allSigns, v, hashNoFee)
+			if !ok || e != nil {
+				return ok, e // 验证失败
+			}
+			// next
+		} else {
+			// 验证失败
+			return false, nil
 		}
 	}
-	// 验证失败
-	return false, nil
+	// 验证成功
+	return true, nil
+
 }
 
 func verifyOneSignature_not_use_with_bug(allSigns map[string]fields.Sign, address fields.Address, hash []byte) (bool, error) {

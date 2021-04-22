@@ -5,6 +5,10 @@ import (
 	"github.com/hacash/core/crypto/ripemd160"
 )
 
+func NewAddressFromPublicKeyV0(pubKey []byte) []byte {
+	return NewAddressFromPublicKey([]byte{0}, pubKey)
+}
+
 func NewAddressFromPublicKey(version []byte, pubKey []byte) []byte {
 
 	digest := sha256.Sum256(pubKey)

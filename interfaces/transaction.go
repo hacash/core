@@ -31,8 +31,8 @@ type Transaction interface {
 	FillTargetSign(signacc *account.Account) error           // 指定账户签名
 	FillNeedSigns(map[string][]byte, []fields.Address) error // 全部签名
 	// verify signatures
-	VerifyNeedSigns([]fields.Address) (bool, error)
-	VerifyTargetSign(reqaddr fields.Address) (bool, error)
+	VerifyAllNeedSigns() (bool, error)
+	VerifyTargetSigns(reqaddr []fields.Address) (bool, error)
 
 	// change chain state
 	WriteinChainState(ChainStateOperation) error

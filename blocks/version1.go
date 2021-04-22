@@ -390,7 +390,7 @@ func (block *Block_v1) AddTransaction(trs interfaces.Transaction) {
 // 验证需要的签名
 func (block *Block_v1) VerifyNeedSigns() (bool, error) {
 	for _, tx := range block.Transactions {
-		ok, e := tx.VerifyNeedSigns(nil)
+		ok, e := tx.VerifyAllNeedSigns()
 		if !ok || e != nil {
 			return ok, e // 验证失败
 		}

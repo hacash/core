@@ -238,6 +238,10 @@ func (trs *Transaction_2_Simple) AppendAction(action interfaces.Action) error {
 	if trs.ActionCount >= 65530 {
 		return fmt.Errorf("Actions too much")
 	}
+	if trs.Actions == nil {
+		trs.ActionCount = 0 // 初始化
+		trs.Actions = make([]interfaces.Action, 0)
+	}
 	trs.ActionCount += 1
 	trs.Actions = append(trs.Actions, action)
 	return nil
@@ -385,46 +389,57 @@ func (trs *Transaction_2_Simple) addOneSign(hash []byte, addrPrivates map[string
 }
 
 // 单独验证其中一个签名
-func (trs *Transaction_2_Simple) VerifyTargetSign(reqaddr fields.Address) (bool, error) {
-	tarhash := trs.Hash()
-	isMainAddr := trs.Address.Equal(reqaddr)
-	if isMainAddr {
-		tarhash = trs.HashWithFee()
-	}
-	// 开始判断
+func (trs *Transaction_2_Simple) VerifyTargetSigns(reqaddrs []fields.Address) (bool, error) {
+	otherhash := trs.Hash()
+	mainhash := trs.HashWithFee()
+	// 全部签名
 	allSigns := make(map[string]fields.Sign)
 	for i := 0; i < len(trs.Signs); i++ {
 		sig := trs.Signs[i]
-		addrbts := account.NewAddressFromPublicKey([]byte{0}, sig.PublicKey)
+		addrbts := account.NewAddressFromPublicKeyV0(sig.PublicKey)
 		addr := fields.Address(addrbts)
-		if addr.Equal(reqaddr) {
-			allSigns[string(reqaddr)] = sig
-			ok, e := verifyOneSignature(allSigns, reqaddr, tarhash)
-			return ok, e // 验证结果
-		}
+		allSigns[string(addr)] = sig
 	}
-	// 验证失败
-	return false, nil
+	// 依次验证
+	for _, v := range reqaddrs {
+		// 判断是否为主地址
+		tarhash := otherhash // 交易哈希
+		isMainAddr := v.Equal(trs.Address)
+		if isMainAddr { // 是否为主地址
+			tarhash = mainhash
+		}
+		ok, e := verifyOneSignature(allSigns, v, tarhash)
+		if !ok || e != nil {
+			return ok, e // 验证失败
+		}
+		// next
+	}
+	// 验证成功
+	return true, nil
 }
 
 // 验证需要的签名
 // reqs 附加的另外要验证的
-func (trs *Transaction_2_Simple) VerifyNeedSigns(reqs []fields.Address) (bool, error) {
-	hash := trs.HashWithFee()
+func (trs *Transaction_2_Simple) VerifyAllNeedSigns() (bool, error) {
+	hashWithFee := trs.HashWithFee()
 	hashNoFee := trs.Hash()
-	requests, e0 := trs.RequestSignAddresses(reqs, true)
-	if e0 != nil {
-		return false, e0
+	// 验证全部需要验证的签名 // 去掉主地址
+	requests, e := trs.RequestSignAddresses(nil, true)
+	if e != nil {
+		return false, e
+	}
+	if requests == nil || len(requests) == 0 {
+		return true, nil // 什么都不验证，直接通过
 	}
 	// 开始判断
 	allSigns := make(map[string]fields.Sign)
 	for i := 0; i < len(trs.Signs); i++ {
 		sig := trs.Signs[i]
-		addr := account.NewAddressFromPublicKey([]byte{0}, sig.PublicKey)
+		addr := account.NewAddressFromPublicKeyV0(sig.PublicKey)
 		allSigns[string(addr)] = sig
 	}
 	// 验证主签名（包括手续费）
-	ok, e := verifyOneSignature(allSigns, trs.Address, hash)
+	ok, e := verifyOneSignature(allSigns, trs.Address, hashWithFee)
 	if e != nil || !ok {
 		return ok, e
 	}

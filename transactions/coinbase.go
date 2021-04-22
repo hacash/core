@@ -5,13 +5,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/hacash/core/account"
-	"github.com/hacash/core/stores"
-	"math/big"
-
 	"github.com/hacash/core/actions"
 	"github.com/hacash/core/crypto/sha3"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/stores"
+	"math/big"
 )
 
 type Transaction_0_Coinbase struct {
@@ -255,14 +254,18 @@ func (trs *Transaction_0_Coinbase) Hash() fields.Hash {
 	return trs.HashWithFee()
 }
 
-// 从 actions 拿出需要签名的地址
+// 需要的余额检查
+func (trs *Transaction_0_Coinbase) RequestAddressBalance() ([][]byte, []big.Int, error) {
+	panic("cannot RequestAddressBalance for Transaction_0_Coinbase")
+}
 
+// 从 actions 拿出需要签名的地址
 func (trs *Transaction_0_Coinbase) RequestSignAddresses([]fields.Address, bool) ([]fields.Address, error) {
 	panic("never call Transaction_0_Coinbase.RequestSignAddresses")
 	return []fields.Address{}, nil
 }
-func (trs *Transaction_0_Coinbase) VerifyTargetSign(fields.Address) (bool, error) {
-	panic("never call Transaction_0_Coinbase.VerifyTargetSign")
+func (trs *Transaction_0_Coinbase) VerifyTargetSigns([]fields.Address) (bool, error) {
+	panic("never call Transaction_0_Coinbase.VerifyTargetSigns")
 	return true, nil
 }
 
@@ -292,13 +295,8 @@ func (trs *Transaction_0_Coinbase) FillNeedSigns(map[string][]byte, []fields.Add
 }
 
 // 验证需要的签名
-func (trs *Transaction_0_Coinbase) VerifyNeedSigns([]fields.Address) (bool, error) {
+func (trs *Transaction_0_Coinbase) VerifyAllNeedSigns() (bool, error) {
 	return true, nil
-}
-
-// 需要的余额检查
-func (trs *Transaction_0_Coinbase) RequestAddressBalance() ([][]byte, []big.Int, error) {
-	return nil, nil, nil
 }
 
 // 修改 / 恢复 状态数据库
