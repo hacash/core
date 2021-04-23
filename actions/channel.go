@@ -556,8 +556,8 @@ func calculateChannelInterest(curheight uint64, openBelongHeight uint64, leftAmo
 	//a1, a2 := DoAppendCompoundInterest1Of10000By2500Height(&leftAmount, &rightAmount, insnum)
 	var insnum = (curheight - openBelongHeight) / 2500
 	var wfzn uint64 = 1 // 万分之一 1/10000
-	// 通过当前的区块高度，修改一次增发比例
-	if curheight > 200000 {
+	// 通过开启通道的区块高度，修改一次增发比例
+	if openBelongHeight > 200000 {
 		// 增加利息计算，复利次数：约 10000 个区块 34 天增加一次千分之一的复利，少于34天忽略不计，年复合利息约 1.06%
 		insnum = (curheight - openBelongHeight) / 10000
 		wfzn = 10 // 千分之一 10/10000

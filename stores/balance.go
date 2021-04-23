@@ -12,7 +12,7 @@ const (
 type Balance struct {
 	Diamond fields.VarUint3
 	Satoshi fields.VarUint8
-	Hacash  fields.Amount // len = 11
+	Hacash  fields.Amount // max_len = 11
 }
 
 func NewEmptyBalance() *Balance {
