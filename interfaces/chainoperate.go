@@ -13,8 +13,6 @@ type ChainStateOperation interface {
 	IsInMemTxPool() bool // 否在交易池
 	SetInMemTxPool(bool)
 
-	LoadValidatedSatoshiGenesis(int64) (*stores.SatoshiGenesis, bool) // 获取已验证的BTC转移日志 & 是否需要验证
-
 	// status
 	GetPendingBlockHeight() uint64
 	SetPendingBlockHeight(uint64)
@@ -69,4 +67,6 @@ type ChainStateOperation interface {
 	// movebtc
 	SaveMoveBTCBelongTxHash(trsno uint32, txhash []byte) error
 	ReadMoveBTCTxHashByNumber(trsno uint32) ([]byte, error)
+	LoadValidatedSatoshiGenesis(int64) (*stores.SatoshiGenesis, bool) // 获取已验证的BTC转移日志 & 是否需要验证
+
 }

@@ -126,7 +126,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	//	return fmt.Errorf("Not yet.")
 	//}
 
-	// 检查已经记录的增发
+	// 检查已经记录的增发（避免已完成的增发重复执行）
 	belongtxhx, berr2 := state.ReadMoveBTCTxHashByNumber(uint32(act.TransferNo))
 	if berr2 != nil {
 		return berr2

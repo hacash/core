@@ -4,6 +4,8 @@ import (
 	"github.com/hacash/core/fields"
 )
 
+const SatoshiGenesisLogStorePageLimit int = 50
+
 type SatoshiGenesis struct {
 	TransferNo               fields.VarUint4 // 转账流水编号
 	BitcoinBlockHeight       fields.VarUint4 // 转账的比特币区块高度
