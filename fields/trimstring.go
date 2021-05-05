@@ -30,9 +30,24 @@ func (elm *TrimString16) Size() uint32 { return 16 }
 func (elm *TrimString34) Size() uint32 { return 34 }
 func (elm *TrimString64) Size() uint32 { return 64 }
 
-func (elm *TrimString16) ValueShow() string { return strings.TrimRight(string(*elm), " ") }
-func (elm *TrimString34) ValueShow() string { return strings.TrimRight(string(*elm), " ") }
-func (elm *TrimString64) ValueShow() string { return strings.TrimRight(string(*elm), " ") }
+func (elm *TrimString16) ValueShow() string { return valueShow(string(*elm)) }
+func (elm *TrimString34) ValueShow() string { return valueShow(string(*elm)) }
+func (elm *TrimString64) ValueShow() string { return valueShow(string(*elm)) }
+
+func valueShow(str string) string {
+	str = strings.TrimRight(str, " ")
+	msg := ""
+	for _, v := range []byte(str) {
+		if v < 32 || v > 126 {
+			break
+		}
+		if v == 34 { // 处理双引号转换为单引号
+			v = 39
+		}
+		msg += string([]byte{v})
+	}
+	return msg
+}
 
 ////////////////////////////////////////////////////////
 
