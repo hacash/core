@@ -12,9 +12,9 @@ type TrimString64 string
 
 ////////////////////////////////////////////////////////
 
-func (elm *TrimString16) Serialize() ([]byte, error) { return trimStringSerialize(string(*elm), 16) }
-func (elm *TrimString34) Serialize() ([]byte, error) { return trimStringSerialize(string(*elm), 34) }
-func (elm *TrimString64) Serialize() ([]byte, error) { return trimStringSerialize(string(*elm), 64) }
+func (elm TrimString16) Serialize() ([]byte, error) { return trimStringSerialize(string(elm), 16) }
+func (elm TrimString34) Serialize() ([]byte, error) { return trimStringSerialize(string(elm), 34) }
+func (elm TrimString64) Serialize() ([]byte, error) { return trimStringSerialize(string(elm), 64) }
 
 func (elm *TrimString16) Parse(buf []byte, seek uint32) (uint32, error) {
 	return trimStringParse(elm, buf, seek, 16)
@@ -26,13 +26,13 @@ func (elm *TrimString64) Parse(buf []byte, seek uint32) (uint32, error) {
 	return trimStringParse(elm, buf, seek, 64)
 }
 
-func (elm *TrimString16) Size() uint32 { return 16 }
-func (elm *TrimString34) Size() uint32 { return 34 }
-func (elm *TrimString64) Size() uint32 { return 64 }
+func (elm TrimString16) Size() uint32 { return 16 }
+func (elm TrimString34) Size() uint32 { return 34 }
+func (elm TrimString64) Size() uint32 { return 64 }
 
-func (elm *TrimString16) ValueShow() string { return valueShow(string(*elm)) }
-func (elm *TrimString34) ValueShow() string { return valueShow(string(*elm)) }
-func (elm *TrimString64) ValueShow() string { return valueShow(string(*elm)) }
+func (elm TrimString16) ValueShow() string { return valueShow(string(elm)) }
+func (elm TrimString34) ValueShow() string { return valueShow(string(elm)) }
+func (elm TrimString64) ValueShow() string { return valueShow(string(elm)) }
 
 func valueShow(str string) string {
 	str = strings.TrimRight(str, " ")

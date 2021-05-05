@@ -7,11 +7,11 @@ type ExtendMessageMaxLen255 struct {
 	Message []byte
 }
 
-func (e *ExtendMessageMaxLen255) Size() uint32 {
+func (e ExtendMessageMaxLen255) Size() uint32 {
 	return 1 + uint32(len(e.Message))
 }
 
-func (e *ExtendMessageMaxLen255) Serialize() ([]byte, error) {
+func (e ExtendMessageMaxLen255) Serialize() ([]byte, error) {
 	bts := make([]byte, 0, e.Size())
 	bts = append(bts, byte(e.Count))
 	bts = append(bts, e.Message...)

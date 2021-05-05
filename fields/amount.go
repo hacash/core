@@ -112,7 +112,7 @@ func NewAmountSmall(num uint8, unit uint8) *Amount {
 	}
 }
 
-func (bill *Amount) Serialize() ([]byte, error) {
+func (bill Amount) Serialize() ([]byte, error) {
 	var buffer = new(bytes.Buffer)
 	buffer.Write([]byte{bill.Unit})
 	buffer.Write([]byte{byte(bill.Dist)})
@@ -140,13 +140,13 @@ func (bill *Amount) Parse(buf []byte, seek uint32) (uint32, error) {
 	return tail, nil
 }
 
-func (bill *Amount) Size() uint32 {
+func (bill Amount) Size() uint32 {
 	return 1 + 1 + uint32(len(bill.Numeral))
 }
 
 //////////////////////////////////////////////////////////
 
-func (bill *Amount) Copy() *Amount {
+func (bill Amount) Copy() *Amount {
 	num := make([]byte, len(bill.Numeral))
 	copy(num, bill.Numeral)
 	return &Amount{
@@ -156,7 +156,7 @@ func (bill *Amount) Copy() *Amount {
 	}
 }
 
-func (bill *Amount) GetValue() *big.Int {
+func (bill Amount) GetValue() *big.Int {
 	var bignum = new(big.Int)
 	bignum.SetBytes(bill.Numeral)
 	var sign = big.NewInt(int64(big.NewInt(int64(bill.Dist)).Sign()))
@@ -166,12 +166,12 @@ func (bill *Amount) GetValue() *big.Int {
 	return bignum
 }
 
-func (bill *Amount) IsEmpty() bool {
+func (bill Amount) IsEmpty() bool {
 	return bill.Dist == int8(0) || len(bill.Numeral) == 0
 }
 
 // 判断必须为正数，且不能为零
-func (bill *Amount) IsPositive() bool {
+func (bill Amount) IsPositive() bool {
 	if bill.Unit == 0 {
 		return false
 	}
@@ -183,7 +183,7 @@ func (bill *Amount) IsPositive() bool {
 }
 
 // 判断必须为负数，且不能为零
-func (bill *Amount) IsNegative() bool {
+func (bill Amount) IsNegative() bool {
 	if bill.Unit == 0 {
 		return false
 	}
@@ -194,7 +194,7 @@ func (bill *Amount) IsNegative() bool {
 	return true
 }
 
-func (bill *Amount) ToMeiOrFinString(usemei bool) string {
+func (bill Amount) ToMeiOrFinString(usemei bool) string {
 	if usemei {
 		return bill.ToMeiString()
 	} else {
@@ -203,7 +203,7 @@ func (bill *Amount) ToMeiOrFinString(usemei bool) string {
 }
 
 // 转换单位为枚 保留 8 位小数，多余的舍去
-func (bill *Amount) ToMeiString() string {
+func (bill Amount) ToMeiString() string {
 	bigmei := bill.ToMeiBigFloat()
 	meistr := bigmei.Text('f', 9)
 	spx := strings.Split(meistr, ".")
@@ -217,7 +217,7 @@ func (bill *Amount) ToMeiString() string {
 }
 
 // 转换单位为枚
-func (bill *Amount) ToMeiBigFloat() *big.Float {
+func (bill Amount) ToMeiBigFloat() *big.Float {
 	// 处理
 	bigmei := new(big.Float).SetInt(new(big.Int).SetBytes(bill.Numeral))
 	//fmt.Println(bigmei.String(), int(bill.Unit), int(bill.Unit) - 248)
@@ -243,7 +243,7 @@ func (bill *Amount) ToMeiBigFloat() *big.Float {
 }
 
 // 转换单位为枚
-func (bill *Amount) ToMei() float64 {
+func (bill Amount) ToMei() float64 {
 	bigmei := bill.ToMeiBigFloat()
 	mei, _ := bigmei.Float64()
 	return mei
@@ -346,11 +346,11 @@ func NewAmountFromFinString(finstr string) (*Amount, error) {
 	return NewAmountByBigIntWithUnit(main_num, unit_num)
 }
 
-func (bill *Amount) ToFinString() string {
+func (bill Amount) ToFinString() string {
 	return bill.ToFinStringWithMark("ㄜ")
 }
 
-func (bill *Amount) ToFinStringWithMark(mark string) string {
+func (bill Amount) ToFinStringWithMark(mark string) string {
 	unitStr := strconv.Itoa(int(bill.Unit)) // string(bytes.Repeat([]byte{48}, int(bill.Unit)))
 	numStr := new(big.Int).SetBytes(bill.Numeral).String()
 	sig := ""
@@ -498,7 +498,7 @@ func (bill *Amount) EllipsisDecimalFor23SizeStore() (*Amount, bool) {
 */
 
 // add
-func (bill *Amount) Add(amt *Amount) (*Amount, error) {
+func (bill Amount) Add(amt *Amount) (*Amount, error) {
 	num1 := bill.GetValue()
 	num2 := amt.GetValue()
 	num1 = num1.Add(num1, num2)
@@ -506,7 +506,7 @@ func (bill *Amount) Add(amt *Amount) (*Amount, error) {
 }
 
 // sub
-func (bill *Amount) Sub(amt *Amount) (*Amount, error) {
+func (bill Amount) Sub(amt *Amount) (*Amount, error) {
 	num1 := bill.GetValue()
 	num2 := amt.GetValue()
 	num1 = num1.Sub(num1, num2)
@@ -514,7 +514,7 @@ func (bill *Amount) Sub(amt *Amount) (*Amount, error) {
 }
 
 // compare
-func (bill *Amount) LessThan(amt *Amount) bool {
+func (bill Amount) LessThan(amt *Amount) bool {
 	add1 := bill.GetValue()
 	add2 := amt.GetValue()
 	res := add1.Cmp(add2)
@@ -526,7 +526,7 @@ func (bill *Amount) LessThan(amt *Amount) bool {
 }
 
 // compare
-func (bill *Amount) MoreThan(amt *Amount) bool {
+func (bill Amount) MoreThan(amt *Amount) bool {
 	add1 := bill.GetValue()
 	add2 := amt.GetValue()
 	res := add1.Cmp(add2)
@@ -538,7 +538,7 @@ func (bill *Amount) MoreThan(amt *Amount) bool {
 }
 
 // compare
-func (bill *Amount) Equal(amt *Amount) bool {
+func (bill Amount) Equal(amt *Amount) bool {
 	//
 	if bill.Unit != amt.Unit ||
 		bill.Dist != amt.Dist ||

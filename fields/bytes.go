@@ -26,19 +26,19 @@ type Bytes64 []byte
 
 ////////////////////////////////////////////////////////
 
-func (elm *Bytes3) Serialize() ([]byte, error)  { return bytesSerialize(*elm, 3) }
-func (elm *Bytes4) Serialize() ([]byte, error)  { return bytesSerialize(*elm, 4) }
-func (elm *Bytes5) Serialize() ([]byte, error)  { return bytesSerialize(*elm, 5) }
-func (elm *Bytes6) Serialize() ([]byte, error)  { return bytesSerialize(*elm, 6) }
-func (elm *Bytes8) Serialize() ([]byte, error)  { return bytesSerialize(*elm, 8) }
-func (elm *Bytes12) Serialize() ([]byte, error) { return bytesSerialize(*elm, 12) }
-func (elm *Bytes16) Serialize() ([]byte, error) { return bytesSerialize(*elm, 16) }
-func (elm *Bytes18) Serialize() ([]byte, error) { return bytesSerialize(*elm, 18) }
-func (elm *Bytes21) Serialize() ([]byte, error) { return bytesSerialize(*elm, 21) }
-func (elm *Bytes24) Serialize() ([]byte, error) { return bytesSerialize(*elm, 24) }
-func (elm *Bytes32) Serialize() ([]byte, error) { return bytesSerialize(*elm, 32) }
-func (elm *Bytes33) Serialize() ([]byte, error) { return bytesSerialize(*elm, 33) }
-func (elm *Bytes64) Serialize() ([]byte, error) { return bytesSerialize(*elm, 64) }
+func (elm Bytes3) Serialize() ([]byte, error)  { return bytesSerialize(elm, 3) }
+func (elm Bytes4) Serialize() ([]byte, error)  { return bytesSerialize(elm, 4) }
+func (elm Bytes5) Serialize() ([]byte, error)  { return bytesSerialize(elm, 5) }
+func (elm Bytes6) Serialize() ([]byte, error)  { return bytesSerialize(elm, 6) }
+func (elm Bytes8) Serialize() ([]byte, error)  { return bytesSerialize(elm, 8) }
+func (elm Bytes12) Serialize() ([]byte, error) { return bytesSerialize(elm, 12) }
+func (elm Bytes16) Serialize() ([]byte, error) { return bytesSerialize(elm, 16) }
+func (elm Bytes18) Serialize() ([]byte, error) { return bytesSerialize(elm, 18) }
+func (elm Bytes21) Serialize() ([]byte, error) { return bytesSerialize(elm, 21) }
+func (elm Bytes24) Serialize() ([]byte, error) { return bytesSerialize(elm, 24) }
+func (elm Bytes32) Serialize() ([]byte, error) { return bytesSerialize(elm, 32) }
+func (elm Bytes33) Serialize() ([]byte, error) { return bytesSerialize(elm, 33) }
+func (elm Bytes64) Serialize() ([]byte, error) { return bytesSerialize(elm, 64) }
 
 func (elm *Bytes3) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 3)
@@ -80,19 +80,19 @@ func (elm *Bytes64) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 64)
 }
 
-func (elm *Bytes3) Size() uint32  { return 3 }
-func (elm *Bytes4) Size() uint32  { return 4 }
-func (elm *Bytes5) Size() uint32  { return 5 }
-func (elm *Bytes6) Size() uint32  { return 6 }
-func (elm *Bytes8) Size() uint32  { return 8 }
-func (elm *Bytes12) Size() uint32 { return 12 }
-func (elm *Bytes16) Size() uint32 { return 16 }
-func (elm *Bytes18) Size() uint32 { return 18 }
-func (elm *Bytes21) Size() uint32 { return 21 }
-func (elm *Bytes24) Size() uint32 { return 24 }
-func (elm *Bytes32) Size() uint32 { return 32 }
-func (elm *Bytes33) Size() uint32 { return 33 }
-func (elm *Bytes64) Size() uint32 { return 64 }
+func (elm Bytes3) Size() uint32  { return 3 }
+func (elm Bytes4) Size() uint32  { return 4 }
+func (elm Bytes5) Size() uint32  { return 5 }
+func (elm Bytes6) Size() uint32  { return 6 }
+func (elm Bytes8) Size() uint32  { return 8 }
+func (elm Bytes12) Size() uint32 { return 12 }
+func (elm Bytes16) Size() uint32 { return 16 }
+func (elm Bytes18) Size() uint32 { return 18 }
+func (elm Bytes21) Size() uint32 { return 21 }
+func (elm Bytes24) Size() uint32 { return 24 }
+func (elm Bytes32) Size() uint32 { return 32 }
+func (elm Bytes33) Size() uint32 { return 33 }
+func (elm Bytes64) Size() uint32 { return 64 }
 
 ////////////////////////////////////////////////////////
 

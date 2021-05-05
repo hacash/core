@@ -19,15 +19,15 @@ type VarUint8 uint64
 
 ////////////////////////////////////////////////////////
 
-func (elm *Bool) Serialize() ([]byte, error)     { return varIntSerialize(uint64(*elm), 1) }
-func (elm *VarUint1) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 1) }
-func (elm *VarUint2) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 2) }
-func (elm *VarUint3) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 3) }
-func (elm *VarUint4) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 4) }
-func (elm *VarUint5) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 5) }
-func (elm *VarUint6) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 6) }
-func (elm *VarUint7) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 7) }
-func (elm *VarUint8) Serialize() ([]byte, error) { return varIntSerialize(uint64(*elm), 8) }
+func (elm Bool) Serialize() ([]byte, error)     { return varIntSerialize(uint64(elm), 1) }
+func (elm VarUint1) Serialize() ([]byte, error) { return varIntSerialize(uint64(elm), 1) }
+func (elm VarUint2) Serialize() ([]byte, error) { return varIntSerialize(uint64(elm), 2) }
+func (elm VarUint3) Serialize() ([]byte, error) { return varIntSerialize(uint64(elm), 3) }
+func (elm VarUint4) Serialize() ([]byte, error) { return varIntSerialize(uint64(elm), 4) }
+func (elm VarUint5) Serialize() ([]byte, error) { return varIntSerialize(uint64(elm), 5) }
+func (elm VarUint6) Serialize() ([]byte, error) { return varIntSerialize(uint64(elm), 6) }
+func (elm VarUint7) Serialize() ([]byte, error) { return varIntSerialize(uint64(elm), 7) }
+func (elm VarUint8) Serialize() ([]byte, error) { return varIntSerialize(uint64(elm), 8) }
 
 func (elm *Bool) Parse(buf []byte, seek uint32) (uint32, error) {
 	return varIntParse(elm, buf, seek, 1)
@@ -57,19 +57,19 @@ func (elm *VarUint8) Parse(buf []byte, seek uint32) (uint32, error) {
 	return varIntParse(elm, buf, seek, 8)
 }
 
-func (elm *Bool) Size() uint32     { return 1 }
-func (elm *VarUint1) Size() uint32 { return 1 }
-func (elm *VarUint2) Size() uint32 { return 2 }
-func (elm *VarUint3) Size() uint32 { return 3 }
-func (elm *VarUint4) Size() uint32 { return 4 }
-func (elm *VarUint5) Size() uint32 { return 5 }
-func (elm *VarUint6) Size() uint32 { return 6 }
-func (elm *VarUint7) Size() uint32 { return 7 }
-func (elm *VarUint8) Size() uint32 { return 8 }
+func (elm Bool) Size() uint32     { return 1 }
+func (elm VarUint1) Size() uint32 { return 1 }
+func (elm VarUint2) Size() uint32 { return 2 }
+func (elm VarUint3) Size() uint32 { return 3 }
+func (elm VarUint4) Size() uint32 { return 4 }
+func (elm VarUint5) Size() uint32 { return 5 }
+func (elm VarUint6) Size() uint32 { return 6 }
+func (elm VarUint7) Size() uint32 { return 7 }
+func (elm VarUint8) Size() uint32 { return 8 }
 
 // 判断
-func (elm *Bool) Is(v bool) bool { return elm.Check() == v }
-func (elm *Bool) Check() bool    { return int(*elm) != 0 }
+func (elm Bool) Is(v bool) bool { return elm.Check() == v }
+func (elm Bool) Check() bool    { return int(elm) != 0 }
 func CreateBoolPtr(v bool) *Bool {
 	b := CreateBool(v)
 	return &b
