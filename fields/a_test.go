@@ -57,3 +57,10 @@ func Test_t2(t *testing.T) {
 	}
 
 }
+
+func Test_t3(t *testing.T) {
+
+	fmt.Println(trimStringSerialize("abcdef1234567890wmtxyz", 16))
+	fmt.Println(trimStringSerialize("abcdef", 16))
+
+}

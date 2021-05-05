@@ -3,6 +3,7 @@ package fields
 import (
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 type TrimString16 string
@@ -28,6 +29,10 @@ func (elm *TrimString64) Parse(buf []byte, seek uint32) (uint32, error) {
 func (elm *TrimString16) Size() uint32 { return 16 }
 func (elm *TrimString34) Size() uint32 { return 34 }
 func (elm *TrimString64) Size() uint32 { return 64 }
+
+func (elm *TrimString16) ValueShow() string { return strings.TrimRight(string(*elm), " ") }
+func (elm *TrimString34) ValueShow() string { return strings.TrimRight(string(*elm), " ") }
+func (elm *TrimString64) ValueShow() string { return strings.TrimRight(string(*elm), " ") }
 
 ////////////////////////////////////////////////////////
 
@@ -56,16 +61,8 @@ func trimStringParse(elm interface{}, buf []byte, seek uint32, maxlen uint32) (u
 func trimStringSerialize(str string, maxlen int) ([]byte, error) {
 	//var str = string(*elm)
 	//fmt.Println("trimStringSerialize ---------", str, "===")
-	newbts := make([]byte, len(str))
-	copy(newbts, str)
-	newstr := string(newbts)
-	for {
-		if len(newstr) < maxlen {
-			newstr += " "
-		} else {
-			break
-		}
-	}
-	//fmt.Println("trimStringSerialize  2222 ---------", str, "===")
-	return []byte(newstr), nil
+	// 空格填充
+	newbts := bytes.Repeat([]byte{byte(' ')}, maxlen)
+	copy(newbts, str) // 按长度拷贝
+	return newbts, nil
 }

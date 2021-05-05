@@ -78,39 +78,39 @@ func (elm *Action_7_SatoshiGenesis) Serialize() ([]byte, error) {
 
 func (elm *Action_7_SatoshiGenesis) Parse(buf []byte, seek uint32) (uint32, error) {
 	var e error = nil
-	sk1, e := elm.TransferNo.Parse(buf, seek)
+	seek, e = elm.TransferNo.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
-	sk2, e := elm.BitcoinBlockHeight.Parse(buf, sk1)
+	seek, e = elm.BitcoinBlockHeight.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
-	sk3, e := elm.BitcoinBlockTimestamp.Parse(buf, sk2)
+	seek, e = elm.BitcoinBlockTimestamp.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
-	sk4, e := elm.BitcoinEffectiveGenesis.Parse(buf, sk3)
+	seek, e = elm.BitcoinEffectiveGenesis.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
-	sk5, e := elm.BitcoinQuantity.Parse(buf, sk4)
+	seek, e = elm.BitcoinQuantity.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
-	sk6, e := elm.AdditionalTotalHacAmount.Parse(buf, sk5)
+	seek, e = elm.AdditionalTotalHacAmount.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
-	sk7, e := elm.OriginAddress.Parse(buf, sk6)
+	seek, e = elm.OriginAddress.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
-	sk8, e := elm.BitcoinTransferHash.Parse(buf, sk7)
+	seek, e = elm.BitcoinTransferHash.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
-	return sk8, nil
+	return seek, nil
 }
 
 func (*Action_7_SatoshiGenesis) RequestSignAddresses() []fields.Address {
@@ -204,7 +204,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	if lockweek > 0 {
 
 		// 线性锁仓（周）
-		lkblsid := gainLockblsIdByBtcMove(uint32(act.TransferNo))
+		lkblsid := GainLockblsIdByBtcMove(uint32(act.TransferNo))
 
 		// 存储
 		lockbls := stores.NewEmptyLockbls(act.OriginAddress)
@@ -285,7 +285,7 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStat
 	if lockweek > 0 {
 
 		// 回退锁仓
-		lkblsid := gainLockblsIdByBtcMove(uint32(act.TransferNo))
+		lkblsid := GainLockblsIdByBtcMove(uint32(act.TransferNo))
 		// 删除线性锁仓
 		state.LockblsDelete(lkblsid)
 
@@ -380,7 +380,7 @@ func moveBtcLockWeekByIdx(btcidx int64) (int64, int64) {
 
 ///////////////////////////
 
-func gainLockblsIdByBtcMove(btcTransferNo uint32) []byte {
+func GainLockblsIdByBtcMove(btcTransferNo uint32) []byte {
 
 	// 自己创建的 lockbls key 不允许创建这样的的前面全为0的key!!!
 	lockbleid := bytes.Repeat([]byte{0}, 4) // key size = 18

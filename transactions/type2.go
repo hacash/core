@@ -29,8 +29,8 @@ type Transaction_2_Simple struct {
 	Multisigns     []fields.Multisign
 
 	// cache data
-	hash      fields.Hash
-	hashnofee fields.Hash
+	hashwithfee fields.Hash
+	hashnofee   fields.Hash
 }
 
 func NewEmptyTransaction_2_Simple(master fields.Address) (*Transaction_2_Simple, error) {
@@ -206,17 +206,17 @@ func (trs *Transaction_2_Simple) Size() uint32 {
 
 // 交易唯一哈希值
 func (trs *Transaction_2_Simple) HashWithFee() fields.Hash {
-	if trs.hash == nil {
+	if trs.hashwithfee == nil {
 		return trs.HashWithFeeFresh()
 	}
-	return trs.hash
+	return trs.hashwithfee
 }
 
 func (trs *Transaction_2_Simple) HashWithFeeFresh() fields.Hash {
 	stuff, _ := trs.SerializeNoSign()
 	digest := sha3.Sum256(stuff)
-	trs.hash = digest[:]
-	return trs.hash
+	trs.hashwithfee = digest[:]
+	return trs.hashwithfee
 }
 
 func (trs *Transaction_2_Simple) Hash() fields.Hash {
