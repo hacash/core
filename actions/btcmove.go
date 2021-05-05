@@ -15,7 +15,7 @@ import (
 type Action_7_SatoshiGenesis struct {
 	TransferNo               fields.VarUint4 // 转账流水编号
 	BitcoinBlockHeight       fields.VarUint4 // 转账的比特币区块高度
-	BitcoinBlockTimestamp    fields.VarUint4 // 转账的比特币区块时间戳
+	BitcoinBlockTimestamp    fields.VarUint5 // 转账的比特币区块时间戳
 	BitcoinEffectiveGenesis  fields.VarUint4 // 在这笔之前已经成功转移的比特币数量
 	BitcoinQuantity          fields.VarUint4 // 本笔转账的比特币数量（单位：枚）
 	AdditionalTotalHacAmount fields.VarUint4 // 本次转账[总共]应该增发的 hac 数量 （单位：枚）
@@ -142,7 +142,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		// 交易位于交易池时 和 设置了check url时， 必须验证
 		if checkact == nil {
 			// URL 未返回数据
-			return fmt.Errorf("Satoshi btc move logs url return invalid.")
+			return fmt.Errorf("SatoshiGenesis btc move logs url return invalid.")
 		}
 		// 比较
 		if act.TransferNo != checkact.TransferNo ||
@@ -157,7 +157,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		}
 		// 验证数据 （转移比特币数量 1 ～ 1万枚）
 		if act.BitcoinQuantity < 1 && act.BitcoinQuantity > 10000 {
-			return fmt.Errorf("Satoshi act BitcoinQuantity number is error (right is 1 ~ 10000).")
+			return fmt.Errorf("SatoshiGenesis act BitcoinQuantity number is error (right is 1 ~ 10000).")
 		}
 		var ttHac int64 = 0
 		for i := act.BitcoinEffectiveGenesis + 1; i <= act.BitcoinEffectiveGenesis+act.BitcoinQuantity; i++ {
@@ -165,12 +165,12 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		}
 		if ttHac != int64(act.AdditionalTotalHacAmount) {
 			// 增发的 HAC 数量不对
-			return fmt.Errorf("Satoshi act AdditionalTotalHacAmount need %d but goot %d.", ttHac, act.AdditionalTotalHacAmount)
+			return fmt.Errorf("SatoshiGenesis act AdditionalTotalHacAmount need %d but got %d.", ttHac, act.AdditionalTotalHacAmount)
 		}
 		// 检查时间（延迟28天才能领取）
 		targettime := time.Unix(int64(act.BitcoinBlockTimestamp), 0).AddDate(0, 0, 28)
-		if targettime.After(time.Now()) {
-			return fmt.Errorf("SatoshiGenesis time must over %s", targettime.Format("2006/01/02 15:04:05"))
+		if time.Now().Before(targettime) {
+			return fmt.Errorf("SatoshiGenesis submit tx time must over %s", targettime.Format("2006/01/02 15:04:05"))
 		}
 		// 检查成功！！！
 	}
@@ -199,7 +199,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	// 判断是否线性锁仓至 lockbls
 	lockweek, weekhei := moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
 	if weekhei > 17000000 {
-		return fmt.Errorf("moveBtcLockWeekByIdx weekhei overflow.")
+		return fmt.Errorf("SatoshiGenesis moveBtcLockWeekByIdx weekhei overflow.")
 	}
 	if lockweek > 0 {
 
@@ -220,7 +220,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		allamts[0] = totaladdhacamt
 		// 余额
 		allamts[1] = totaladdhacamt
-		// 每周解锁的币
+		// 每周可以解锁的币
 		hacweekbig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount) / uint64(lockweek))
 		wklkhacamt, _ := fields.NewAmountByBigIntWithUnit(hacweekbig, 248)
 		allamts[2] = wklkhacamt // 每周解锁
@@ -355,7 +355,7 @@ func moveBtcCoinRewardByIdx(btcidx int64) int64 {
 	return powf2(lvn - tarlv)
 }
 
-// 第几枚BTC锁仓信息
+// 计算第几枚BTC锁仓信息
 func moveBtcLockWeekByIdx(btcidx int64) (int64, int64) {
 	var oneweekhei int64 = 2000   // 2000 / 288 = 6.9444天
 	var mostlockweek int64 = 1024 // 1024周约等于 20 年

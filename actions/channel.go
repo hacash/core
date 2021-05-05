@@ -379,7 +379,7 @@ func (act *Action_12_ClosePaymentChannelBySetupAmount) WriteinChainState(state i
 	if paychan.LeftAddress.Equal(act.LeftAddress) == false ||
 		paychan.RightAddress.Equal(act.RightAddress) == false {
 		// 地址检查失败
-		return fmt.Errorf("Payment Channel <%s> address not match.")
+		return fmt.Errorf("Payment Channel <%s> address not match.", act.RightAddress.ToReadable())
 	}
 	// 分配金额可以为零但不能为负
 	if act.LeftAmount.IsNegative() || act.RightAmount.IsNegative() {

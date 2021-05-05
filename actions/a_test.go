@@ -32,3 +32,9 @@ func Test2(t *testing.T) {
 	fmt.Println(total, time.Since(ttt).Seconds())
 
 }
+
+func Test3(t *testing.T) {
+
+	fmt.Println(moveBtcLockWeekByIdx(2048))
+
+}

@@ -132,6 +132,11 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	if act.belone_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
+	// 交易只能包含唯一一个action
+	belongactionnum := len(act.belone_trs.GetActions())
+	if 1 != belongactionnum {
+		return fmt.Errorf("Diamond create tx need only one action but got %d actions.", belongactionnum)
+	}
 	// 检查区块高度
 	blkhei := state.GetPendingBlockHeight()
 	// 检查区块高度值是否为5的倍数
