@@ -31,7 +31,6 @@ const (
 type TotalSupply struct {
 	changeMark []bool
 	dataBytes  []float64 //fields.Bytes8
-
 }
 
 func NewTotalSupplyStoreData() *TotalSupply {
@@ -97,6 +96,18 @@ func (t *TotalSupply) CoverCopySave(src *TotalSupply) {
 			t.changeMark[i] = true
 			t.dataBytes[i] = src.dataBytes[i]
 		}
+	}
+}
+
+// 拷贝复制
+func (t *TotalSupply) Clone() *TotalSupply {
+	changeMark := []bool{}
+	dataBytes := []float64{}
+	changeMark = append(changeMark, t.changeMark...)
+	dataBytes = append(dataBytes, t.dataBytes...)
+	return &TotalSupply{
+		changeMark: changeMark,
+		dataBytes:  dataBytes,
 	}
 }
 

@@ -156,7 +156,7 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	if e2 != nil {
 		return e2
 	}
-	// 累加解锁的HAC
+	// 累加锁入的HAC
 	addamt := act.LeftAmount.ToMei() + act.RightAmount.ToMei()
 	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedInChannel, addamt)
 	// update total supply
