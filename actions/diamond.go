@@ -32,9 +32,8 @@ type Action_4_DiamondCreate struct {
 	// 客户消息
 	CustomMessage fields.Bytes32
 
-	// 数据指针
 	// 所属交易
-	belone_trs interfaces.Transaction
+	belong_trs interfaces.Transaction
 }
 
 func (elm *Action_4_DiamondCreate) Kind() uint16 {
@@ -129,11 +128,11 @@ func (elm *Action_4_DiamondCreate) RequestSignAddresses() []fields.Address {
 }
 
 func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainStateOperation) error {
-	if act.belone_trs == nil {
+	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
 	// 交易只能包含唯一一个action
-	belongactionnum := len(act.belone_trs.GetActions())
+	belongactionnum := len(act.belong_trs.GetActions())
 	if 1 != belongactionnum {
 		return fmt.Errorf("Diamond create tx need only one action but got %d actions.", belongactionnum)
 	}
@@ -207,7 +206,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 
 	// 设置矿工状态
 	//标记本区块已经包含钻石
-	feeoffer := act.belone_trs.GetFee()
+	feeoffer := act.belong_trs.GetFee()
 	approxfeeoffer, _, e11 := feeoffer.CompressForMainNumLen(4, true)
 	if e11 != nil {
 		return e11
@@ -305,7 +304,7 @@ func (act *Action_4_DiamondCreate) RecoverChainState(state interfaces.ChainState
 }
 
 func (elm *Action_4_DiamondCreate) SetBelongTransaction(t interfaces.Transaction) {
-	elm.belone_trs = t
+	elm.belong_trs = t
 }
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用
@@ -387,7 +386,7 @@ func (act *Action_5_DiamondTransfer) WriteinChainState(state interfaces.ChainSta
 	item := diaitem
 	// 检查所属
 	if bytes.Compare(item.Address, trsMainAddress) != 0 {
-		return fmt.Errorf("Diamond <%s> not belong to belone_trs address.", string(act.Diamond))
+		return fmt.Errorf("Diamond <%s> not belong to belong_trs address.", string(act.Diamond))
 	}
 	// 转移钻石
 	item.Address = act.Address

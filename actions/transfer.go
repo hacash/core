@@ -86,7 +86,7 @@ func (act *Action_1_SimpleTransfer) RecoverChainState(state interfaces.ChainStat
 	return DoSimpleTransferFromChainState(state, act.ToAddress, act.belong_trs.GetAddress(), act.Amount)
 }
 
-// 设置所属 belone_trs
+// 设置所属 belong_trs
 func (act *Action_1_SimpleTransfer) SetBelongTransaction(trs interfaces.Transaction) {
 	act.belong_trs = trs
 }

@@ -81,7 +81,7 @@ func (act *Action_8_SimpleSatoshiTransfer) RecoverChainState(state interfaces.Ch
 	return DoSimpleSatoshiTransferFromChainState(state, act.Address, act.belong_trs.GetAddress(), act.Amount)
 }
 
-// 设置所属 belone_trs
+// 设置所属 belong_trs
 func (act *Action_8_SimpleSatoshiTransfer) SetBelongTransaction(trs interfaces.Transaction) {
 	act.belong_trs = trs
 }
@@ -176,7 +176,7 @@ func (act *Action_11_FromToSatoshiTransfer) RecoverChainState(state interfaces.C
 	return DoSimpleSatoshiTransferFromChainState(state, act.ToAddress, act.FromAddress, act.Amount)
 }
 
-// 设置所属 belone_trs
+// 设置所属 belong_trs
 func (act *Action_11_FromToSatoshiTransfer) SetBelongTransaction(trs interfaces.Transaction) {
 	act.belong_trs = trs
 }

@@ -115,8 +115,9 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 		// 避免锁定资金的储存位数过长，导致的复利计算后的值存储位数超过最大范围
 		return fmt.Errorf("Payment Channel create error: left or right Amount bytes too long.")
 	}
-	// 不能为零或负数
-	if !act.LeftAmount.IsPositive() || !act.RightAmount.IsPositive() {
+	// 不能为负数，或者两个通道同时为零（可以一个为正数另一个为零）
+	if (!act.LeftAmount.IsPositive() || !act.RightAmount.IsPositive()) ||
+		(act.LeftAmount.IsEmpty() && act.RightAmount.IsEmpty()) {
 		return fmt.Errorf("Action_2_OpenPaymentChannel Payment Channel create error: left or right Amount is not positive.")
 	}
 	// 检查余额是否充足
@@ -206,7 +207,7 @@ type Action_3_ClosePaymentChannel struct {
 	ChannelId fields.Bytes16 // 通道id
 
 	// data ptr
-	belone_trs interfaces.Transaction
+	belong_trs interfaces.Transaction
 }
 
 func (elm *Action_3_ClosePaymentChannel) Kind() uint16 {
@@ -244,7 +245,7 @@ func (elm *Action_3_ClosePaymentChannel) RequestSignAddresses() []fields.Address
 }
 
 func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.ChainStateOperation) error {
-	if act.belone_trs == nil {
+	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
 	// 查询通道
@@ -257,7 +258,7 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 		return fmt.Errorf("Payment Channel <%s> is be closed.", hex.EncodeToString(act.ChannelId))
 	}
 	// 检查两个账户的签名 // 仅仅验证这两个地址
-	signok, e1 := act.belone_trs.VerifyTargetSigns([]fields.Address{paychan.LeftAddress, paychan.RightAddress})
+	signok, e1 := act.belong_trs.VerifyTargetSigns([]fields.Address{paychan.LeftAddress, paychan.RightAddress})
 	if e1 != nil {
 		return e1
 	}
@@ -275,7 +276,7 @@ func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.Chai
 }
 
 func (elm *Action_3_ClosePaymentChannel) SetBelongTransaction(t interfaces.Transaction) {
-	elm.belone_trs = t
+	elm.belong_trs = t
 }
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用
@@ -294,7 +295,7 @@ type Action_12_ClosePaymentChannelBySetupAmount struct {
 	RightAmount  fields.Amount  // 右侧最终分配金额
 
 	// data ptr
-	belone_trs interfaces.Transaction
+	belong_trs interfaces.Transaction
 }
 
 func (elm *Action_12_ClosePaymentChannelBySetupAmount) Kind() uint16 {
@@ -367,7 +368,7 @@ func (elm *Action_12_ClosePaymentChannelBySetupAmount) RequestSignAddresses() []
 }
 
 func (act *Action_12_ClosePaymentChannelBySetupAmount) WriteinChainState(state interfaces.ChainStateOperation) error {
-	if act.belone_trs == nil {
+	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
 	// 查询通道
@@ -408,7 +409,7 @@ func (act *Action_12_ClosePaymentChannelBySetupAmount) RecoverChainState(state i
 }
 
 func (elm *Action_12_ClosePaymentChannelBySetupAmount) SetBelongTransaction(t interfaces.Transaction) {
-	elm.belone_trs = t
+	elm.belong_trs = t
 }
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用

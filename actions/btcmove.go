@@ -126,6 +126,11 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	//	return fmt.Errorf("Not yet.")
 	//}
 
+	// 交易只能包含唯一一个action
+	belongactionnum := len(act.belong_trs.GetActions())
+	if 1 != belongactionnum {
+		return fmt.Errorf("Satoshi Genesis tx need only one action but got %d actions.", belongactionnum)
+	}
 	// 检查已经记录的增发（避免已完成的增发重复执行）
 	belongtxhx, berr2 := state.ReadMoveBTCTxHashByNumber(uint32(act.TransferNo))
 	if berr2 != nil {
@@ -317,7 +322,7 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStat
 	return DoSubSatoshiFromChainState(state, act.OriginAddress, fields.VarUint8(satBTC))
 }
 
-// 设置所属 belone_trs
+// 设置所属 belong_trs
 func (act *Action_7_SatoshiGenesis) SetBelongTransaction(trs interfaces.Transaction) {
 	act.belong_trs = trs
 }

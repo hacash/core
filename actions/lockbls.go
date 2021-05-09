@@ -204,7 +204,7 @@ func (act *Action_9_LockblsCreate) RecoverChainState(state interfaces.ChainState
 	return nil
 }
 
-// 设置所属 belone_trs
+// 设置所属 belong_trs
 func (act *Action_9_LockblsCreate) SetBelongTransaction(trs interfaces.Transaction) {
 	act.belong_trs = trs
 }
@@ -416,7 +416,7 @@ func (act *Action_10_LockblsRelease) RecoverChainState(state interfaces.ChainSta
 	return DoSubBalanceFromChainState(state, lockbls.MasterAddress, act.ReleaseAmount)
 }
 
-// 设置所属 belone_trs
+// 设置所属 belong_trs
 func (act *Action_10_LockblsRelease) SetBelongTransaction(trs interfaces.Transaction) {
 	act.belong_trs = trs
 }
