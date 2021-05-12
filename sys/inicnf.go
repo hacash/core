@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const BlockChainStateDatabaseVersion = 2
+const BlockChainStateDatabaseVersion = 3
 
 type Inicnf struct {
 	inicnf.File

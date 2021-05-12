@@ -423,14 +423,6 @@ func (trs *Transaction_2_Simple) VerifyTargetSigns(reqaddrs []fields.Address) (b
 func (trs *Transaction_2_Simple) VerifyAllNeedSigns() (bool, error) {
 	hashWithFee := trs.HashWithFee()
 	hashNoFee := trs.Hash()
-	// 验证全部需要验证的签名 // 去掉主地址
-	requests, e := trs.RequestSignAddresses(nil, true)
-	if e != nil {
-		return false, e
-	}
-	if requests == nil || len(requests) == 0 {
-		return true, nil // 什么都不验证，直接通过
-	}
 	// 开始判断
 	allSigns := make(map[string]fields.Sign)
 	for i := 0; i < len(trs.Signs); i++ {
@@ -442,6 +434,14 @@ func (trs *Transaction_2_Simple) VerifyAllNeedSigns() (bool, error) {
 	ok, e := verifyOneSignature(allSigns, trs.Address, hashWithFee)
 	if e != nil || !ok {
 		return ok, e
+	}
+	// 验证全部需要验证的签名 // 去掉主地址
+	requests, e := trs.RequestSignAddresses(nil, true)
+	if e != nil {
+		return false, e
+	}
+	if requests == nil || len(requests) == 0 {
+		return true, nil // 没有其他需要验证
 	}
 	// 验证其他所有签名（不包含手续费字段）
 	for i := 0; i < len(requests); i++ {
