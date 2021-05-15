@@ -6,6 +6,8 @@ import (
 )
 
 type Transaction interface {
+	ClearHash() // 清除hash缓存
+
 	Copy() Transaction
 
 	// the transaction type number

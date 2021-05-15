@@ -78,6 +78,10 @@ func (trs *Transaction_0_Coinbase) Describe(isUnitMei, isForMining bool) map[str
 	return cbinfo
 }
 
+func (trs *Transaction_0_Coinbase) ClearHash() {
+
+}
+
 func (trs *Transaction_0_Coinbase) Copy() interfaces.Transaction {
 	// copy
 	bodys, _ := trs.Serialize()

@@ -67,6 +67,11 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Type() uint8 {
 	return 1
 }
 
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) ClearHash() {
+	trs.hash = nil
+	trs.hashnofee = nil
+}
+
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Serialize() ([]byte, error) {
 	body, e0 := trs.SerializeNoSign()
 	if e0 != nil {
