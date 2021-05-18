@@ -83,9 +83,8 @@ func CreateOneTxOfBTCTransfer(payacc *account.Account, toaddr fields.Address, am
 	return newTrs, nil
 }
 
-// 创建一笔 HACD 转账交易
-func CreateOneTxOfOutfeeQuantityHACDTransfer(payacc *account.Account, toaddr fields.Address, hacdlistsplitcomma string,
-	feeacc *account.Account, fee *fields.Amount, timestamp int64) (*Transaction_2_Simple, error) {
+// 创建钻石
+func CreateHACDlistBySplitCommaFromString(hacdlistsplitcomma string) ([]fields.Bytes6, error) {
 
 	diamonds := strings.Split(hacdlistsplitcomma, ",")
 	if len(diamonds) > 200 {
@@ -100,6 +99,20 @@ func CreateOneTxOfOutfeeQuantityHACDTransfer(payacc *account.Account, toaddr fie
 		diamondsbytes[i] = []byte(v)
 	}
 
+	// 成功返回
+	return diamondsbytes, nil
+}
+
+// 创建一笔 HACD 转账交易
+func CreateOneTxOfOutfeeQuantityHACDTransfer(payacc *account.Account, toaddr fields.Address, hacdlistsplitcomma string,
+	feeacc *account.Account, fee *fields.Amount, timestamp int64) (*Transaction_2_Simple, error) {
+
+	// 钻石表
+	diamondsbytes, e0 := CreateHACDlistBySplitCommaFromString(hacdlistsplitcomma)
+	if e0 != nil {
+		return nil, e0
+	}
+
 	// 创建交易
 	newTrs, _ := NewEmptyTransaction_2_Simple(feeacc.Address) // 使用手续费地址为主地址
 	newTrs.Timestamp = fields.VarUint5(timestamp)             // 使用时间戳
@@ -107,7 +120,7 @@ func CreateOneTxOfOutfeeQuantityHACDTransfer(payacc *account.Account, toaddr fie
 	tranact := &actions.Action_6_OutfeeQuantityDiamondTransfer{
 		FromAddress:  payacc.Address,
 		ToAddress:    toaddr,
-		DiamondCount: fields.VarUint1(len(diamonds)),
+		DiamondCount: fields.VarUint1(len(diamondsbytes)),
 		Diamonds:     diamondsbytes,
 	}
 	e9 := newTrs.AppendAction(tranact)
