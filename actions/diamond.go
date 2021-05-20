@@ -525,6 +525,9 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 		panic("Action belong to transaction not be nil !")
 	}
 	// 数量检查
+	if int(act.DiamondCount) == 0 || int(act.DiamondCount) > 200 {
+		return fmt.Errorf("Diamonds number error")
+	}
 	if int(act.DiamondCount) != len(act.Diamonds) {
 		return fmt.Errorf("Diamonds number quantity count error")
 	}
