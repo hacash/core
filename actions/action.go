@@ -12,7 +12,7 @@ func NewActionByKind(kind uint16) (interfaces.Action, error) {
 	////////////////////   ACTIONS   ////////////////////
 	switch kind {
 	case 1:
-		return new(Action_1_SimpleTransfer), nil
+		return new(Action_1_SimpleToTransfer), nil
 	case 2:
 		return new(Action_2_OpenPaymentChannel), nil
 	case 3:
@@ -35,6 +35,10 @@ func NewActionByKind(kind uint16) (interfaces.Action, error) {
 		return new(Action_11_FromToSatoshiTransfer), nil
 	case 12:
 		return new(Action_12_ClosePaymentChannelBySetupAmount), nil
+	case 13:
+		return new(Action_13_FromTransfer), nil
+	case 14:
+		return new(Action_14_FromToTransfer), nil
 	}
 	////////////////////    END      ////////////////////
 	return nil, fmt.Errorf("Cannot find Action kind of " + string(kind))

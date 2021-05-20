@@ -607,3 +607,35 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) GetDiamondNamesSplitByComma()
 	}
 	return strings.Join(names, ",")
 }
+
+///////////////////////////////////////////////////////////////////////
+
+// 解析钻石表
+func SerializeHACDlistToCommaSplitString(list []fields.Bytes6) (hacdlistsplitcomma string) {
+	var count = len(list)
+	var diamonds = make([]string, count)
+	for i, v := range list {
+		diamonds[i] = string(v)
+	}
+	return strings.Join(diamonds, ",")
+}
+
+// 创建钻石
+func CreateHACDlistBySplitCommaFromString(hacdlistsplitcomma string) ([]fields.Bytes6, error) {
+
+	diamonds := strings.Split(hacdlistsplitcomma, ",")
+	if len(diamonds) > 200 {
+		return nil, fmt.Errorf("too many diamond names")
+	}
+	diamondsbytes := make([]fields.Bytes6, len(diamonds))
+	for i, v := range diamonds {
+		dok := x16rs.IsDiamondValueString(v)
+		if !dok {
+			return nil, fmt.Errorf("<%s> not a valid diamond name", v)
+		}
+		diamondsbytes[i] = []byte(v)
+	}
+
+	// 成功返回
+	return diamondsbytes, nil
+}

@@ -20,7 +20,7 @@ func Test_t1(t *testing.T) {
 
 	amount1 := fields.NewAmountNumSmallCoin(12)
 	// create action
-	action1 := actions.NewAction_1_SimpleTransfer(account2.Address, amount1)
+	action1 := actions.NewAction_1_SimpleToTransfer(account2.Address, amount1)
 	// create tx
 	tx1, e2 := NewEmptyTransaction_2_Simple(account1.Address)
 	if e2 != nil {

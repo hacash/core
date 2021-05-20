@@ -21,7 +21,7 @@ func Test_alltx(t *testing.T) {
 	// 1 普通转账
 	addr1, _ := fields.CheckReadableAddress("1AVRuFXNFi3rdMrPH4hdqSgFrEBnWisWaS")
 	amt1, _ := fields.NewAmountFromFinString("ㄜ500:248")
-	act1 := actions.NewAction_1_SimpleTransfer(*addr1, amt1)
+	act1 := actions.NewAction_1_SimpleToTransfer(*addr1, amt1)
 	tx.AppendAction(act1)
 
 	// 2 开启通道

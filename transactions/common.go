@@ -2,13 +2,10 @@ package transactions
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/actions"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
-	"github.com/hacash/x16rs"
-	"strings"
 )
 
 // 取出钻石创建的action
@@ -33,7 +30,7 @@ func CreateOneTxOfSimpleTransfer(payacc *account.Account, toaddr fields.Address,
 	newTrs, _ := NewEmptyTransaction_2_Simple(payacc.Address)
 	newTrs.Timestamp = fields.VarUint5(timestamp) // 使用时间戳
 	newTrs.Fee = *fee                             // set fee
-	tranact := actions.NewAction_1_SimpleTransfer(toaddr, amount)
+	tranact := actions.NewAction_1_SimpleToTransfer(toaddr, amount)
 	e9 := newTrs.AppendAction(tranact)
 	// sign 私钥签名
 	allPrivateKeyBytes := make(map[string][]byte, 1)
@@ -83,32 +80,12 @@ func CreateOneTxOfBTCTransfer(payacc *account.Account, toaddr fields.Address, am
 	return newTrs, nil
 }
 
-// 创建钻石
-func CreateHACDlistBySplitCommaFromString(hacdlistsplitcomma string) ([]fields.Bytes6, error) {
-
-	diamonds := strings.Split(hacdlistsplitcomma, ",")
-	if len(diamonds) > 200 {
-		return nil, fmt.Errorf("too many diamond names")
-	}
-	diamondsbytes := make([]fields.Bytes6, len(diamonds))
-	for i, v := range diamonds {
-		dok := x16rs.IsDiamondValueString(v)
-		if !dok {
-			return nil, fmt.Errorf("<%s> not a valid diamond name", v)
-		}
-		diamondsbytes[i] = []byte(v)
-	}
-
-	// 成功返回
-	return diamondsbytes, nil
-}
-
 // 创建一笔 HACD 转账交易
 func CreateOneTxOfOutfeeQuantityHACDTransfer(payacc *account.Account, toaddr fields.Address, hacdlistsplitcomma string,
 	feeacc *account.Account, fee *fields.Amount, timestamp int64) (*Transaction_2_Simple, error) {
 
 	// 钻石表
-	diamondsbytes, e0 := CreateHACDlistBySplitCommaFromString(hacdlistsplitcomma)
+	diamondsbytes, e0 := actions.CreateHACDlistBySplitCommaFromString(hacdlistsplitcomma)
 	if e0 != nil {
 		return nil, e0
 	}
