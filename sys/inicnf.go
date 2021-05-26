@@ -15,7 +15,11 @@ import (
 // 全局开发测试标记
 var TestDebugLocalDevelopmentMark bool = false
 
-const BlockChainStateDatabaseVersion = 3
+// 最低可被当前兼容的区块链数据库（仅blockdata）版本号
+const BlockChainStateDatabaseLowestCompatibleVersion = 3
+
+// 当前使用的区块链数据库版本号
+const BlockChainStateDatabaseCurrentUseVersion = 4
 
 type Inicnf struct {
 	inicnf.File
@@ -66,10 +70,27 @@ func (i *Inicnf) MustDataDir() string {
 		dir = os.Getenv("HOME") + string([]byte(dir)[1:])
 	}
 	dir = AbsDir(dir)
-	dir = path.Join(dir, fmt.Sprintf("v%d", BlockChainStateDatabaseVersion))
+	dir = path.Join(dir, fmt.Sprintf("v%d", BlockChainStateDatabaseCurrentUseVersion))
 	i.mustDataDir = dir
 	fmt.Println("[Inicnf] Block chain state data dir: \"" + dir + "\"")
 	return dir
+}
+
+// data dir Check Version
+func (i *Inicnf) MustDataDirCheckVersion(version int) (string, bool) {
+	dir := i.Section("").Key("data_dir").MustString("~/.hacash_mainnet")
+	if strings.HasPrefix(dir, "~/") {
+		dir = os.Getenv("HOME") + string([]byte(dir)[1:])
+	}
+	dir = AbsDir(dir)
+	dir = path.Join(dir, fmt.Sprintf("v%d", version))
+	// 检查是否存在
+	_, nte := os.Stat(dir)
+	if nte != nil {
+		return dir, false // 不存在
+	}
+	// 目录存在
+	return dir, true
 }
 
 //////////////////////////////

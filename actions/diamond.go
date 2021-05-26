@@ -131,70 +131,78 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 交易只能包含唯一一个action
-	belongactionnum := len(act.belong_trs.GetActions())
-	if 1 != belongactionnum {
-		return fmt.Errorf("Diamond create tx need only one action but got %d actions.", belongactionnum)
-	}
-	// 检查区块高度
-	blkhei := state.GetPendingBlockHeight()
-	// 检查区块高度值是否为5的倍数
-	// {BACKTOPOOL} 表示扔回交易池等待下个区块再次处理
-	if blkhei%5 != 0 {
-		return fmt.Errorf("{BACKTOPOOL} Diamond must be in block height multiple of 5.")
-	}
 
-	// 矿工状态检查
-	lastdiamond, err := state.ReadLastestDiamond()
-	if err != nil {
-		return err
-	}
-	if lastdiamond != nil {
-		//fmt.Println(lastdiamond.Diamond)
-		//fmt.Println(lastdiamond.Number)
-		//fmt.Println(lastdiamond.ContainBlockHash.ToHex())
-		//fmt.Println(lastdiamond.PrevContainBlockHash.ToHex())
-		prevdiamondnum, prevdiamondhash := uint32(lastdiamond.Number), lastdiamond.ContainBlockHash
-		// 检查钻石是否是从上一个区块得来
-		if act.PrevHash.Equal(prevdiamondhash) != true {
-			return fmt.Errorf("Diamond prev hash must be <%s> but got <%s>.", hex.EncodeToString(prevdiamondhash), hex.EncodeToString(act.PrevHash))
+	//区块高度
+	blkhei := state.GetPendingBlockHeight()
+
+	// 是否做全面的检查
+	doallcheck := state.IsDatabaseVersionRebuildMode() == false
+	if doallcheck {
+		// 交易只能包含唯一一个action
+		belongactionnum := len(act.belong_trs.GetActions())
+		if 1 != belongactionnum {
+			return fmt.Errorf("Diamond create tx need only one action but got %d actions.", belongactionnum)
 		}
-		if prevdiamondnum+1 != uint32(act.Number) {
-			return fmt.Errorf("Diamond number must be <%d> but got <%d>.", prevdiamondnum+1, act.Number)
+		// 检查区块高度
+		// 检查区块高度值是否为5的倍数
+		// {BACKTOPOOL} 表示扔回交易池等待下个区块再次处理
+		if blkhei%5 != 0 {
+			return fmt.Errorf("{BACKTOPOOL} Diamond must be in block height multiple of 5.")
 		}
-	}
-	// 检查钻石挖矿计算
-	diamond_resbytes, diamond_str := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address, act.GetRealCustomMessage())
-	diamondstrval, isdia := x16rs.IsDiamondHashResultString(diamond_str)
-	if !isdia {
-		return fmt.Errorf("String <%s> is not diamond.", diamond_str)
-	}
-	if strings.Compare(diamondstrval, string(act.Diamond)) != 0 {
-		return fmt.Errorf("Diamond need <%s> but got <%s>", act.Diamond, diamondstrval)
-	}
-	// 检查钻石难度值
-	difok := x16rs.CheckDiamondDifficulty(uint32(act.Number), diamond_resbytes)
-	if !difok {
-		return fmt.Errorf("Diamond difficulty not meet the requirements.")
-	}
-	// 查询钻石是否已经存在
-	hasaddr := state.Diamond(act.Diamond)
-	if hasaddr != nil {
-		return fmt.Errorf("Diamond <%s> already exist.", string(act.Diamond))
-	}
-	// 检查一个区块只能包含一枚钻石
-	pendingdiamond, e2 := state.GetPendingSubmitStoreDiamond()
-	if e2 != nil {
-		return e2
-	}
-	if pendingdiamond != nil {
-		return fmt.Errorf("This block height:%d has already exist diamond:<%s> .", blkhei, pendingdiamond.Diamond)
+
+		// 矿工状态检查
+		lastdiamond, err := state.ReadLastestDiamond()
+		if err != nil {
+			return err
+		}
+		if lastdiamond != nil {
+			//fmt.Println(lastdiamond.Diamond)
+			//fmt.Println(lastdiamond.Number)
+			//fmt.Println(lastdiamond.ContainBlockHash.ToHex())
+			//fmt.Println(lastdiamond.PrevContainBlockHash.ToHex())
+			prevdiamondnum, prevdiamondhash := uint32(lastdiamond.Number), lastdiamond.ContainBlockHash
+			// 检查钻石是否是从上一个区块得来
+			if act.PrevHash.Equal(prevdiamondhash) != true {
+				return fmt.Errorf("Diamond prev hash must be <%s> but got <%s>.", hex.EncodeToString(prevdiamondhash), hex.EncodeToString(act.PrevHash))
+			}
+			if prevdiamondnum+1 != uint32(act.Number) {
+				return fmt.Errorf("Diamond number must be <%d> but got <%d>.", prevdiamondnum+1, act.Number)
+			}
+		}
+		// 检查钻石挖矿计算
+		diamond_resbytes, diamond_str := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address, act.GetRealCustomMessage())
+		diamondstrval, isdia := x16rs.IsDiamondHashResultString(diamond_str)
+		if !isdia {
+			return fmt.Errorf("String <%s> is not diamond.", diamond_str)
+		}
+		if strings.Compare(diamondstrval, string(act.Diamond)) != 0 {
+			return fmt.Errorf("Diamond need <%s> but got <%s>", act.Diamond, diamondstrval)
+		}
+		// 检查钻石难度值
+		difok := x16rs.CheckDiamondDifficulty(uint32(act.Number), diamond_resbytes)
+		if !difok {
+			return fmt.Errorf("Diamond difficulty not meet the requirements.")
+		}
+		// 查询钻石是否已经存在
+		hasaddr := state.Diamond(act.Diamond)
+		if hasaddr != nil {
+			return fmt.Errorf("Diamond <%s> already exist.", string(act.Diamond))
+		}
+		// 检查一个区块只能包含一枚钻石
+		pendingdiamond, e2 := state.GetPendingSubmitStoreDiamond()
+		if e2 != nil {
+			return e2
+		}
+		if pendingdiamond != nil {
+			return fmt.Errorf("This block height:%d has already exist diamond:<%s> .", blkhei, pendingdiamond.Diamond)
+		}
+		// 全部条件检查成功
 	}
 	// 存入钻石
 	//fmt.Println(act.Address.ToReadable())
-	var diastore stores.Diamond
+	var diastore = stores.NewDiamond(act.Address)
 	diastore.Address = act.Address
-	e3 := state.DiamondSet(act.Diamond, &diastore) // 保存
+	e3 := state.DiamondSet(act.Diamond, diastore) // 保存
 	if e3 != nil {
 		return e3
 	}
@@ -384,6 +392,10 @@ func (act *Action_5_DiamondTransfer) WriteinChainState(state interfaces.ChainSta
 		return fmt.Errorf("Diamond <%s> not exist.", string(act.Diamond))
 	}
 	item := diaitem
+	// 检查是否抵押，是否可以转账
+	if diaitem.Status != stores.DiamondStatusNormal {
+		return fmt.Errorf("Diamond <%s> has been mortgaged and cannot be transferred.", string(act.Diamond))
+	}
 	// 检查所属
 	if bytes.Compare(item.Address, trsMainAddress) != 0 {
 		return fmt.Errorf("Diamond <%s> not belong to belong_trs address.", string(act.Diamond))
@@ -536,6 +548,10 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 			return fmt.Errorf("Quantity Diamond <%s> not exist.", string(diamond))
 		}
 		item := diaitem
+		// 检查是否抵押，是否可以转账
+		if diaitem.Status != stores.DiamondStatusNormal {
+			return fmt.Errorf("Diamond <%s> has been mortgaged and cannot be transferred.", string(diamond))
+		}
 		// 检查所属
 		if bytes.Compare(item.Address, act.FromAddress) != 0 {
 			return fmt.Errorf("Diamond <%s> not belong to address '%s'", string(diamond), act.FromAddress.ToReadable())

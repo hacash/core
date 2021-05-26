@@ -7,6 +7,9 @@ import (
 
 type BlockStore interface {
 
+	// close
+	Close()
+
 	// save
 	SaveBlockUniteTransactions(Block) error
 	// cancel
