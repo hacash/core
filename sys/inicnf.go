@@ -12,6 +12,9 @@ import (
 	"time"
 )
 
+// 全局开发测试标记
+var TestDebugLocalDevelopmentMark bool = false
+
 const BlockChainStateDatabaseVersion = 3
 
 type Inicnf struct {

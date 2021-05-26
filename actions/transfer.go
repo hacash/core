@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/sys"
 )
 
 type Action_1_SimpleToTransfer struct {
@@ -164,8 +165,8 @@ func (elm *Action_13_FromTransfer) RequestSignAddresses() []fields.Address {
 
 func (act *Action_13_FromTransfer) WriteinChainState(state interfaces.ChainStateOperation) error {
 
-	if act.belong_trs != nil {
-		return fmt.Errorf("not yet") // 暂未启用等待review
+	if !sys.TestDebugLocalDevelopmentMark {
+		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
 	}
 
 	if act.belong_trs == nil {
@@ -270,8 +271,8 @@ func (elm *Action_14_FromToTransfer) RequestSignAddresses() []fields.Address {
 
 func (act *Action_14_FromToTransfer) WriteinChainState(state interfaces.ChainStateOperation) error {
 
-	if act.belong_trs != nil {
-		return fmt.Errorf("not yet") // 暂未启用等待review
+	if !sys.TestDebugLocalDevelopmentMark {
+		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
 	}
 
 	if act.belong_trs == nil {

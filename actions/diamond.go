@@ -440,10 +440,9 @@ func (act *Action_5_DiamondTransfer) IsBurning90PersentTxFees() bool {
 
 // 批量转移钻石
 type Action_6_OutfeeQuantityDiamondTransfer struct {
-	FromAddress  fields.Address  // 拥有钻石的账户
-	ToAddress    fields.Address  // 收钻方账户
-	DiamondCount fields.VarUint1 // 钻石数量
-	Diamonds     []fields.Bytes6 // 钻石字面量数组
+	FromAddress fields.Address              // 拥有钻石的账户
+	ToAddress   fields.Address              // 收钻方账户
+	DiamondList fields.DiamondListMaxLen200 // 钻石列表
 
 	// 数据指针
 	// 所属交易
@@ -458,8 +457,7 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) Size() uint32 {
 	return 2 +
 		elm.FromAddress.Size() +
 		elm.ToAddress.Size() +
-		elm.DiamondCount.Size() +
-		uint32(elm.DiamondCount)*6 // 每个钻石长6位
+		elm.DiamondList.Size() // 每个钻石长6位
 }
 
 // json api
@@ -469,23 +467,19 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) Describe() map[string]interfa
 }
 
 func (elm *Action_6_OutfeeQuantityDiamondTransfer) Serialize() ([]byte, error) {
-	if int(elm.DiamondCount) != len(elm.Diamonds) {
-		return nil, fmt.Errorf("diamonds number quantity count error")
-	}
 	var kindByte = make([]byte, 2)
 	binary.BigEndian.PutUint16(kindByte, elm.Kind())
 	var addr1Bytes, _ = elm.FromAddress.Serialize()
 	var addr2Bytes, _ = elm.ToAddress.Serialize()
-	var countBytes, _ = elm.DiamondCount.Serialize()
+	var diaBytes, e = elm.DiamondList.Serialize()
+	if e != nil {
+		return nil, e
+	}
 	var buffer bytes.Buffer
 	buffer.Write(kindByte)
 	buffer.Write(addr1Bytes)
 	buffer.Write(addr2Bytes)
-	buffer.Write(countBytes)
-	for _, v := range elm.Diamonds {
-		diabts, _ := v.Serialize()
-		buffer.Write(diabts)
-	}
+	buffer.Write(diaBytes)
 	return buffer.Bytes(), nil
 }
 
@@ -499,17 +493,9 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) Parse(buf []byte, seek uint32
 	if e != nil {
 		return 0, e
 	}
-	seek, e = elm.DiamondCount.Parse(buf, seek)
+	seek, e = elm.DiamondList.Parse(buf, seek)
 	if e != nil {
 		return 0, e
-	}
-	elm.Diamonds = make([]fields.Bytes6, int(elm.DiamondCount))
-	for i := 0; i < int(elm.DiamondCount); i++ {
-		elm.Diamonds[i] = fields.Bytes6{}
-		seek, e = elm.Diamonds[i].Parse(buf, seek)
-		if e != nil {
-			return 0, e
-		}
 	}
 	return seek, nil
 }
@@ -525,19 +511,20 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 		panic("Action belong to transaction not be nil !")
 	}
 	// 数量检查
-	if int(act.DiamondCount) == 0 || int(act.DiamondCount) > 200 {
-		return fmt.Errorf("Diamonds number error")
+	dianum := int(act.DiamondList.Count)
+	if dianum == 0 || dianum != len(act.DiamondList.Diamonds) {
+		return fmt.Errorf("Diamonds quantity error")
 	}
-	if int(act.DiamondCount) != len(act.Diamonds) {
-		return fmt.Errorf("Diamonds number quantity count error")
+	if dianum > 200 {
+		return fmt.Errorf("Diamonds quantity cannot over 200")
 	}
 	// 自己不能转给自己
 	if bytes.Compare(act.FromAddress, act.ToAddress) == 0 {
 		return fmt.Errorf("Cannot transfer to self.")
 	}
 	// 批量转移钻石
-	for i := 0; i < len(act.Diamonds); i++ {
-		diamond := act.Diamonds[i]
+	for i := 0; i < len(act.DiamondList.Diamonds); i++ {
+		diamond := act.DiamondList.Diamonds[i]
 
 		//fmt.Println("Action_6_OutfeeQuantityDiamondTransfer:", act.FromAddress.ToReadable(), act.ToAddress.ToReadable(), string(diamond))
 
@@ -558,7 +545,7 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 		state.DiamondSet(diamond, item)
 	}
 	// 转移钻石余额
-	e9 := DoSimpleDiamondTransferFromChainState(state, act.FromAddress, act.ToAddress, fields.VarUint3(act.DiamondCount))
+	e9 := DoSimpleDiamondTransferFromChainState(state, act.FromAddress, act.ToAddress, fields.VarUint3(dianum))
 	if e9 != nil {
 		return e9
 	}
@@ -570,8 +557,8 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) RecoverChainState(state inter
 		panic("Action belong to transaction not be nil !")
 	}
 	// 批量回退钻石
-	for i := 0; i < len(act.Diamonds); i++ {
-		diamond := act.Diamonds[i]
+	for i := 0; i < len(act.DiamondList.Diamonds); i++ {
+		diamond := act.DiamondList.Diamonds[i]
 		// get diamond
 		diaitem := state.Diamond(diamond)
 		if diaitem == nil {
@@ -586,7 +573,7 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) RecoverChainState(state inter
 		}
 	}
 	// 回退钻石余额
-	e9 := DoSimpleDiamondTransferFromChainState(state, act.ToAddress, act.FromAddress, fields.VarUint3(act.DiamondCount))
+	e9 := DoSimpleDiamondTransferFromChainState(state, act.ToAddress, act.FromAddress, fields.VarUint3(act.DiamondList.Count))
 	if e9 != nil {
 		return e9
 	}
@@ -604,41 +591,7 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) IsBurning90PersentTxFees() bo
 
 // 获取区块钻石的名称列表
 func (elm *Action_6_OutfeeQuantityDiamondTransfer) GetDiamondNamesSplitByComma() string {
-	var names = make([]string, len(elm.Diamonds))
-	for i, v := range elm.Diamonds {
-		names[i] = string(v)
-	}
-	return strings.Join(names, ",")
+	return elm.DiamondList.SerializeHACDlistToCommaSplitString()
 }
 
 ///////////////////////////////////////////////////////////////////////
-
-// 解析钻石表
-func SerializeHACDlistToCommaSplitString(list []fields.Bytes6) (hacdlistsplitcomma string) {
-	var count = len(list)
-	var diamonds = make([]string, count)
-	for i, v := range list {
-		diamonds[i] = string(v)
-	}
-	return strings.Join(diamonds, ",")
-}
-
-// 创建钻石
-func CreateHACDlistBySplitCommaFromString(hacdlistsplitcomma string) ([]fields.Bytes6, error) {
-
-	diamonds := strings.Split(hacdlistsplitcomma, ",")
-	if len(diamonds) > 200 {
-		return nil, fmt.Errorf("too many diamond names")
-	}
-	diamondsbytes := make([]fields.Bytes6, len(diamonds))
-	for i, v := range diamonds {
-		dok := x16rs.IsDiamondValueString(v)
-		if !dok {
-			return nil, fmt.Errorf("<%s> not a valid diamond name", v)
-		}
-		diamondsbytes[i] = []byte(v)
-	}
-
-	// 成功返回
-	return diamondsbytes, nil
-}
