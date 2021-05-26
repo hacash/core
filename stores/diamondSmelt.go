@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	DiamondSmeltSize = 6 + 3 + 5 + 32 + 32 + fields.AddressSize + 4 + 8 + 32
+	DiamondSmeltSize = 6 + 3 + 5 + 32 + 32 + fields.AddressSize + 4 + 8 + 32 + 2
 )
 
 type DiamondSmelt struct {
@@ -19,10 +19,18 @@ type DiamondSmelt struct {
 	ApproxFeeOffer       fields.Bytes4  // Fee Amount
 	Nonce                fields.Bytes8  // nonce
 	CustomMessage        fields.Bytes32 // msg
+	// data statistics
+	AverageBidBurnPrice fields.VarUint2 // 平均竞价销毁的HAC枚数，向下取整，最低一枚，最高65535枚
 }
 
 func (this *DiamondSmelt) Size() uint32 {
 	return uint32(DiamondSmeltSize)
+}
+
+func (this *DiamondSmelt) GetApproxFeeOffer() *fields.Amount {
+	amt := fields.Amount{}
+	amt.Parse(this.ApproxFeeOffer, 0)
+	return &amt
 }
 
 func (this *DiamondSmelt) Serialize() ([]byte, error) {
@@ -36,6 +44,7 @@ func (this *DiamondSmelt) Serialize() ([]byte, error) {
 	b7, _ := this.ApproxFeeOffer.Serialize()
 	b8, _ := this.Nonce.Serialize()
 	b9, _ := this.CustomMessage.Serialize()
+	b10, _ := this.AverageBidBurnPrice.Serialize()
 	buffer.Write(b1)
 	buffer.Write(b2)
 	buffer.Write(b3)
@@ -45,6 +54,7 @@ func (this *DiamondSmelt) Serialize() ([]byte, error) {
 	buffer.Write(b7)
 	buffer.Write(b8)
 	buffer.Write(b9)
+	buffer.Write(b10)
 	return buffer.Bytes(), nil
 }
 
@@ -58,5 +68,6 @@ func (this *DiamondSmelt) Parse(buf []byte, seek uint32) (uint32, error) {
 	seek, _ = this.ApproxFeeOffer.Parse(buf, seek)
 	seek, _ = this.Nonce.Parse(buf, seek)
 	seek, _ = this.CustomMessage.Parse(buf, seek)
+	seek, _ = this.AverageBidBurnPrice.Parse(buf, seek)
 	return seek, nil
 }

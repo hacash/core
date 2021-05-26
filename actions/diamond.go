@@ -22,6 +22,10 @@ const DiamondCreateCustomMessageAboveNumber uint32 = 20000
 // 第 30001 个钻石开始，销毁 90% 的竞价费用
 const DiamondCreateBurning90PercentTxFeesAboveNumber uint32 = 30000
 
+// 第 31248 枚以上（不含）钻石开始，计算平均竞价费用，之前的设定为8枚
+// 在此时刚好一共销毁 10000.9506 枚HAC
+const DiamondStatisticsAverageBiddingBurningPriceAboveNumber uint32 = 31248
+
 // 挖出钻石
 type Action_4_DiamondCreate struct {
 	Diamond  fields.Bytes6   // 钻石字面量 WTYUIAHXVMEKBSZN
@@ -237,6 +241,26 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		Nonce:                act.Nonce,
 		CustomMessage:        act.GetRealCustomMessage(),
 	}
+	// total supply 统计
+	totalsupply, e2 := state.ReadTotalSupply()
+	if e2 != nil {
+		return e2
+	}
+
+	// 计算平均竞价HAC枚数
+	if uint32(act.Number) <= DiamondStatisticsAverageBiddingBurningPriceAboveNumber {
+		diamondstore.AverageBidBurnPrice = 8 // 固定设为 8 枚， 累计共销毁 10000.9506 HAC
+	} else {
+		bsnum := uint32(act.Number) - DiamondCreateBurning90PercentTxFeesAboveNumber
+		burnhac := totalsupply.Get(stores.TotalSupplyStoreTypeOfBurningFee)
+		bidprice := uint64(burnhac) / uint64(bsnum) // 向下取整
+		setprice := fields.VarUint2(bidprice)
+		if setprice < 1 {
+			setprice = 1 // 最小为1
+		}
+		diamondstore.AverageBidBurnPrice = setprice
+	}
+
 	e4 := state.SetLastestDiamond(diamondstore)
 	if e4 != nil {
 		return e4
@@ -246,11 +270,6 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		return e5
 	}
 
-	// total supply 统计
-	totalsupply, e2 := state.ReadTotalSupply()
-	if e2 != nil {
-		return e2
-	}
 	totalsupply.Set(stores.TotalSupplyStoreTypeOfDiamond, float64(act.Number))
 	// update total supply
 	e7 := state.UpdateSetTotalSupply(totalsupply)
