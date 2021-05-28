@@ -115,8 +115,8 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfaces.ChainState
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 检查key值合法性
-	if act.LockblsId[0] == 0 || act.LockblsId[stores.LockblsIdLength-1] == 0 {
+	// 检查id值合法性
+	if len(act.LockblsId) != stores.LockblsIdLength || act.LockblsId[0] == 0 || act.LockblsId[stores.LockblsIdLength-1] == 0 {
 		// 用户创建的 锁仓ID， 第一位和最后一位不能为零
 		// 第一位为零的ID是比特币单向转移的锁仓id
 		return fmt.Errorf("LockblsId format error.")
@@ -130,8 +130,8 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfaces.ChainState
 	if act.LinearBlockNumber < 288 {
 		return fmt.Errorf("LinearBlockNumber cannot less 288.")
 	}
-	if act.LinearBlockNumber > 1700*10000 {
-		return fmt.Errorf("LinearBlockNumber cannot over 17000000.")
+	if act.LinearBlockNumber > 1600*10000 {
+		return fmt.Errorf("LinearBlockNumber cannot over 16000000.")
 	}
 	// 检查数额
 	if !act.TotalStockAmount.IsPositive() || !act.LinearReleaseAmount.IsPositive() {

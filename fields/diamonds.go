@@ -12,6 +12,13 @@ type DiamondListMaxLen200 struct {
 	Diamonds []Bytes6
 }
 
+func NewEmptyDiamondListMaxLen200() *DiamondListMaxLen200 {
+	return &DiamondListMaxLen200{
+		Count:    VarUint1(0),
+		Diamonds: []Bytes6{},
+	}
+}
+
 func (elm DiamondListMaxLen200) Size() uint32 {
 	return 1 + uint32(len(elm.Diamonds))*6
 }

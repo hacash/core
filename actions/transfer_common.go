@@ -21,6 +21,26 @@ func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 
 		// 高度 20万 之后，不允许出现自己转给自己的数额大于可用余额的情况！
 		return nil // 可以自己转给自己，不改变状态，白费手续费
 	}
+
+	// 如果是数据库升级模式，则去掉所有的判断，直接修改余额
+	if state.IsDatabaseVersionRebuildMode() {
+		bls1 := state.Balance(addr1)
+		bls2 := state.Balance(addr2)
+		if bls2 == nil {
+			bls2 = stores.NewEmptyBalance() // create balance store
+		}
+		amt1 := bls1.Hacash
+		amtsub, _ := amt1.Sub(&amt)
+		amt2 := bls2.Hacash
+		amtadd, _ := amt2.Add(&amt)
+		bls1.Hacash = *amtsub
+		state.BalanceSet(addr1, bls1)
+		bls2.Hacash = *amtadd
+		state.BalanceSet(addr2, bls2)
+		return nil
+	}
+
+	// 正常开始判断
 	// 判断余额是否充足
 	bls1 := state.Balance(addr1)
 	if bls1 == nil {

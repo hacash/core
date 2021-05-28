@@ -3,11 +3,85 @@ package transactions
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/hacash/core/account"
 	"github.com/hacash/core/actions"
 	"github.com/hacash/core/fields"
 	"testing"
 	"time"
 )
+
+// 钻石借贷交易
+func Test_diamond_lending(t *testing.T) {
+
+	hash14, _ := hex.DecodeString("530dd68299cf6d2bd68299cf6d2b")
+
+	// tx
+	feeamt, _ := fields.NewAmountFromFinString("ㄜ1:246")
+	mainaddr, _ := fields.CheckReadableAddress("1MzNY1oA3kfgYi75zquj3SRUPYztzXHzK9")
+	tx, _ := NewEmptyTransaction_2_Simple(*mainaddr)
+	tx.Fee = *feeamt
+	tx.Timestamp = 1618839281
+
+	// 创建钻石
+	amt1 := fields.NewAmountSmall(16, 248)
+	act1 := actions.Action_15_DiamondsSystemLendingCreate{
+		LendingID: hash14,
+		MortgageDiamondList: fields.DiamondListMaxLen200{
+			Count:    2,
+			Diamonds: []fields.Bytes6{[]byte("XXXYYY"), []byte("WWWMMM")},
+		},
+		LoanTotalAmount: *amt1,
+		BorrowPeriod:    20,
+	}
+	tx.AppendAction(&act1)
+
+	// 签名
+	feeacc := account.CreateAccountByPassword("123456")
+	addrPrivateKeys := map[string][]byte{}
+	addrPrivateKeys[string(feeacc.Address)] = feeacc.PrivateKey
+	tx.FillNeedSigns(addrPrivateKeys, nil)
+
+	// 序列化
+	txbody, _ := tx.Serialize()
+	fmt.Println("tx body:", hex.EncodeToString(txbody))
+
+}
+
+// 创建钻石交易
+func Test_create_diamond(t *testing.T) {
+
+	hash8, _ := hex.DecodeString("530dd68299cf6d2b")
+	hash32, _ := hex.DecodeString("000000000e8ca4376218601120e12b6724a8c174087b9614530dd68299cf6d2b")
+
+	// tx
+	feeamt, _ := fields.NewAmountFromFinString("ㄜ1:246")
+	mainaddr, _ := fields.CheckReadableAddress("1MzNY1oA3kfgYi75zquj3SRUPYztzXHzK9")
+	tx, _ := NewEmptyTransaction_2_Simple(*mainaddr)
+	tx.Fee = *feeamt
+	tx.Timestamp = 1618839281
+
+	// 创建钻石
+	act1 := actions.Action_4_DiamondCreate{
+		Diamond:       fields.Bytes6("WWWMMM"),
+		Number:        3,
+		PrevHash:      hash32,
+		Nonce:         hash8,
+		Address:       *mainaddr,
+		CustomMessage: hash32,
+	}
+	tx.AppendAction(&act1)
+
+	// 签名
+	feeacc := account.CreateAccountByPassword("123456")
+	addrPrivateKeys := map[string][]byte{}
+	addrPrivateKeys[string(feeacc.Address)] = feeacc.PrivateKey
+	tx.FillNeedSigns(addrPrivateKeys, nil)
+
+	// 序列化
+	txbody, _ := tx.Serialize()
+	fmt.Println("tx body:", hex.EncodeToString(txbody))
+
+}
 
 func Test_alltx(t *testing.T) {
 

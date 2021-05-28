@@ -46,6 +46,7 @@ type ChainStateOperation interface {
 	Lockbls(fields.Bytes18) *stores.Lockbls
 	Channel(fields.Bytes16) *stores.Channel
 	Diamond(fields.Bytes6) *stores.Diamond
+	DiamondLending(fields.Bytes14) *stores.DiamondLending
 
 	// operate
 
@@ -65,6 +66,10 @@ type ChainStateOperation interface {
 
 	DiamondSet(fields.Bytes6, *stores.Diamond) error
 	DiamondDel(fields.Bytes6) error
+
+	DiamondLendingCreate(fields.Bytes14, *stores.DiamondLending) error
+	DiamondLendingUpdate(fields.Bytes14, *stores.DiamondLending) error
+	DiamondLendingDelete(fields.Bytes14) error
 
 	// movebtc
 	SaveMoveBTCBelongTxHash(trsno uint32, txhash []byte) error

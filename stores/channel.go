@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	ChannelSize = 5 + 2 + (21+6)*2 + 1 + 2 + 16 // 80 = 16 × 5
+	ChannelSize     = 5 + 2 + (21+6)*2 + 1 + 2 + 16 // 80 = 16 × 5
+	ChannelIdLength = 16
 )
 
 //

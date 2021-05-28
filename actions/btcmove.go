@@ -7,6 +7,7 @@ import (
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/stores"
+	"github.com/hacash/core/sys"
 	"math"
 	"math/big"
 	"time"
@@ -203,6 +204,12 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	// 锁仓时间按最先一枚计算
 	// 判断是否线性锁仓至 lockbls
 	lockweek, weekhei := moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
+
+	// 开发者模式
+	if sys.TestDebugLocalDevelopmentMark {
+		weekhei = 10 // 开发者模式，十个区块就释放
+	}
+
 	if weekhei > 17000000 {
 		return fmt.Errorf("SatoshiGenesis moveBtcLockWeekByIdx weekhei overflow.")
 	}

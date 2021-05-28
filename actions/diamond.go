@@ -8,6 +8,7 @@ import (
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/stores"
+	"github.com/hacash/core/sys"
 	"github.com/hacash/x16rs"
 	"strings"
 )
@@ -139,9 +140,19 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	//区块高度
 	blkhei := state.GetPendingBlockHeight()
 
+	// 必须检查
+	var mustDoAllCheck = true
+
+	if sys.TestDebugLocalDevelopmentMark {
+		mustDoAllCheck = false // 开发者模式 不检查
+	}
+	//fmt.Println(state.IsDatabaseVersionRebuildMode(), "-------------------------")
+	if state.IsDatabaseVersionRebuildMode() {
+		mustDoAllCheck = false // 数据库升级模式 不检查
+	}
+
 	// 是否做全面的检查
-	doallcheck := state.IsDatabaseVersionRebuildMode() == false
-	if doallcheck {
+	if mustDoAllCheck {
 		// 交易只能包含唯一一个action
 		belongactionnum := len(act.belong_trs.GetActions())
 		if 1 != belongactionnum {
@@ -202,6 +213,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		}
 		// 全部条件检查成功
 	}
+
 	// 存入钻石
 	//fmt.Println(act.Address.ToReadable())
 	var diastore = stores.NewDiamond(act.Address)
@@ -218,17 +230,6 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 
 	// 设置矿工状态
 	//标记本区块已经包含钻石
-	feeoffer := act.belong_trs.GetFee()
-	approxfeeoffer, _, e11 := feeoffer.CompressForMainNumLen(4, true)
-	if e11 != nil {
-		return e11
-	}
-	approxfeeofferBytes, e12 := approxfeeoffer.Serialize()
-	if e12 != nil {
-		return e12
-	}
-	approxfeeofferBytesStores := make([]byte, 4)
-	copy(approxfeeofferBytesStores, approxfeeofferBytes)
 	// 存储对象
 	var diamondstore = &stores.DiamondSmelt{
 		Diamond:              act.Diamond,
@@ -237,9 +238,15 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		ContainBlockHash:     nil, // current block not exist !!!
 		PrevContainBlockHash: act.PrevHash,
 		MinerAddress:         act.Address,
-		ApproxFeeOffer:       fields.Bytes4(approxfeeofferBytesStores),
 		Nonce:                act.Nonce,
 		CustomMessage:        act.GetRealCustomMessage(),
+	}
+
+	// 写入手续费报价
+	feeoffer := act.belong_trs.GetFee()
+	e11 := diamondstore.ParseApproxFeeOffer(feeoffer)
+	if e11 != nil {
+		return e11
 	}
 	// total supply 统计
 	totalsupply, e2 := state.ReadTotalSupply()
@@ -261,6 +268,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		diamondstore.AverageBidBurnPrice = setprice
 	}
 
+	// 设置最新状态
 	e4 := state.SetLastestDiamond(diamondstore)
 	if e4 != nil {
 		return e4
@@ -577,7 +585,10 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 		}
 		// 转移钻石
 		item.Address = act.ToAddress
-		state.DiamondSet(diamond, item)
+		e5 := state.DiamondSet(diamond, item)
+		if e5 != nil {
+			return e5
+		}
 	}
 	// 转移钻石余额
 	e9 := DoSimpleDiamondTransferFromChainState(state, act.FromAddress, act.ToAddress, fields.VarUint3(dianum))

@@ -33,6 +33,22 @@ func (this *DiamondSmelt) GetApproxFeeOffer() *fields.Amount {
 	return &amt
 }
 
+func (this *DiamondSmelt) ParseApproxFeeOffer(amt *fields.Amount) error {
+	// 压缩存储空间
+	approxfeeoffer, _, e11 := amt.CompressForMainNumLen(4, true)
+	if e11 != nil {
+		return e11
+	}
+	approxfeeofferBytes, e12 := approxfeeoffer.Serialize()
+	if e12 != nil {
+		return e12
+	}
+	approxfeeofferBytesStores := make([]byte, 4)
+	copy(approxfeeofferBytesStores, approxfeeofferBytes)
+	this.ApproxFeeOffer = fields.Bytes4(approxfeeofferBytesStores)
+	return nil
+}
+
 func (this *DiamondSmelt) Serialize() ([]byte, error) {
 	var buffer = new(bytes.Buffer)
 	b1, _ := this.Diamond.Serialize()

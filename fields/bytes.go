@@ -16,7 +16,10 @@ type Bytes5 []byte
 type Bytes6 []byte
 type Bytes8 []byte
 type Bytes12 []byte
+type Bytes14 []byte
+type Bytes15 []byte
 type Bytes16 []byte
+type Bytes17 []byte
 type Bytes18 []byte
 type Bytes21 []byte
 type Bytes24 []byte
@@ -32,7 +35,10 @@ func (elm Bytes5) Serialize() ([]byte, error)  { return bytesSerialize(elm, 5) }
 func (elm Bytes6) Serialize() ([]byte, error)  { return bytesSerialize(elm, 6) }
 func (elm Bytes8) Serialize() ([]byte, error)  { return bytesSerialize(elm, 8) }
 func (elm Bytes12) Serialize() ([]byte, error) { return bytesSerialize(elm, 12) }
+func (elm Bytes14) Serialize() ([]byte, error) { return bytesSerialize(elm, 14) }
+func (elm Bytes15) Serialize() ([]byte, error) { return bytesSerialize(elm, 15) }
 func (elm Bytes16) Serialize() ([]byte, error) { return bytesSerialize(elm, 16) }
+func (elm Bytes17) Serialize() ([]byte, error) { return bytesSerialize(elm, 17) }
 func (elm Bytes18) Serialize() ([]byte, error) { return bytesSerialize(elm, 18) }
 func (elm Bytes21) Serialize() ([]byte, error) { return bytesSerialize(elm, 21) }
 func (elm Bytes24) Serialize() ([]byte, error) { return bytesSerialize(elm, 24) }
@@ -58,8 +64,17 @@ func (elm *Bytes8) Parse(buf []byte, seek uint32) (uint32, error) {
 func (elm *Bytes12) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 12)
 }
+func (elm *Bytes14) Parse(buf []byte, seek uint32) (uint32, error) {
+	return bytesParse(elm, buf, seek, 14)
+}
+func (elm *Bytes15) Parse(buf []byte, seek uint32) (uint32, error) {
+	return bytesParse(elm, buf, seek, 15)
+}
 func (elm *Bytes16) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 16)
+}
+func (elm *Bytes17) Parse(buf []byte, seek uint32) (uint32, error) {
+	return bytesParse(elm, buf, seek, 17)
 }
 func (elm *Bytes18) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 18)
@@ -86,7 +101,10 @@ func (elm Bytes5) Size() uint32  { return 5 }
 func (elm Bytes6) Size() uint32  { return 6 }
 func (elm Bytes8) Size() uint32  { return 8 }
 func (elm Bytes12) Size() uint32 { return 12 }
+func (elm Bytes14) Size() uint32 { return 14 }
+func (elm Bytes15) Size() uint32 { return 15 }
 func (elm Bytes16) Size() uint32 { return 16 }
+func (elm Bytes17) Size() uint32 { return 17 }
 func (elm Bytes18) Size() uint32 { return 18 }
 func (elm Bytes21) Size() uint32 { return 21 }
 func (elm Bytes24) Size() uint32 { return 24 }
@@ -119,8 +137,14 @@ func bytesParse(elm interface{}, buf []byte, seek uint32, maxlen uint32) (uint32
 		*a = (Bytes6(addrbytes))
 	case *Bytes8:
 		*a = (Bytes8(addrbytes))
+	case *Bytes14:
+		*a = (Bytes14(addrbytes))
+	case *Bytes15:
+		*a = (Bytes15(addrbytes))
 	case *Bytes16:
 		*a = (Bytes16(addrbytes))
+	case *Bytes17:
+		*a = (Bytes17(addrbytes))
 	case *Bytes18:
 		*a = (Bytes18(addrbytes))
 	case *Bytes12:

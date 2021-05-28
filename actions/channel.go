@@ -101,7 +101,7 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 		return fmt.Errorf("Payment Channel Id <%s> already exist.", hex.EncodeToString(act.ChannelId))
 	}
 	// 通道id合法性
-	if len(act.ChannelId) != 16 || act.ChannelId[0] == 0 || act.ChannelId[15] == 0 {
+	if len(act.ChannelId) != stores.ChannelIdLength || act.ChannelId[0] == 0 || act.ChannelId[stores.ChannelIdLength-1] == 0 {
 		return fmt.Errorf("Payment Channel Id <%s> format error.", hex.EncodeToString(act.ChannelId))
 	}
 	// 两个地址不能相同

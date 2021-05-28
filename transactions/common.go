@@ -85,7 +85,7 @@ func CreateOneTxOfOutfeeQuantityHACDTransfer(payacc *account.Account, toaddr fie
 	feeacc *account.Account, fee *fields.Amount, timestamp int64) (*Transaction_2_Simple, error) {
 
 	// 钻石表
-	var diamonds = fields.DiamondListMaxLen200{}
+	var diamonds = fields.NewEmptyDiamondListMaxLen200()
 	e0 := diamonds.ParseHACDlistBySplitCommaFromString(hacdlistsplitcomma)
 	if e0 != nil {
 		return nil, e0
@@ -98,7 +98,7 @@ func CreateOneTxOfOutfeeQuantityHACDTransfer(payacc *account.Account, toaddr fie
 	tranact := &actions.Action_6_OutfeeQuantityDiamondTransfer{
 		FromAddress: payacc.Address,
 		ToAddress:   toaddr,
-		DiamondList: diamonds,
+		DiamondList: *diamonds,
 	}
 	e9 := newTrs.AppendAction(tranact)
 	if e9 != nil {

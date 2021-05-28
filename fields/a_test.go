@@ -30,10 +30,12 @@ func Test_t1(t *testing.T) {
 
 	amt, _ := NewAmountFromFinString("HAC123456789:240")
 
-	a1, _, _ := amt.CompressForMainNumLen(4, true)
-	a2, _, _ := amt.CompressForMainNumLen(6, false)
+	a0, _, _ := amt.CompressForMainNumLen(1, false)
+	a1, _, _ := amt.CompressForMainNumLen(3, false)
+	a2, _, _ := amt.CompressForMainNumLen(5, true)
+	a3, _, _ := amt.CompressForMainNumLen(7, true)
 
-	fmt.Println(a1.ToFinString(), a2.ToFinString())
+	fmt.Println(a0.ToFinString(), a1.ToFinString(), a2.ToFinString(), a3.ToFinString())
 
 }
 
