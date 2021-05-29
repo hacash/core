@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/hacash/core/stores"
 	"math"
@@ -16,14 +15,14 @@ import (
 // hac转账
 func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, amt fields.Amount) error {
 
-	//fmt.Println("addr1:", addr1.ToReadable(), "addr2:", addr2.ToReadable(), "amt:", amt.ToFinString())
-	if state.GetPendingBlockHeight() < 200000 && bytes.Compare(addr1, addr2) == 0 {
-		// 高度 20万 之后，不允许出现自己转给自己的数额大于可用余额的情况！
-		return nil // 可以自己转给自己，不改变状态，白费手续费
-	}
+	isTrsToMySelf := addr1.Equal(addr2)
 
 	// 如果是数据库升级模式，则去掉所有的判断，直接修改余额
 	if state.IsDatabaseVersionRebuildMode() {
+		// 判断是否为自己转给自己
+		if isTrsToMySelf {
+			return nil // 可以自己转给自己，不改变状态，白费手续费
+		}
 		bls1 := state.Balance(addr1)
 		bls2 := state.Balance(addr2)
 		if bls2 == nil {
@@ -41,6 +40,11 @@ func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 
 	}
 
 	// 正常开始判断
+	//fmt.Println("addr1:", addr1.ToReadable(), "addr2:", addr2.ToReadable(), "amt:", amt.ToFinString())
+	if state.GetPendingBlockHeight() < 200000 && isTrsToMySelf {
+		// 高度 20万 之后，不允许出现自己转给自己的数额大于可用余额的情况！
+		return nil // 可以自己转给自己，不改变状态，白费手续费
+	}
 	// 判断余额是否充足
 	bls1 := state.Balance(addr1)
 	if bls1 == nil {
@@ -57,7 +61,7 @@ func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 
 		return fmt.Errorf("address %s balance %s not enough， need %s.", addr1.ToReadable(), amt1.ToFinString(), amt.ToFinString())
 	}
 	// 判断是否为自己转给自己
-	if bytes.Compare(addr1, addr2) == 0 {
+	if isTrsToMySelf {
 		return nil // 可以自己转给自己，不改变状态，白费手续费
 	}
 	// 查询收款方余额
