@@ -25,7 +25,7 @@ const DiamondCreateBurning90PercentTxFeesAboveNumber uint32 = 30000
 
 // 第 31248 枚以上（不含）钻石开始，计算平均竞价费用，之前的设定为8枚
 // 在此时刚好一共销毁 10000.9506 枚HAC
-const DiamondStatisticsAverageBiddingBurningPriceAboveNumber uint32 = 31248
+const DiamondStatisticsAverageBiddingBurningPriceAboveNumber uint32 = 32000
 
 // 挖出钻石
 type Action_4_DiamondCreate struct {
@@ -256,11 +256,11 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 
 	// 计算平均竞价HAC枚数
 	if uint32(act.Number) <= DiamondStatisticsAverageBiddingBurningPriceAboveNumber {
-		diamondstore.AverageBidBurnPrice = 8 // 固定设为 8 枚， 累计共销毁 10000.9506 HAC
+		diamondstore.AverageBidBurnPrice = 8 // 固定设为 8 枚
 	} else {
 		bsnum := uint32(act.Number) - DiamondCreateBurning90PercentTxFeesAboveNumber
 		burnhac := totalsupply.Get(stores.TotalSupplyStoreTypeOfBurningFee)
-		bidprice := uint64(burnhac) / uint64(bsnum) // 向下取整
+		bidprice := uint64(burnhac/float64(bsnum) + 0.99999999) // 向上取整
 		setprice := fields.VarUint2(bidprice)
 		if setprice < 1 {
 			setprice = 1 // 最小为1
