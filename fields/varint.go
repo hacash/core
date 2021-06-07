@@ -67,6 +67,15 @@ func (elm VarUint6) Size() uint32 { return 6 }
 func (elm VarUint7) Size() uint32 { return 7 }
 func (elm VarUint8) Size() uint32 { return 8 }
 
+// 设置
+func (elm *Bool) Set(v bool) {
+	if v {
+		*elm = 1
+	} else {
+		*elm = 0
+	}
+}
+
 // 判断
 func (elm Bool) Is(v bool) bool { return elm.Check() == v }
 func (elm Bool) Check() bool    { return int(elm) != 0 }

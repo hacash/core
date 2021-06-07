@@ -29,7 +29,7 @@ const (
 	TotalSupplyStoreTypeOfSystemLendingDiamondCumulationRansomHacAmount uint8 = 9 // 钻石系统抵押累计赎回（销毁）HAC流水数量
 	// 比特币借贷（每一份为 0.01 BTC）
 	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount      uint8 = 10 // 比特币系统借贷抵押份数实时统计
-	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionBurningInterestHacAmount  uint8 = 11 // 用户间借贷系统销毁的1%利息统计
+	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionBurningInterestHacAmount  uint8 = 11 // 比特币系统借贷预销毁利息统计
 	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCumulationLoanHacAmount   uint8 = 12 // 比特币系统借贷累计借出HAC流水数量
 	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCumulationRansomHacAmount uint8 = 13 // 比特币系统借贷累计赎回HAC流水数量
 	// 用户间借贷
@@ -37,7 +37,7 @@ const (
 	TotalSupplyStoreTypeOfUsersLendingCumulationBitcoin                  uint8 = 15 // 用户间借贷比特币数量流水累计（单位：枚）
 	TotalSupplyStoreTypeOfUsersLendingCumulationHacAmount                uint8 = 16 // 用户间借贷HAC借出额流水累计（借出累计而非归还累计）
 	TotalSupplyStoreTypeOfUsersLendingBurningOnePercentInterestHacAmount uint8 = 17 // 用户间借贷系统销毁的1%利息统计
-	TotalSupplyStoreTypeOfUsersLendingLendersInterestHacAmountCumulation uint8 = 18 // 用户间借贷贷出方赚取的利息流水累计
+	// TotalSupplyStoreTypeOfUsersLendingLendersInterestHacAmountCumulation uint8 = 18 // 用户间借贷贷出方赚取的利息流水累计
 
 )
 

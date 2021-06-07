@@ -9,7 +9,6 @@ import (
 	"github.com/hacash/core/stores"
 	"github.com/hacash/core/sys"
 	"math"
-	"math/big"
 	"time"
 )
 
@@ -196,11 +195,14 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 	}
 
 	// 增发 hac
-	hacmeibig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount))
-	totaladdhacamt, err := fields.NewAmountByBigIntWithUnit(hacmeibig, 248)
-	if err != nil {
-		return err
-	}
+	/*
+		hacmeibig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount))
+		totaladdhacamt, err := fields.NewAmountByBigIntWithUnit(hacmeibig, 248)
+		if err != nil {
+			return err
+		}
+	*/
+	totaladdhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount))
 	// 锁仓时间按最先一枚计算
 	// 判断是否线性锁仓至 lockbls
 	lockweek, weekhei := moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
@@ -233,8 +235,10 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		// 余额
 		allamts[1] = totaladdhacamt
 		// 每周可以解锁的币
-		hacweekbig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount) / uint64(lockweek))
-		wklkhacamt, _ := fields.NewAmountByBigIntWithUnit(hacweekbig, 248)
+		/*
+			hacweekbig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount) / uint64(lockweek))
+		*/
+		wklkhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount) / int64(lockweek))
 		allamts[2] = wklkhacamt // 每周解锁
 		// 赋值
 		for i := 0; i < 3; i++ {
@@ -287,7 +291,6 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStat
 	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfTransferBitcoin, float64(act.BitcoinQuantity))
 
 	// 回退 hac
-	hacmeibig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount))
 	// 锁仓时间按最先一枚计算
 	// 判断是否线性锁仓至 lockbls
 	lockweek, weekhei := moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
@@ -304,10 +307,13 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStat
 	} else {
 
 		// 回退 HAC 增发
-		addhacamt, err := fields.NewAmountByBigIntWithUnit(hacmeibig, 248)
-		if err != nil {
-			return err
-		}
+		/*
+			addhacamt, err := fields.NewAmountByBigIntWithUnit(hacmeibig, 248)
+			if err != nil {
+				return err
+			}
+		*/
+		addhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount))
 		e1 := DoSubBalanceFromChainState(state, act.OriginAddress, *addhacamt)
 		if e1 != nil {
 			return e1

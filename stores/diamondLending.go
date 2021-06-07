@@ -10,11 +10,11 @@ const (
 )
 
 type DiamondLending struct {
-	IsRansomed          fields.VarUint1             // 是否已经赎回(已经被赎回)
+	IsRansomed          fields.Bool                 // 是否已经赎回(已经被赎回)
 	CreateBlockHeight   fields.VarUint5             // 借贷开启时的区块高度
 	MainAddress         fields.Address              // 借贷人地址
 	MortgageDiamondList fields.DiamondListMaxLen200 // 抵押钻石列表
-	LoanTotalAmount     fields.Amount               // 总共借出HAC额度，必须等于总可借额度，不能多也不能少
+	LoanTotalAmountMei  fields.VarUint4             // [枚数]总共借出HAC额度，必须等于总可借额度，不能多也不能少
 	BorrowPeriod        fields.VarUint1             // 借款周期，一个周期代表 0.5%利息和10000个区块约35天，最低1最高20
 }
 
@@ -30,7 +30,7 @@ func (elm *DiamondLending) Size() uint32 {
 		elm.CreateBlockHeight.Size() +
 		elm.MainAddress.Size() +
 		elm.MortgageDiamondList.Size() +
-		elm.LoanTotalAmount.Size() +
+		elm.LoanTotalAmountMei.Size() +
 		elm.BorrowPeriod.Size()
 }
 
@@ -40,7 +40,7 @@ func (elm *DiamondLending) Serialize() ([]byte, error) {
 	var b1, _ = elm.CreateBlockHeight.Serialize()
 	var b2, _ = elm.MainAddress.Serialize()
 	var b3, _ = elm.MortgageDiamondList.Serialize()
-	var b4, _ = elm.LoanTotalAmount.Serialize()
+	var b4, _ = elm.LoanTotalAmountMei.Serialize()
 	var b5, _ = elm.BorrowPeriod.Serialize()
 	buffer.Write(b0)
 	buffer.Write(b1)
@@ -69,7 +69,7 @@ func (elm *DiamondLending) Parse(buf []byte, seek uint32) (uint32, error) {
 	if e != nil {
 		return 0, e
 	}
-	seek, e = elm.LoanTotalAmount.Parse(buf, seek)
+	seek, e = elm.LoanTotalAmountMei.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}

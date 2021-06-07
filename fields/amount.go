@@ -44,6 +44,14 @@ func NewAmountNumOneByUnit(unit uint8) *Amount {
 	}
 }
 
+func NewAmountByUnit248(num int64) *Amount {
+	amt, err := NewAmountByBigIntWithUnit(big.NewInt(num), 248)
+	if err != nil {
+		panic(err)
+	}
+	return amt
+}
+
 func NewAmountByBigIntWithUnit(bignum *big.Int, unit int) (*Amount, error) {
 	var unitint = new(big.Int).Exp(big.NewInt(int64(10)), big.NewInt(int64(unit)), big.NewInt(int64(0)))
 	//fmt.Println(bignum.String())
@@ -250,16 +258,16 @@ func (bill Amount) ToMei() float64 {
 }
 
 // 从字符串建立数额
-func NewAmountFromString(numstr string) (*Amount, error) {
+func NewAmountFromStringUnsafe(numstr string) (*Amount, error) {
 	if strings.Contains(numstr, ":") {
 		return NewAmountFromFinString(numstr)
 	} else {
-		return NewAmountFromMeiString(numstr)
+		return NewAmountFromMeiStringUnsafe(numstr)
 	}
 }
 
 // create form readble string
-func NewAmountFromMeiString(meistr string) (*Amount, error) {
+func NewAmountFromMeiStringUnsafe(meistr string) (*Amount, error) {
 	mei, e1 := strconv.ParseFloat(meistr, 0)
 	if e1 != nil {
 		return nil, e1

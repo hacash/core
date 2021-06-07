@@ -13,6 +13,9 @@ func DoSimpleSatoshiTransferFromChainState(state interfaces.ChainStateOperation,
 	if bytes.Compare(addr1, addr2) == 0 {
 		return nil // 可以自己转给自己，不改变状态，白费手续费
 	}
+	if sat == 0 {
+		return nil // 数量为0，直接成功
+	}
 	bls1 := state.Balance(addr1)
 	if bls1 == nil {
 		return fmt.Errorf("Satoshi not find.")
@@ -43,6 +46,9 @@ func DoSimpleSatoshiTransferFromChainState(state interfaces.ChainStateOperation,
 
 // 单纯增加 BTC 余额 （amt 单位 聪）
 func DoAddSatoshiFromChainState(state interfaces.ChainStateOperation, addr fields.Address, sat fields.VarUint8) error {
+	if sat == 0 {
+		return nil // 数量为0，直接成功
+	}
 	blssto := state.Balance(addr)
 	if blssto == nil {
 		blssto = stores.NewEmptyBalance() // first create account
@@ -60,6 +66,9 @@ func DoAddSatoshiFromChainState(state interfaces.ChainStateOperation, addr field
 
 // 单纯扣除 BTC 余额 （amt 单位 聪）
 func DoSubSatoshiFromChainState(state interfaces.ChainStateOperation, addr fields.Address, sat fields.VarUint8) error {
+	if sat == 0 {
+		return nil // 数量为0，直接成功
+	}
 	blssto := state.Balance(addr)
 	if blssto == nil {
 		return fmt.Errorf("address %s satoshi need %d not enough.", addr.ToReadable(), sat)

@@ -47,6 +47,8 @@ type ChainStateOperation interface {
 	Channel(fields.Bytes16) *stores.Channel
 	Diamond(fields.Bytes6) *stores.Diamond
 	DiamondLending(fields.Bytes14) *stores.DiamondLending
+	BitcoinLending(fields.Bytes15) *stores.BitcoinLending
+	UserLending(fields.Bytes17) *stores.UserLending
 
 	// operate
 
@@ -70,6 +72,14 @@ type ChainStateOperation interface {
 	DiamondLendingCreate(fields.Bytes14, *stores.DiamondLending) error
 	DiamondLendingUpdate(fields.Bytes14, *stores.DiamondLending) error
 	DiamondLendingDelete(fields.Bytes14) error
+
+	BitcoinLendingCreate(fields.Bytes15, *stores.BitcoinLending) error
+	BitcoinLendingUpdate(fields.Bytes15, *stores.BitcoinLending) error
+	BitcoinLendingDelete(fields.Bytes15) error
+
+	UserLendingCreate(fields.Bytes17, *stores.UserLending) error
+	UserLendingUpdate(fields.Bytes17, *stores.UserLending) error
+	UserLendingDelete(fields.Bytes17) error
 
 	// movebtc
 	SaveMoveBTCBelongTxHash(trsno uint32, txhash []byte) error

@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"github.com/hacash/core/coinbase"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/stores"
@@ -565,7 +566,7 @@ func calculateChannelInterest(curheight uint64, openBelongHeight uint64, leftAmo
 	}
 	if insnum > 0 {
 		// 计算通道利息奖励
-		a1, a2, e := DoAppendCompoundInterestProportionOfHeightV2(leftAmount, rightAmount, insnum, wfzn)
+		a1, a2, e := coinbase.DoAppendCompoundInterestProportionOfHeightV2(leftAmount, rightAmount, insnum, wfzn)
 		if e != nil {
 			return nil, nil, false, e
 		}
