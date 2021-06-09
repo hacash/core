@@ -11,7 +11,8 @@ const (
 
 type UserLending struct {
 	IsRansomed           fields.Bool // 是否已经赎回(已经被赎回)
-	IsRedemptionOvertime fields.Bool // 是否超期仍可赎回
+	IsRedemptionOvertime fields.Bool // 是否超期仍可赎回（自动展期）
+	IsPublicRedeemable   fields.Bool // 到期后是否公共可赎回
 
 	CreateBlockHeight fields.VarUint5 // 借贷开启时的区块高度
 	ExpireBlockHeight fields.VarUint5 // 约定到期的区块高度
@@ -31,6 +32,7 @@ type UserLending struct {
 func (elm *UserLending) Size() uint32 {
 	return elm.IsRansomed.Size() +
 		elm.IsRedemptionOvertime.Size() +
+		elm.IsPublicRedeemable.Size() +
 		elm.CreateBlockHeight.Size() +
 		elm.ExpireBlockHeight.Size() +
 		elm.MortgagorAddress.Size() +
@@ -46,15 +48,16 @@ func (elm *UserLending) Serialize() ([]byte, error) {
 	var buffer bytes.Buffer
 	var b1, _ = elm.IsRansomed.Serialize()
 	var b2, _ = elm.IsRedemptionOvertime.Serialize()
-	var b3, _ = elm.CreateBlockHeight.Serialize()
-	var b4, _ = elm.ExpireBlockHeight.Serialize()
-	var b5, _ = elm.MortgagorAddress.Serialize()
-	var b6, _ = elm.LendersAddress.Serialize()
-	var b7, _ = elm.MortgageBitcoin.Serialize()
-	var b8, _ = elm.MortgageDiamondList.Serialize()
-	var b9, _ = elm.LoanTotalAmount.Serialize()
-	var b10, _ = elm.AgreedRedemptionAmount.Serialize()
-	var b11, _ = elm.PreBurningInterestAmount.Serialize()
+	var b3, _ = elm.IsPublicRedeemable.Serialize()
+	var b4, _ = elm.CreateBlockHeight.Serialize()
+	var b5, _ = elm.ExpireBlockHeight.Serialize()
+	var b6, _ = elm.MortgagorAddress.Serialize()
+	var b7, _ = elm.LendersAddress.Serialize()
+	var b8, _ = elm.MortgageBitcoin.Serialize()
+	var b9, _ = elm.MortgageDiamondList.Serialize()
+	var b10, _ = elm.LoanTotalAmount.Serialize()
+	var b11, _ = elm.AgreedRedemptionAmount.Serialize()
+	var b12, _ = elm.PreBurningInterestAmount.Serialize()
 	buffer.Write(b1)
 	buffer.Write(b2)
 	buffer.Write(b3)
@@ -66,6 +69,7 @@ func (elm *UserLending) Serialize() ([]byte, error) {
 	buffer.Write(b9)
 	buffer.Write(b10)
 	buffer.Write(b11)
+	buffer.Write(b12)
 	return buffer.Bytes(), nil
 }
 
@@ -76,6 +80,10 @@ func (elm *UserLending) Parse(buf []byte, seek uint32) (uint32, error) {
 		return 0, e
 	}
 	seek, e = elm.IsRedemptionOvertime.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.IsPublicRedeemable.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
