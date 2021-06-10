@@ -185,6 +185,11 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 		panic("Action belong to transaction not be nil !")
 	}
 
+	// 不能自己借给自己
+	if act.MortgagorAddress.Equal(act.LendersAddress) {
+		return fmt.Errorf("Cannot lending to myself.")
+	}
+
 	// 检查数额长度
 	if len(act.LoanTotalAmount.Numeral) > 4 {
 		return fmt.Errorf("Amount <%s> byte length is too long.", act.LoanTotalAmount.ToFinString())

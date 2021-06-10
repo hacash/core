@@ -355,8 +355,8 @@ func (act *Action_4_DiamondCreate) IsBurning90PersentTxFees() bool {
 
 // 转移钻石
 type Action_5_DiamondTransfer struct {
-	Diamond fields.Bytes6  // 钻石字面量 WTYUIAHXVMEKBSZN
-	Address fields.Address // 收钻方账户
+	Diamond   fields.Bytes6  // 钻石字面量 WTYUIAHXVMEKBSZN
+	ToAddress fields.Address // 收钻方账户
 
 	// 数据指针
 	// 所属交易
@@ -374,14 +374,14 @@ func (elm *Action_5_DiamondTransfer) Describe() map[string]interface{} {
 }
 
 func (elm *Action_5_DiamondTransfer) Size() uint32 {
-	return 2 + elm.Diamond.Size() + elm.Address.Size()
+	return 2 + elm.Diamond.Size() + elm.ToAddress.Size()
 }
 
 func (elm *Action_5_DiamondTransfer) Serialize() ([]byte, error) {
 	var kindByte = make([]byte, 2)
 	binary.BigEndian.PutUint16(kindByte, elm.Kind())
 	var diamondBytes, _ = elm.Diamond.Serialize()
-	var addrBytes, _ = elm.Address.Serialize()
+	var addrBytes, _ = elm.ToAddress.Serialize()
 	var buffer bytes.Buffer
 	buffer.Write(kindByte)
 	buffer.Write(diamondBytes)
@@ -391,7 +391,7 @@ func (elm *Action_5_DiamondTransfer) Serialize() ([]byte, error) {
 
 func (elm *Action_5_DiamondTransfer) Parse(buf []byte, seek uint32) (uint32, error) {
 	var moveseek1, _ = elm.Diamond.Parse(buf, seek)
-	var moveseek2, _ = elm.Address.Parse(buf, moveseek1)
+	var moveseek2, _ = elm.ToAddress.Parse(buf, moveseek1)
 	return moveseek2, nil
 }
 
@@ -410,7 +410,7 @@ func (act *Action_5_DiamondTransfer) WriteinChainState(state interfaces.ChainSta
 	//fmt.Println("Action_5_DiamondTransfer:", trsMainAddress.ToReadable(), act.Address.ToReadable(), string(act.Diamond))
 
 	// 自己不能转给自己
-	if bytes.Compare(act.Address, trsMainAddress) == 0 {
+	if bytes.Compare(act.ToAddress, trsMainAddress) == 0 {
 		return fmt.Errorf("Cannot transfer to self.")
 	}
 	// 查询钻石是否已经存在
@@ -428,13 +428,13 @@ func (act *Action_5_DiamondTransfer) WriteinChainState(state interfaces.ChainSta
 		return fmt.Errorf("Diamond <%s> not belong to belong_trs address.", string(act.Diamond))
 	}
 	// 转移钻石
-	item.Address = act.Address
+	item.Address = act.ToAddress
 	err := state.DiamondSet(act.Diamond, item)
 	if err != nil {
 		return err
 	}
 	// 转移钻石余额
-	e9 := DoSimpleDiamondTransferFromChainState(state, trsMainAddress, act.Address, 1)
+	e9 := DoSimpleDiamondTransferFromChainState(state, trsMainAddress, act.ToAddress, 1)
 	if e9 != nil {
 		return e9
 	}
@@ -459,7 +459,7 @@ func (act *Action_5_DiamondTransfer) RecoverChainState(state interfaces.ChainSta
 		return err
 	}
 	// 回退钻石余额
-	e9 := DoSimpleDiamondTransferFromChainState(state, act.Address, trsMainAddress, 1)
+	e9 := DoSimpleDiamondTransferFromChainState(state, act.ToAddress, trsMainAddress, 1)
 	if e9 != nil {
 		return e9
 	}

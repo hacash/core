@@ -8,8 +8,8 @@ import (
 )
 
 type Action_8_SimpleSatoshiTransfer struct {
-	Address fields.Address
-	Amount  fields.VarUint8
+	ToAddress fields.Address
+	Amount    fields.VarUint8
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -17,8 +17,8 @@ type Action_8_SimpleSatoshiTransfer struct {
 
 func NewAction_8_SimpleSatoshiTransfer(addr fields.Address, amt fields.VarUint8) *Action_8_SimpleSatoshiTransfer {
 	return &Action_8_SimpleSatoshiTransfer{
-		Address: addr,
-		Amount:  amt,
+		ToAddress: addr,
+		Amount:    amt,
 	}
 }
 
@@ -35,7 +35,7 @@ func (elm *Action_8_SimpleSatoshiTransfer) Describe() map[string]interface{} {
 func (elm *Action_8_SimpleSatoshiTransfer) Serialize() ([]byte, error) {
 	var kindByte = make([]byte, 2)
 	binary.BigEndian.PutUint16(kindByte, elm.Kind())
-	var addrBytes, _ = elm.Address.Serialize()
+	var addrBytes, _ = elm.ToAddress.Serialize()
 	var amtBytes, _ = elm.Amount.Serialize()
 	var buffer bytes.Buffer
 	buffer.Write(kindByte)
@@ -46,7 +46,7 @@ func (elm *Action_8_SimpleSatoshiTransfer) Serialize() ([]byte, error) {
 
 func (elm *Action_8_SimpleSatoshiTransfer) Parse(buf []byte, seek uint32) (uint32, error) {
 	var e error = nil
-	moveseek, e := elm.Address.Parse(buf, seek)
+	moveseek, e := elm.ToAddress.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -58,7 +58,7 @@ func (elm *Action_8_SimpleSatoshiTransfer) Parse(buf []byte, seek uint32) (uint3
 }
 
 func (elm *Action_8_SimpleSatoshiTransfer) Size() uint32 {
-	return 2 + elm.Address.Size() + elm.Amount.Size()
+	return 2 + elm.ToAddress.Size() + elm.Amount.Size()
 }
 
 func (elm *Action_8_SimpleSatoshiTransfer) RequestSignAddresses() []fields.Address {
@@ -70,7 +70,7 @@ func (act *Action_8_SimpleSatoshiTransfer) WriteinChainState(state interfaces.Ch
 		panic("Action belong to transaction not be nil !")
 	}
 	// 转移
-	return DoSimpleSatoshiTransferFromChainState(state, act.belong_trs.GetAddress(), act.Address, act.Amount)
+	return DoSimpleSatoshiTransferFromChainState(state, act.belong_trs.GetAddress(), act.ToAddress, act.Amount)
 }
 
 func (act *Action_8_SimpleSatoshiTransfer) RecoverChainState(state interfaces.ChainStateOperation) error {
@@ -78,7 +78,7 @@ func (act *Action_8_SimpleSatoshiTransfer) RecoverChainState(state interfaces.Ch
 		panic("Action belong to transaction not be nil !")
 	}
 	// 回退
-	return DoSimpleSatoshiTransferFromChainState(state, act.Address, act.belong_trs.GetAddress(), act.Amount)
+	return DoSimpleSatoshiTransferFromChainState(state, act.ToAddress, act.belong_trs.GetAddress(), act.Amount)
 }
 
 // 设置所属 belong_trs

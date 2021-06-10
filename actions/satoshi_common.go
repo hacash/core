@@ -10,9 +10,6 @@ import (
 
 // btc 转账 （amt 单位 聪）
 func DoSimpleSatoshiTransferFromChainState(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, sat fields.VarUint8) error {
-	if bytes.Compare(addr1, addr2) == 0 {
-		return nil // 可以自己转给自己，不改变状态，白费手续费
-	}
 	if sat == 0 {
 		return nil // 数量为0，直接成功
 	}
@@ -24,6 +21,9 @@ func DoSimpleSatoshiTransferFromChainState(state interfaces.ChainStateOperation,
 	// 检查余额
 	if uint64(sat1) < uint64(sat) {
 		return fmt.Errorf("Address %s satoshi %d not enough, need more %d.", addr1.ToReadable(), sat1, sat)
+	}
+	if bytes.Compare(addr1, addr2) == 0 {
+		return nil // 可以自己转给自己，不改变状态，白费手续费
 	}
 	bls2 := state.Balance(addr2)
 	if bls2 == nil {

@@ -24,7 +24,7 @@ func (elm DiamondListMaxLen200) Size() uint32 {
 }
 
 func (elm DiamondListMaxLen200) Serialize() ([]byte, error) {
-	if int(elm.Count) != len(elm.Diamonds) || len(elm.Diamonds) == 0 {
+	if int(elm.Count) != len(elm.Diamonds) {
 		return nil, fmt.Errorf("diamond list number quantity count error")
 	}
 	if len(elm.Diamonds) > 200 {
@@ -47,8 +47,8 @@ func (elm *DiamondListMaxLen200) Parse(buf []byte, seek uint32) (uint32, error) 
 	if e != nil {
 		return 0, e
 	}
-	if len(buf) < int(elm.Count)-1 {
-		return 0, fmt.Errorf("buf is too short.")
+	if elm.Count == 0 {
+		return seek, nil // 列表为空
 	}
 	elm.Diamonds = make([]Bytes6, int(elm.Count))
 	for i := 0; i < int(elm.Count); i++ {

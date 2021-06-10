@@ -57,8 +57,8 @@ func CreateOneTxOfBTCTransfer(payacc *account.Account, toaddr fields.Address, am
 	var tranact interfaces.Action = nil
 	if bytes.Compare(payacc.Address, feeacc.Address) == 0 {
 		tranact = &actions.Action_8_SimpleSatoshiTransfer{
-			Address: toaddr,
-			Amount:  fields.VarUint8(amount),
+			ToAddress: toaddr,
+			Amount:    fields.VarUint8(amount),
 		}
 	} else {
 		tranact = &actions.Action_11_FromToSatoshiTransfer{

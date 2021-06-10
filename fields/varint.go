@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"strconv"
 	"unsafe"
 )
 
@@ -55,6 +56,11 @@ func (elm *VarUint7) Parse(buf []byte, seek uint32) (uint32, error) {
 }
 func (elm *VarUint8) Parse(buf []byte, seek uint32) (uint32, error) {
 	return varIntParse(elm, buf, seek, 8)
+}
+
+// ToString
+func (elm VarUint8) ToString() string {
+	return strconv.FormatUint(uint64(elm), 10)
 }
 
 func (elm Bool) Size() uint32     { return 1 }

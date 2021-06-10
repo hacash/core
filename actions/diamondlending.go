@@ -60,14 +60,27 @@ func (elm *Action_15_DiamondsSystemLendingCreate) Describe() map[string]interfac
 }
 
 func (elm *Action_15_DiamondsSystemLendingCreate) Serialize() ([]byte, error) {
+	var e error = nil
 	var kindByte = make([]byte, 2)
 	binary.BigEndian.PutUint16(kindByte, elm.Kind())
 	var buffer bytes.Buffer
 	buffer.Write(kindByte)
-	var b1, _ = elm.LendingID.Serialize()
-	var b2, _ = elm.MortgageDiamondList.Serialize()
-	var b3, _ = elm.LoanTotalAmount.Serialize()
-	var b4, _ = elm.BorrowPeriod.Serialize()
+	b1, e := elm.LendingID.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	b2, e := elm.MortgageDiamondList.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	b3, e := elm.LoanTotalAmount.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	b4, e := elm.BorrowPeriod.Serialize()
+	if e != nil {
+		return nil, e
+	}
 	buffer.Write(b1)
 	buffer.Write(b2)
 	buffer.Write(b3)
