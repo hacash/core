@@ -6,6 +6,59 @@ import (
 	"math/big"
 )
 
+// 计算比特币赎回所系金额
+func CalculationBitcoinSystemLendingRedeemAmount(
+	feeAddr fields.Address, lendingMainAddr fields.Address,
+	loanTotalAmount *fields.Amount, ransomBlockNumberBase uint64,
+	lendingCreateBlockHeight uint64, penddingBlockHeight uint64,
+) (uint8, *fields.Amount, error) {
+
+	var e error = nil
+
+	// 赎回期限阶段
+	redeemStage := uint8(1) // 1. 私有期  2. 公共期  3. 拍卖期
+
+	// 赎回期基础
+	// ransomBlockNumberBase := uint64(100000) // 十万个区块约一年
+
+	// 检查私有赎回期
+	privateHeight := uint64(lendingCreateBlockHeight) + ransomBlockNumberBase
+	if penddingBlockHeight <= privateHeight && feeAddr.NotEqual(lendingMainAddr) {
+		// 未到期之前只能被抵押者私下赎回
+		return 0, nil, fmt.Errorf("It can only be redeemed privately by the mortgagor %s before the blockheight %d", lendingMainAddr.ToReadable(), privateHeight)
+	}
+
+	// 任何人可以公开赎回
+	if penddingBlockHeight > privateHeight {
+		redeemStage = 2
+	}
+
+	// 赎回金额就是原始借出金额（因为利息被预先支付了）
+	var realRansomAmt = loanTotalAmount
+
+	// 检查公共赎回期，计算实时赎回金额
+	publicHeight := privateHeight + ransomBlockNumberBase
+	if penddingBlockHeight > publicHeight {
+		// 大于公共赎回期，开始利息荷兰拍卖模式，用十年（百万区块）将赎回金额降低到0
+		maxDown := ransomBlockNumberBase * 10
+		redeemStage = 3
+		overhei := penddingBlockHeight - publicHeight
+		if overhei >= maxDown {
+			realRansomAmt = fields.NewEmptyAmount() // 可赎回已降低至0
+		} else {
+			boli := (float64(maxDown) - float64(overhei)) / float64(maxDown) * loanTotalAmount.ToMei()
+			boli *= 100000000
+			realRansomAmt, e = fields.NewAmountByBigIntWithUnit(big.NewInt(int64(boli)), 240)
+			if e != nil {
+				return 0, nil, e
+			}
+		}
+	}
+
+	// 计算成功返回
+	return redeemStage, realRansomAmt, nil
+}
+
 // 计算钻石赎回所需金额
 func CalculationDiamondSystemLendingRedeemAmount(
 	feeAddr fields.Address, lendingMainAddr fields.Address,

@@ -155,7 +155,7 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteinChainState(state interf
 	btcpartcurnum := totalsupply.Get(stores.TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount)
 	// 总的比特币份数
 	totalbtcpart := totalsupply.Get(stores.TotalSupplyStoreTypeOfTransferBitcoin) * 100
-	// 借贷比例
+	// 借贷比例，必须算上本次抵押的BTC份数
 	alllendper := (btcpartcurnum + float64(act.MortgageBitcoinPortion)) / totalbtcpart
 
 	// 计算可借数量和预付利息
@@ -444,39 +444,22 @@ func (act *Action_18_BitcoinsSystemLendingRansom) WriteinChainState(state interf
 	if btclendObj.IsRansomed.Check() {
 		// 已经赎回。不可再次赎回
 		return fmt.Errorf("Bitcoin Lending <%d> has been redeemed.", hex.EncodeToString(act.LendingID))
-
 	}
 
-	// 赎回期基础
+	// 赎回期阶段区块数
 	ransomBlockNumberBase := uint64(100000) // 十万个区块约一年
-
-	// 检查私有赎回期
-	privateHeight := uint64(btclendObj.CreateBlockHeight) + ransomBlockNumberBase
-	if paddingHeight <= privateHeight && feeAddr.NotEqual(btclendObj.MainAddress) {
-		// 未到期之前只能被抵押者私下赎回
-		return fmt.Errorf("It can only be redeemed privately by the mortgagor %s before the blockheight %d", btclendObj.MainAddress.ToReadable(), privateHeight)
+	if sys.TestDebugLocalDevelopmentMark {
+		ransomBlockNumberBase = 10 // 测试环境 10 个区块为周期
 	}
 
-	// 任何人可以公开赎回
-
-	// 赎回金额就是原始借出金额（利息被预先支付了）
-	realRansomAmt := &act.RansomAmount
-
-	// 检查公共赎回期，计算实时赎回金额
-	publicHeight := privateHeight + ransomBlockNumberBase
-	if paddingHeight > publicHeight {
-		// 大于公共赎回期，开始利息荷兰拍卖模式，用十年（百万区块）将赎回金额降低到0
-		overhei := paddingHeight - publicHeight
-		if overhei >= 1000000 {
-			realRansomAmt = fields.NewEmptyAmount() // 可赎回已降低至0
-		} else {
-			boli := (1000000 - float64(overhei)) / 1000000 * btclendObj.LoanTotalAmount.ToMei()
-			boli *= 100000000
-			realRansomAmt, e = fields.NewAmountByBigIntWithUnit(big.NewInt(int64(boli)), 240)
-			if e != nil {
-				return e
-			}
-		}
+	// 计算比特币赎回金额
+	_, realRansomAmt, e4 := coinbase.CalculationBitcoinSystemLendingRedeemAmount(
+		feeAddr, btclendObj.MainAddress, &btclendObj.LoanTotalAmount,
+		ransomBlockNumberBase,
+		uint64(btclendObj.CreateBlockHeight), paddingHeight,
+	)
+	if e4 != nil {
+		return e4
 	}
 
 	// 检查赎回金额是否有效（赎回金额真的大于实时计算的可赎回金额）

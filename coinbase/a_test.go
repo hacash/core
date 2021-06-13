@@ -28,3 +28,24 @@ func Test1(t *testing.T) {
 	}
 
 }
+
+func Test2(t *testing.T) {
+
+	mainaddr, _ := fields.CheckReadableAddress("1MzNY1oA3kfgYi75zquj3SRUPYztzXHzK9")
+	loan := fields.NewAmountByUnit248(100)
+
+	for i := uint64(0); i < 210; i++ {
+		pdhei := i + 1
+		a, b, e := CalculationBitcoinSystemLendingRedeemAmount(
+			*mainaddr, *mainaddr, loan, 5,
+			1, pdhei,
+		)
+		if e == nil {
+			fmt.Println(i+1, pdhei, a, b.ToMei())
+		} else {
+			fmt.Println(e)
+		}
+
+	}
+
+}
