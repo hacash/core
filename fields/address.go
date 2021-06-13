@@ -50,6 +50,9 @@ func (this Address) IsValid() bool {
 func (this Address) Equal(tar Address) bool {
 	return bytes.Compare(this, tar) == 0
 }
+func (this Address) NotEqual(tar Address) bool {
+	return bytes.Compare(this, tar) != 0
+}
 
 // check equal
 func (this Address) Copy() Address {

@@ -555,3 +555,7 @@ func (bill Amount) Equal(amt *Amount) bool {
 	}
 	return true
 }
+
+func (bill Amount) NotEqual(amt *Amount) bool {
+	return bill.Equal(amt) == false
+}

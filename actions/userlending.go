@@ -226,9 +226,13 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 	}
 
 	// 检查赎回期限高度
-	if uint64(act.AgreedExpireBlockHeight) < paddingHeight+10 {
-		// 约定赎回期至少在10个区块以后
-		return fmt.Errorf("AgreedExpireBlockHeight %d is too short, must over than %d.", act.AgreedExpireBlockHeight, paddingHeight+10)
+	effectiveExpireBlockHeight := paddingHeight + 288
+	if sys.TestDebugLocalDevelopmentMark {
+		effectiveExpireBlockHeight = paddingHeight + 10 // 测试环境10个区块
+	}
+	if uint64(act.AgreedExpireBlockHeight) < effectiveExpireBlockHeight {
+		// 约定赎回期至少在288个区块以后
+		return fmt.Errorf("AgreedExpireBlockHeight %d is too short, must over than %d.", act.AgreedExpireBlockHeight, effectiveExpireBlockHeight)
 	}
 
 	if dianum != len(act.MortgageDiamondList.Diamonds) {
@@ -247,7 +251,7 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 			return fmt.Errorf("Diamond <%s> not find.", string(diamond))
 		}
 		// 检查所属
-		if diaitem.Address.Equal(act.MortgagorAddress) == false {
+		if diaitem.Address.NotEqual(act.MortgagorAddress) {
 			return fmt.Errorf("Diamond <%s> not belong to address '%s'", string(diamond), act.MortgagorAddress.ToReadable())
 		}
 		// 检查是否已经抵押，是否可以抵押
@@ -627,7 +631,7 @@ func (act *Action_20_UsersLendingRansom) WriteinChainState(state interfaces.Chai
 			return fmt.Errorf("diamond <%s> not find.", string(diamond))
 		}
 		// 检查钻石归属地址
-		if diaitem.Address.Equal(usrlendObj.MortgagorAddress) == false {
+		if diaitem.Address.NotEqual(usrlendObj.MortgagorAddress) {
 			return fmt.Errorf("diamond <%s> not belong to address %s", usrlendObj.MortgagorAddress.ToReadable())
 		}
 		// 检查钻石状态

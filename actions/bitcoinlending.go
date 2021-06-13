@@ -452,7 +452,7 @@ func (act *Action_18_BitcoinsSystemLendingRansom) WriteinChainState(state interf
 
 	// 检查私有赎回期
 	privateHeight := uint64(btclendObj.CreateBlockHeight) + ransomBlockNumberBase
-	if paddingHeight <= privateHeight && feeAddr.Equal(btclendObj.MainAddress) == false {
+	if paddingHeight <= privateHeight && feeAddr.NotEqual(btclendObj.MainAddress) {
 		// 未到期之前只能被抵押者私下赎回
 		return fmt.Errorf("It can only be redeemed privately by the mortgagor %s before the blockheight %d", btclendObj.MainAddress.ToReadable(), privateHeight)
 	}

@@ -202,7 +202,7 @@ func (act *Action_15_DiamondsSystemLendingCreate) WriteinChainState(state interf
 	// 共借出 HAC 枚
 	totalAmt := fields.NewAmountByUnit248(totalLoanHAC)
 	// 验证数量
-	if totalAmt.Equal(&act.LoanTotalAmount) == false {
+	if totalAmt.NotEqual(&act.LoanTotalAmount) {
 		return fmt.Errorf("LoanTotalAmountMei <%s> and <%s> not match.", totalAmt.ToFinString(), act.LoanTotalAmount.ToFinString())
 	}
 
@@ -454,7 +454,7 @@ func (act *Action_16_DiamondsSystemLendingRansom) WriteinChainState(state interf
 
 	// 检查私有赎回期
 	privateHeight := uint64(dmdlendObj.CreateBlockHeight) + ransomBlockNumberBase
-	if paddingHeight <= privateHeight && feeAddr.Equal(dmdlendObj.MainAddress) == false {
+	if paddingHeight <= privateHeight && feeAddr.NotEqual(dmdlendObj.MainAddress) {
 		// 未到期之前只能被抵押者私下赎回
 		return fmt.Errorf("It can only be redeemed privately by the mortgagor %s before the blockheight %d", dmdlendObj.MainAddress.ToReadable(), privateHeight)
 	}

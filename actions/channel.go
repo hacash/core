@@ -378,8 +378,8 @@ func (act *Action_12_ClosePaymentChannelBySetupAmount) WriteinChainState(state i
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
 	// 检查两个账户是否匹配
-	if paychan.LeftAddress.Equal(act.LeftAddress) == false ||
-		paychan.RightAddress.Equal(act.RightAddress) == false {
+	if paychan.LeftAddress.NotEqual(act.LeftAddress) ||
+		paychan.RightAddress.NotEqual(act.RightAddress) {
 		// 地址检查失败
 		return fmt.Errorf("Payment Channel <%s> address not match.", act.RightAddress.ToReadable())
 	}
@@ -396,7 +396,7 @@ func (act *Action_12_ClosePaymentChannelBySetupAmount) WriteinChainState(state i
 	if e2 != nil {
 		return e2
 	}
-	if tt1.Equal(tt2) == false {
+	if tt1.NotEqual(tt2) {
 		// 不相等
 		return fmt.Errorf("Payment channel distribution amount must equal with lock in.")
 	}
