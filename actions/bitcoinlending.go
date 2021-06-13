@@ -127,14 +127,14 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteinChainState(state interf
 	feeAddr := act.belong_trs.GetAddress()
 
 	// 检查id格式
-	if len(act.LendingID) != stores.BitcoinLendingIdLength ||
+	if len(act.LendingID) != stores.BitcoinSyslendIdLength ||
 		act.LendingID[0] == 0 ||
-		act.LendingID[stores.BitcoinLendingIdLength-1] == 0 {
+		act.LendingID[stores.BitcoinSyslendIdLength-1] == 0 {
 		return fmt.Errorf("Bitcoin Lending Id format error.")
 	}
 
 	// 查询id是否存在
-	btclendObj := state.BitcoinLending(act.LendingID)
+	btclendObj := state.BitcoinSystemLending(act.LendingID)
 	if btclendObj != nil {
 		return fmt.Errorf("Bitcoin Lending <%d> already exist.", hex.EncodeToString(act.LendingID))
 	}
@@ -202,7 +202,7 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteinChainState(state interf
 
 	// 保存比特币抵押
 	paddingHei := state.GetPendingBlockHeight()
-	dlsto := &stores.BitcoinLending{
+	dlsto := &stores.BitcoinSystemLending{
 		IsRansomed:               fields.CreateBool(false), // 标记未赎回
 		CreateBlockHeight:        fields.VarUint5(paddingHei),
 		MainAddress:              feeAddr,
@@ -260,7 +260,7 @@ func (act *Action_17_BitcoinsSystemLendingCreate) RecoverChainState(state interf
 	feeAddr := act.belong_trs.GetAddress()
 
 	// 查询id是否存在
-	btclendObj := state.BitcoinLending(act.LendingID)
+	btclendObj := state.BitcoinSystemLending(act.LendingID)
 	if btclendObj == nil {
 		return fmt.Errorf("Bitcoin Lending <%d> not exist.", hex.EncodeToString(act.LendingID))
 	}
@@ -428,14 +428,14 @@ func (act *Action_18_BitcoinsSystemLendingRansom) WriteinChainState(state interf
 	feeAddr := act.belong_trs.GetAddress()
 
 	// 检查id格式
-	if len(act.LendingID) != stores.BitcoinLendingIdLength ||
+	if len(act.LendingID) != stores.BitcoinSyslendIdLength ||
 		act.LendingID[0] == 0 ||
-		act.LendingID[stores.BitcoinLendingIdLength-1] == 0 {
+		act.LendingID[stores.BitcoinSyslendIdLength-1] == 0 {
 		return fmt.Errorf("Bitcoin Lending Id format error.")
 	}
 
 	// 查询id是否存在
-	btclendObj := state.BitcoinLending(act.LendingID)
+	btclendObj := state.BitcoinSystemLending(act.LendingID)
 	if btclendObj == nil {
 		return fmt.Errorf("Bitcoin Lending <%d> not exist.", hex.EncodeToString(act.LendingID))
 	}
@@ -543,7 +543,7 @@ func (act *Action_18_BitcoinsSystemLendingRansom) RecoverChainState(state interf
 	feeAddr := act.belong_trs.GetAddress()
 
 	// 查询id是否存在
-	btclendObj := state.BitcoinLending(act.LendingID)
+	btclendObj := state.BitcoinSystemLending(act.LendingID)
 	if btclendObj == nil {
 		return fmt.Errorf("Bitcoin Lending <%d> not exist.", hex.EncodeToString(act.LendingID))
 	}

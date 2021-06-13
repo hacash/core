@@ -200,6 +200,10 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 	if len(act.PreBurningInterestAmount.Numeral) > 4 {
 		return fmt.Errorf("Amount <%s> byte length is too long.", act.PreBurningInterestAmount.ToFinString())
 	}
+	// 借贷数额不能为空
+	if act.LoanTotalAmount.IsEmpty() || act.AgreedRedemptionAmount.IsEmpty() || act.PreBurningInterestAmount.IsEmpty() {
+		return fmt.Errorf("Amount cannot be empty.")
+	}
 
 	// 区块
 	paddingHeight := state.GetPendingBlockHeight()
@@ -250,7 +254,7 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 		if diaitem == nil {
 			return fmt.Errorf("Diamond <%s> not find.", string(diamond))
 		}
-		// 检查所属
+		// 检查钻石所属地址
 		if diaitem.Address.NotEqual(act.MortgagorAddress) {
 			return fmt.Errorf("Diamond <%s> not belong to address '%s'", string(diamond), act.MortgagorAddress.ToReadable())
 		}
@@ -277,7 +281,7 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 		// 扣除比特币
 		e := DoSubSatoshiFromChainState(state, act.MortgagorAddress, act.MortgageBitcoin.ValueSAT)
 		if e != nil {
-			return e
+			return e // 比特币余额不足  扣除失败
 		}
 	}
 
@@ -294,13 +298,13 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 	// 销毁利息，由放款人支付
 	e10 := DoSubBalanceFromChainState(state, act.LendersAddress, act.PreBurningInterestAmount)
 	if e10 != nil {
-		return e10
+		return e10 // 销毁利息余额不足
 	}
 
 	// 抵押成功，转移余额：  放款人 -> 抵押借款者
 	e11 := DoSimpleTransferFromChainState(state, act.LendersAddress, act.MortgagorAddress, act.LoanTotalAmount)
 	if e11 != nil {
-		return e11
+		return e11 // 放款人余额不足
 	}
 
 	// 保存抵押借贷合约
@@ -348,7 +352,7 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 		stores.TotalSupplyStoreTypeOfUsersLendingCumulationHacAmount,
 		act.LoanTotalAmount.ToMei(),
 	)
-	// 预先销毁 1% 利息流水
+	// 预先销毁 1% 利息累计
 	totalsupply.DoAdd(
 		stores.TotalSupplyStoreTypeOfUsersLendingBurningOnePercentInterestHacAmount,
 		act.PreBurningInterestAmount.ToMei(),
@@ -393,10 +397,14 @@ func (act *Action_19_UsersLendingCreate) RecoverChainState(state interfaces.Chai
 	}
 
 	// 回退 钻石余额 增加
-	DoAddDiamondFromChainState(state, act.MortgagorAddress, fields.VarUint3(dianum))
+	if dianum > 0 {
+		DoAddDiamondFromChainState(state, act.MortgagorAddress, fields.VarUint3(dianum))
+	}
 
 	// 回退  扣除比特币 增加
-	DoAddSatoshiFromChainState(state, act.MortgagorAddress, act.MortgageBitcoin.ValueSAT)
+	if act.MortgageBitcoin.NotEmpty.Check() {
+		DoAddSatoshiFromChainState(state, act.MortgagorAddress, act.MortgageBitcoin.ValueSAT)
+	}
 
 	// 回退 销毁利息 增加
 	DoAddBalanceFromChainState(state, act.LendersAddress, act.PreBurningInterestAmount)
@@ -432,7 +440,7 @@ func (act *Action_19_UsersLendingCreate) RecoverChainState(state interfaces.Chai
 		stores.TotalSupplyStoreTypeOfUsersLendingCumulationHacAmount,
 		act.LoanTotalAmount.ToMei(),
 	)
-	// 回退扣除   预先销毁 1% 利息流水
+	// 回退扣除   预先销毁 1% 利息累计
 	totalsupply.DoSub(
 		stores.TotalSupplyStoreTypeOfUsersLendingBurningOnePercentInterestHacAmount,
 		act.PreBurningInterestAmount.ToMei(),
@@ -573,6 +581,12 @@ func (act *Action_20_UsersLendingRansom) WriteinChainState(state interfaces.Chai
 	// 是否处于抵押期内
 	isWithinMortgageTime := paddingHeight <= uint64(usrlendObj.ExpireBlockHeight)
 
+	// 未开启公开赎回，则第三方不能赎回
+	if usrlendObj.IsPublicRedeemable.Is(false) && isPublicDoRedeem {
+		// 公共赎回关闭
+		return fmt.Errorf("Public redeemable not open.")
+	}
+
 	// 抵押期内非抵押人不能赎回
 	if isWithinMortgageTime && !isMortgagorDoRedeem {
 		return fmt.Errorf("only %s can do redeem before height %d.", usrlendObj.MortgagorAddress.ToReadable(), usrlendObj.ExpireBlockHeight)
@@ -580,43 +594,35 @@ func (act *Action_20_UsersLendingRansom) WriteinChainState(state interfaces.Chai
 
 	// 超出抵押期限
 
-	// 未开启公开赎回，则第三方不能赎回
-	if usrlendObj.IsPublicRedeemable.Is(false) && isPublicDoRedeem {
-		// 公共赎回关闭
-		return fmt.Errorf("Public redeemable not open.")
-	}
-
-	// 未开启自动展期和公共赎回，则抵押人超期不能赎回
+	// 未开启自动展期或公共赎回，则抵押人超期不能赎回
 	if usrlendObj.IsPublicRedeemable.Is(false) &&
 		usrlendObj.IsRedemptionOvertime.Is(false) &&
 		isMortgagorDoRedeem {
 		// 抵押期外，没有约定自动展期和公共可赎回，则抵押人不能赎回
 		return fmt.Errorf("only %s can do redeem after height %d.", usrlendObj.LendersAddress.ToReadable(), usrlendObj.ExpireBlockHeight)
-
 	}
 
 	// 放款人扣留抵押品，赎回金额必须为零
-	if isLendersDoRedeem && act.RansomAmount.IsEmpty() == false {
+	if isLendersDoRedeem && act.RansomAmount.IsNotEmpty() {
 		return fmt.Errorf("Ransom amount must be zore but got %s with lender address %s do redeem", act.RansomAmount.ToFinString(), usrlendObj.LendersAddress.ToReadable())
 	}
 
-	// 非放款人扣留，则检查赎回金额
+	// 非放款人扣留，抵押人或第三方赎回，则检查赎回金额
 	if !isLendersDoRedeem && act.RansomAmount.LessThan(&usrlendObj.AgreedRedemptionAmount) {
 		return fmt.Errorf("Ransom amount cannot less than %s but got %s.", usrlendObj.AgreedRedemptionAmount.ToFinString(), act.RansomAmount.ToFinString())
 	}
 
-	// 借款人或第三方 赎回
-	if !isLendersDoRedeem {
+	// 支付赎金
+	if isLendersDoRedeem {
+		// 放款人扣押
+		// 无需支付任何赎金，直接扣押
+	} else {
+		// 抵押人或第三方 赎回
 		// 转移 HAC，支付赎金
 		e2 := DoSimpleTransferFromChainState(state, feeAddr, usrlendObj.LendersAddress, act.RansomAmount)
 		if e2 != nil {
 			return e2
 		}
-	}
-
-	// 放款人扣押
-	if isLendersDoRedeem {
-		// 无需支付任何赎金
 	}
 
 	// 操作赎回或扣押
@@ -684,10 +690,6 @@ func (act *Action_20_UsersLendingRansom) RecoverChainState(state interfaces.Chai
 		panic("Action belong to transaction not be nil !")
 	}
 
-	if act.belong_trs == nil {
-		panic("Action belong to transaction not be nil !")
-	}
-
 	feeAddr := act.belong_trs.GetAddress()
 
 	// 查询id是否存在
@@ -700,14 +702,11 @@ func (act *Action_20_UsersLendingRansom) RecoverChainState(state interfaces.Chai
 	isLendersDoRedeem := feeAddr.Equal(usrlendObj.LendersAddress)
 
 	// 借款人按约定赎回
-	if !isLendersDoRedeem {
+	if isLendersDoRedeem {
+		// 放款人 无需支付任何赎金
+	} else {
 		// 转移 HAC  回退HAC
 		DoSimpleTransferFromChainState(state, usrlendObj.LendersAddress, usrlendObj.MortgagorAddress, act.RansomAmount)
-	}
-
-	// 放款人扣押
-	if isLendersDoRedeem {
-		// 无需支付任何赎金
 	}
 
 	// 操作赎回或扣押

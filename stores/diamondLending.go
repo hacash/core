@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	DiamondLendingIdLength = 14
+	DiamondSyslendIdLength = 14
 )
 
-type DiamondLending struct {
+type DiamondSystemLending struct {
 	IsRansomed          fields.Bool                 // 是否已经赎回(已经被赎回)
 	CreateBlockHeight   fields.VarUint5             // 借贷开启时的区块高度
 	MainAddress         fields.Address              // 借贷人地址
@@ -18,14 +18,14 @@ type DiamondLending struct {
 	BorrowPeriod        fields.VarUint1             // 借款周期，一个周期代表 0.5%利息和10000个区块约35天，最低1最高20
 }
 
-func NewDiamondLending(address fields.Address) *DiamondLending {
+func NewDiamondSystemLending(address fields.Address) *DiamondSystemLending {
 	addr := address.Copy()
-	return &DiamondLending{
+	return &DiamondSystemLending{
 		MainAddress: addr,
 	}
 }
 
-func (elm *DiamondLending) Size() uint32 {
+func (elm *DiamondSystemLending) Size() uint32 {
 	return elm.IsRansomed.Size() +
 		elm.CreateBlockHeight.Size() +
 		elm.MainAddress.Size() +
@@ -34,7 +34,7 @@ func (elm *DiamondLending) Size() uint32 {
 		elm.BorrowPeriod.Size()
 }
 
-func (elm *DiamondLending) Serialize() ([]byte, error) {
+func (elm *DiamondSystemLending) Serialize() ([]byte, error) {
 	var buffer bytes.Buffer
 	var b0, _ = elm.IsRansomed.Serialize()
 	var b1, _ = elm.CreateBlockHeight.Serialize()
@@ -51,7 +51,7 @@ func (elm *DiamondLending) Serialize() ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func (elm *DiamondLending) Parse(buf []byte, seek uint32) (uint32, error) {
+func (elm *DiamondSystemLending) Parse(buf []byte, seek uint32) (uint32, error) {
 	var e error = nil
 	seek, e = elm.IsRansomed.Parse(buf, seek)
 	if e != nil {

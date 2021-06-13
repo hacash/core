@@ -177,6 +177,9 @@ func (bill Amount) GetValue() *big.Int {
 func (bill Amount) IsEmpty() bool {
 	return bill.Dist == int8(0) || len(bill.Numeral) == 0
 }
+func (bill Amount) IsNotEmpty() bool {
+	return bill.IsEmpty() == false
+}
 
 // 判断必须为正数，且不能为零
 func (bill Amount) IsPositive() bool {

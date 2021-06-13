@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	BitcoinLendingIdLength = 15
+	BitcoinSyslendIdLength = 15
 )
 
-type BitcoinLending struct {
+type BitcoinSystemLending struct {
 	IsRansomed               fields.Bool     // 是否已经赎回(已经被赎回)
 	CreateBlockHeight        fields.VarUint5 // 借贷开启时的区块高度
 	MainAddress              fields.Address  // 借贷人地址
@@ -18,14 +18,14 @@ type BitcoinLending struct {
 	PreBurningInterestAmount fields.Amount   // 预先销毁的利息，必须大于等于销毁数量
 }
 
-func NewBitcoinLending(address fields.Address) *BitcoinLending {
+func NewBitcoinSystemLending(address fields.Address) *BitcoinSystemLending {
 	addr := address.Copy()
-	return &BitcoinLending{
+	return &BitcoinSystemLending{
 		MainAddress: addr,
 	}
 }
 
-func (elm *BitcoinLending) Size() uint32 {
+func (elm *BitcoinSystemLending) Size() uint32 {
 	return elm.IsRansomed.Size() +
 		elm.CreateBlockHeight.Size() +
 		elm.MainAddress.Size() +
@@ -34,7 +34,7 @@ func (elm *BitcoinLending) Size() uint32 {
 		elm.PreBurningInterestAmount.Size()
 }
 
-func (elm *BitcoinLending) Serialize() ([]byte, error) {
+func (elm *BitcoinSystemLending) Serialize() ([]byte, error) {
 	var buffer bytes.Buffer
 	var b0, _ = elm.IsRansomed.Serialize()
 	var b1, _ = elm.CreateBlockHeight.Serialize()
@@ -51,7 +51,7 @@ func (elm *BitcoinLending) Serialize() ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func (elm *BitcoinLending) Parse(buf []byte, seek uint32) (uint32, error) {
+func (elm *BitcoinSystemLending) Parse(buf []byte, seek uint32) (uint32, error) {
 	var e error = nil
 	seek, e = elm.IsRansomed.Parse(buf, seek)
 	if e != nil {

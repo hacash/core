@@ -46,8 +46,8 @@ type ChainStateOperation interface {
 	Lockbls(fields.Bytes18) *stores.Lockbls
 	Channel(fields.Bytes16) *stores.Channel
 	Diamond(fields.Bytes6) *stores.Diamond
-	DiamondLending(fields.Bytes14) *stores.DiamondLending
-	BitcoinLending(fields.Bytes15) *stores.BitcoinLending
+	DiamondSystemLending(fields.Bytes14) *stores.DiamondSystemLending
+	BitcoinSystemLending(fields.Bytes15) *stores.BitcoinSystemLending
 	UserLending(fields.Bytes17) *stores.UserLending
 
 	// operate
@@ -69,12 +69,12 @@ type ChainStateOperation interface {
 	DiamondSet(fields.Bytes6, *stores.Diamond) error
 	DiamondDel(fields.Bytes6) error
 
-	DiamondLendingCreate(fields.Bytes14, *stores.DiamondLending) error
-	DiamondLendingUpdate(fields.Bytes14, *stores.DiamondLending) error
+	DiamondLendingCreate(fields.Bytes14, *stores.DiamondSystemLending) error
+	DiamondLendingUpdate(fields.Bytes14, *stores.DiamondSystemLending) error
 	DiamondLendingDelete(fields.Bytes14) error
 
-	BitcoinLendingCreate(fields.Bytes15, *stores.BitcoinLending) error
-	BitcoinLendingUpdate(fields.Bytes15, *stores.BitcoinLending) error
+	BitcoinLendingCreate(fields.Bytes15, *stores.BitcoinSystemLending) error
+	BitcoinLendingUpdate(fields.Bytes15, *stores.BitcoinSystemLending) error
 	BitcoinLendingDelete(fields.Bytes15) error
 
 	UserLendingCreate(fields.Bytes17, *stores.UserLending) error
