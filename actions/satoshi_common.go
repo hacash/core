@@ -15,15 +15,16 @@ func DoSimpleSatoshiTransferFromChainState(state interfaces.ChainStateOperation,
 	}
 	bls1 := state.Balance(addr1)
 	if bls1 == nil {
-		return fmt.Errorf("Satoshi not find.")
+		return fmt.Errorf("Satoshi need %d but empty.", sat)
 	}
 	sat1 := bls1.Satoshi
 	// 检查余额
 	if uint64(sat1) < uint64(sat) {
-		return fmt.Errorf("Address %s satoshi %d not enough, need more %d.", addr1.ToReadable(), sat1, sat)
+		return fmt.Errorf("Address %s satoshi %d not enough, need at least %d.", addr1.ToReadable(), sat1, sat)
 	}
+	// 检查自己转给自己
 	if bytes.Compare(addr1, addr2) == 0 {
-		return nil // 可以自己转给自己，不改变状态，白费手续费
+		return nil // 可以自己转给自己，不改变状态，先检查余额充足，白费手续费
 	}
 	bls2 := state.Balance(addr2)
 	if bls2 == nil {
@@ -54,7 +55,7 @@ func DoAddSatoshiFromChainState(state interfaces.ChainStateOperation, addr field
 		blssto = stores.NewEmptyBalance() // first create account
 	}
 	basesat := blssto.Satoshi
-	newsat := uint64(basesat) + uint64(sat)
+	newsat := uint64(basesat) + uint64(sat) // 增加
 	// 新余额
 	blssto.Satoshi = fields.VarUint8(newsat)
 	bserr := state.BalanceSet(addr, blssto)
@@ -71,14 +72,14 @@ func DoSubSatoshiFromChainState(state interfaces.ChainStateOperation, addr field
 	}
 	blssto := state.Balance(addr)
 	if blssto == nil {
-		return fmt.Errorf("address %s satoshi need %d not enough.", addr.ToReadable(), sat)
+		return fmt.Errorf("address %s satoshi need %d but empty.", addr.ToReadable(), sat)
 	}
 	basesat := blssto.Satoshi
 	// 检查余额
 	if uint64(basesat) < uint64(sat) {
 		return fmt.Errorf("address %s satoshi %d not enough, need more %d.", addr.ToReadable(), basesat, sat)
 	}
-	newsat := uint64(basesat) - uint64(sat)
+	newsat := uint64(basesat) - uint64(sat) // 扣除
 	blssto.Satoshi = fields.VarUint8(newsat)
 	bserr := state.BalanceSet(addr, blssto)
 	if bserr != nil {

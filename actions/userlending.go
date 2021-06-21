@@ -218,7 +218,7 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 	// 查询id是否存在
 	usrlendObj := state.UserLending(act.LendingID)
 	if usrlendObj != nil {
-		return fmt.Errorf("User Lending <%d> already exist.", hex.EncodeToString(act.LendingID))
+		return fmt.Errorf("User Lending <%s> already exist.", hex.EncodeToString(act.LendingID))
 	}
 
 	// 钻石数量检查
@@ -383,7 +383,7 @@ func (act *Action_19_UsersLendingCreate) RecoverChainState(state interfaces.Chai
 	// 查询id是否存在
 	usrlendObj := state.UserLending(act.LendingID)
 	if usrlendObj == nil {
-		return fmt.Errorf("User Lending <%d> not exist.", hex.EncodeToString(act.LendingID))
+		return fmt.Errorf("User Lending <%s> not exist.", hex.EncodeToString(act.LendingID))
 	}
 
 	// 回退 批量抵押钻石
@@ -565,13 +565,13 @@ func (act *Action_20_UsersLendingRansom) WriteinChainState(state interfaces.Chai
 	// 查询id是否存在
 	usrlendObj := state.UserLending(act.LendingID)
 	if usrlendObj == nil {
-		return fmt.Errorf("User Lending <%d> not exist.", hex.EncodeToString(act.LendingID))
+		return fmt.Errorf("User Lending <%s> not exist.", act.LendingID.ToHex())
 	}
 
 	// 检查是否赎回状态
 	if usrlendObj.IsRansomed.Check() {
 		// 已经赎回。不可再次赎回
-		return fmt.Errorf("User Lending <%d> has been redeemed.", hex.EncodeToString(act.LendingID))
+		return fmt.Errorf("User Lending <%s> has been redeemed.", act.LendingID.ToHex())
 	}
 
 	// 赎回人类型
@@ -695,7 +695,7 @@ func (act *Action_20_UsersLendingRansom) RecoverChainState(state interfaces.Chai
 	// 查询id是否存在
 	usrlendObj := state.UserLending(act.LendingID)
 	if usrlendObj == nil {
-		return fmt.Errorf("User Lending <%d> not exist.", hex.EncodeToString(act.LendingID))
+		return fmt.Errorf("User Lending <%s> not exist.", hex.EncodeToString(act.LendingID))
 	}
 
 	// 赎回类型

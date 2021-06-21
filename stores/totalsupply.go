@@ -10,7 +10,7 @@ import (
 
 const (
 	typeSizeMax   int = 32
-	typeSizeValid int = 19 // 当前可用的
+	typeSizeValid int = 18 // 当前可用的
 	// 钻石
 	TotalSupplyStoreTypeOfDiamond uint8 = 0 // 已挖掘出的钻石数量
 	// BTC

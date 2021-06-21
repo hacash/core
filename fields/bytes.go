@@ -4,6 +4,7 @@ import (
 	//"fmt"
 	//"unsafe"
 	"bytes"
+	"encoding/hex"
 	"fmt"
 )
 
@@ -111,6 +112,23 @@ func (elm Bytes24) Size() uint32 { return 24 }
 func (elm Bytes32) Size() uint32 { return 32 }
 func (elm Bytes33) Size() uint32 { return 33 }
 func (elm Bytes64) Size() uint32 { return 64 }
+
+func (elm Bytes3) ToHex() string  { return hex.EncodeToString(elm) }
+func (elm Bytes4) ToHex() string  { return hex.EncodeToString(elm) }
+func (elm Bytes5) ToHex() string  { return hex.EncodeToString(elm) }
+func (elm Bytes6) ToHex() string  { return hex.EncodeToString(elm) }
+func (elm Bytes8) ToHex() string  { return hex.EncodeToString(elm) }
+func (elm Bytes12) ToHex() string { return hex.EncodeToString(elm) }
+func (elm Bytes14) ToHex() string { return hex.EncodeToString(elm) }
+func (elm Bytes15) ToHex() string { return hex.EncodeToString(elm) }
+func (elm Bytes16) ToHex() string { return hex.EncodeToString(elm) }
+func (elm Bytes17) ToHex() string { return hex.EncodeToString(elm) }
+func (elm Bytes18) ToHex() string { return hex.EncodeToString(elm) }
+func (elm Bytes21) ToHex() string { return hex.EncodeToString(elm) }
+func (elm Bytes24) ToHex() string { return hex.EncodeToString(elm) }
+func (elm Bytes32) ToHex() string { return hex.EncodeToString(elm) }
+func (elm Bytes33) ToHex() string { return hex.EncodeToString(elm) }
+func (elm Bytes64) ToHex() string { return hex.EncodeToString(elm) }
 
 ////////////////////////////////////////////////////////
 

@@ -3,6 +3,7 @@ package actions
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
 )
@@ -68,6 +69,11 @@ func (elm *Action_8_SimpleSatoshiTransfer) RequestSignAddresses() []fields.Addre
 func (act *Action_8_SimpleSatoshiTransfer) WriteinChainState(state interfaces.ChainStateOperation) error {
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
+	}
+
+	if act.Amount <= 0 {
+		// 转账不能为 0 或负
+		return fmt.Errorf("Amount <%d> error.", act.Amount)
 	}
 	// 转移
 	return DoSimpleSatoshiTransferFromChainState(state, act.belong_trs.GetAddress(), act.ToAddress, act.Amount)
@@ -164,6 +170,12 @@ func (act *Action_11_FromToSatoshiTransfer) WriteinChainState(state interfaces.C
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
+
+	if act.Amount <= 0 {
+		// 转账不能为 0 或负
+		return fmt.Errorf("Amount <%d> error.", act.Amount)
+	}
+
 	// 转移
 	return DoSimpleSatoshiTransferFromChainState(state, act.FromAddress, act.ToAddress, act.Amount)
 }
