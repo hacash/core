@@ -414,8 +414,6 @@ func (*Action_18_BitcoinsSystemLendingRansom) RequestSignAddresses() []fields.Ad
 
 func (act *Action_18_BitcoinsSystemLendingRansom) WriteinChainState(state interfaces.ChainStateOperation) error {
 
-	var e error
-
 	if !sys.TestDebugLocalDevelopmentMark {
 		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
 	}
