@@ -140,7 +140,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	//区块高度
 	blkhei := state.GetPendingBlockHeight()
 
-	// 必须检查
+	// 是否必须全面检查
 	var mustDoAllCheck = true
 
 	if sys.TestDebugLocalDevelopmentMark {
@@ -217,7 +217,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	// 存入钻石
 	//fmt.Println(act.Address.ToReadable())
 	var diastore = stores.NewDiamond(act.Address)
-	diastore.Address = act.Address
+	diastore.Address = act.Address                // 钻石所属地址
 	e3 := state.DiamondSet(act.Diamond, diastore) // 保存
 	if e3 != nil {
 		return e3
@@ -229,7 +229,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	}
 
 	// 设置矿工状态
-	//标记本区块已经包含钻石
+	// 标记本区块已经包含钻石
 	// 存储对象
 	var diamondstore = &stores.DiamondSmelt{
 		Diamond:              act.Diamond,

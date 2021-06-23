@@ -9,9 +9,9 @@ import (
 
 func Test_bbb1(t *testing.T) {
 
-	amt, _ := NewAmountFromFinString("2:248")
+	amt, _ := NewAmountByBigIntWithUnit(big.NewInt(16160), 245)
 
-	fmt.Println(amt.GetValue().String())
+	fmt.Println(amt.ToFinString())
 
 }
 

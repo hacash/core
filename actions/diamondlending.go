@@ -143,7 +143,7 @@ func (act *Action_15_DiamondsSystemLendingCreate) WriteinChainState(state interf
 	// 查询id是否存在
 	dmdlendObj := state.DiamondSystemLending(act.LendingID)
 	if dmdlendObj != nil {
-		return fmt.Errorf("Diamond Lending <%d> already exist.", hex.EncodeToString(act.LendingID))
+		return fmt.Errorf("Diamond Lending <%s> already exist.", hex.EncodeToString(act.LendingID))
 	}
 
 	// 数量检查
@@ -421,7 +421,7 @@ func (act *Action_16_DiamondsSystemLendingRansom) WriteinChainState(state interf
 
 	// 测试使用
 	if sys.TestDebugLocalDevelopmentMark {
-		dslbpbn = 50 // 测试时使用 50 个区块为一个周期
+		dslbpbn = 10 // 测试时使用 50 个区块为一个周期
 	}
 
 	paddingHeight := state.GetPendingBlockHeight()
@@ -437,17 +437,16 @@ func (act *Action_16_DiamondsSystemLendingRansom) WriteinChainState(state interf
 	// 查询id是否存在
 	dmdlendObj := state.DiamondSystemLending(act.LendingID)
 	if dmdlendObj == nil {
-		return fmt.Errorf("Diamond Lending <%d> not exist.", hex.EncodeToString(act.LendingID))
+		return fmt.Errorf("Diamond Lending <%s> not exist.", hex.EncodeToString(act.LendingID))
 	}
 
 	// 检查是否赎回状态
 	if dmdlendObj.IsRansomed.Check() {
 		// 已经赎回。不可再次赎回
-		return fmt.Errorf("Diamond Lending <%d> has been redeemed.", hex.EncodeToString(act.LendingID))
-
+		return fmt.Errorf("Diamond Lending <%s> has been redeemed.", hex.EncodeToString(act.LendingID))
 	}
 
-	// 计算赎回期限和所需赎回金额
+	// 计算赎回期限和所需赎回金额（判断是否可以公共赎回）
 	_, validRansomAmt, e4 := coinbase.CalculationDiamondSystemLendingRedeemAmount(
 		feeAddr, dmdlendObj.MainAddress,
 		int64(dmdlendObj.BorrowPeriod), int64(dmdlendObj.CreateBlockHeight),
@@ -463,7 +462,7 @@ func (act *Action_16_DiamondsSystemLendingRansom) WriteinChainState(state interf
 	}
 
 	// 赎回操作，扣除HAC余额（以便首先检查余额是否充足）
-	e2 := DoAddBalanceFromChainState(state, feeAddr, act.RansomAmount)
+	e2 := DoSubBalanceFromChainState(state, feeAddr, act.RansomAmount)
 	if e2 != nil {
 		return e2
 	}
@@ -493,7 +492,7 @@ func (act *Action_16_DiamondsSystemLendingRansom) WriteinChainState(state interf
 	}
 
 	// 增加钻石余额
-	e9 := DoSubDiamondFromChainState(state, feeAddr, fields.VarUint3(dianum))
+	e9 := DoAddDiamondFromChainState(state, feeAddr, fields.VarUint3(dianum))
 	if e9 != nil {
 		return e9
 	}
