@@ -47,7 +47,7 @@ const ()
 type Action_17_BitcoinsSystemLendingCreate struct {
 	//
 	LendingID                fields.Bytes15  // 借贷合约ID
-	MortgageBitcoinPortion   fields.VarUint2 // 抵押比特币份数（每份 = 0.01BTC）
+	MortgageBitcoinPortion   fields.VarUint2 // 抵押比特币份数（每份 = 0.01BTC）最多抵押655枚比特币
 	LoanTotalAmount          fields.Amount   // 总共借出HAC数量，必须小于等于可借数
 	PreBurningInterestAmount fields.Amount   // 预先销毁的利息，必须大于等于销毁数量
 
@@ -126,6 +126,14 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteinChainState(state interf
 
 	feeAddr := act.belong_trs.GetAddress()
 
+	// 检查数量上限
+	if act.MortgageBitcoinPortion <= 0 {
+		return fmt.Errorf("Bitcoin system lending mortgage bitcoin portion cannot empty.")
+	}
+	if act.MortgageBitcoinPortion > 10000 {
+		return fmt.Errorf("Bitcoin system lending mortgage bitcoin portion max is 10000 (100BTC).")
+	}
+
 	// 检查id格式
 	if len(act.LendingID) != stores.BitcoinSyslendIdLength ||
 		act.LendingID[0] == 0 ||
@@ -136,16 +144,15 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteinChainState(state interf
 	// 查询id是否存在
 	btclendObj := state.BitcoinSystemLending(act.LendingID)
 	if btclendObj != nil {
-		return fmt.Errorf("Bitcoin Lending <%d> already exist.", hex.EncodeToString(act.LendingID))
+		return fmt.Errorf("Bitcoin Lending <%s> already exist.", hex.EncodeToString(act.LendingID))
 	}
 
 	// 检查扣除比特币余额
-	realSat := act.MortgageBitcoinPortion * 100 * 10000 // 一份 = 0.01 BTC
+	realSat := uint64(act.MortgageBitcoinPortion) * 100 * 10000 // 一份 = 0.01 BTC
 	e0 := DoSubSatoshiFromChainState(state, feeAddr, fields.VarUint8(realSat))
 	if e0 != nil {
 		return e0 // 比特币余额不足
 	}
-
 	// 统计信息
 	totalsupply, e1 := state.ReadTotalSupply()
 	if e1 != nil {
@@ -156,14 +163,14 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteinChainState(state interf
 	// 总的比特币份数
 	totalbtcpart := totalsupply.Get(stores.TotalSupplyStoreTypeOfTransferBitcoin) * 100
 	// 借贷比例，必须算上本次抵押的BTC份数
-	alllendper := (btcpartcurnum + float64(act.MortgageBitcoinPortion)) / totalbtcpart
+	alllendper := (btcpartcurnum + float64(act.MortgageBitcoinPortion)) / totalbtcpart * 100
 
-	// 计算可借数量和预付利息
+	// 计算可借数量和预付利息，参数单位： %
 	canLoanHacPart, predeshac := coinbase.CalculationOfInterestBitcoinMortgageLoanAmount(alllendper)
 	canLoanHacPart *= float64(act.MortgageBitcoinPortion)
 	predeshac *= float64(act.MortgageBitcoinPortion) // 真实预付利息份数
 
-	// 真实数额
+	// 真实数额，计算时忽略单位 240 后的小数部分
 	realMaxLoanAmt, e3 := fields.NewAmountByBigIntWithUnit(
 		big.NewInt(int64(canLoanHacPart*100*10000)),
 		240,
@@ -262,11 +269,11 @@ func (act *Action_17_BitcoinsSystemLendingCreate) RecoverChainState(state interf
 	// 查询id是否存在
 	btclendObj := state.BitcoinSystemLending(act.LendingID)
 	if btclendObj == nil {
-		return fmt.Errorf("Bitcoin Lending <%d> not exist.", hex.EncodeToString(act.LendingID))
+		return fmt.Errorf("Bitcoin Lending <%s> not exist.", hex.EncodeToString(act.LendingID))
 	}
 
 	// 回退比特币余额
-	realSat := act.MortgageBitcoinPortion * 100 * 10000 // 一份 = 0.01 BTC
+	realSat := uint64(act.MortgageBitcoinPortion) * 100 * 10000 // 一份 = 0.01 BTC
 	e = DoAddSatoshiFromChainState(state, feeAddr, fields.VarUint8(realSat))
 	if e != nil {
 		return e
@@ -435,13 +442,13 @@ func (act *Action_18_BitcoinsSystemLendingRansom) WriteinChainState(state interf
 	// 查询id是否存在
 	btclendObj := state.BitcoinSystemLending(act.LendingID)
 	if btclendObj == nil {
-		return fmt.Errorf("Bitcoin Lending <%d> not exist.", hex.EncodeToString(act.LendingID))
+		return fmt.Errorf("Bitcoin Lending <%s> not exist.", hex.EncodeToString(act.LendingID))
 	}
 
 	// 检查是否赎回状态
 	if btclendObj.IsRansomed.Check() {
 		// 已经赎回。不可再次赎回
-		return fmt.Errorf("Bitcoin Lending <%d> has been redeemed.", hex.EncodeToString(act.LendingID))
+		return fmt.Errorf("Bitcoin Lending <%s> has been redeemed.", hex.EncodeToString(act.LendingID))
 	}
 
 	// 赎回期阶段区块数
@@ -460,10 +467,9 @@ func (act *Action_18_BitcoinsSystemLendingRansom) WriteinChainState(state interf
 		return e4
 	}
 
-	// 检查赎回金额是否有效（赎回金额真的大于实时计算的可赎回金额）
-	// 检查赎回金额是否满足要求
+	// 检查赎回金额是否有效（赎回金额真的大于实时计算的可赎回金额）检查赎回金额是否满足要求
 	if act.RansomAmount.LessThan(realRansomAmt) {
-		return fmt.Errorf("Ransom amount %s can not less than real time ransom amount %s.", act.RansomAmount.ToFinString(), btclendObj.LoanTotalAmount.ToFinString())
+		return fmt.Errorf("Ransom amount %s can not less than real time ransom amount %s.", act.RansomAmount.ToFinString(), realRansomAmt.ToFinString())
 	}
 
 	// 赎回操作，扣除HAC余额（以便首先检查余额是否充足）
@@ -473,7 +479,7 @@ func (act *Action_18_BitcoinsSystemLendingRansom) WriteinChainState(state interf
 	}
 
 	// 增加比特币余额
-	addSat := btclendObj.MortgageBitcoinPortion * 100 * 10000
+	addSat := uint64(btclendObj.MortgageBitcoinPortion) * 100 * 10000
 	e9 := DoAddSatoshiFromChainState(state, feeAddr, fields.VarUint8(addSat))
 	if e9 != nil {
 		return e9
@@ -526,7 +532,7 @@ func (act *Action_18_BitcoinsSystemLendingRansom) RecoverChainState(state interf
 	// 查询id是否存在
 	btclendObj := state.BitcoinSystemLending(act.LendingID)
 	if btclendObj == nil {
-		return fmt.Errorf("Bitcoin Lending <%d> not exist.", hex.EncodeToString(act.LendingID))
+		return fmt.Errorf("Bitcoin Lending <%s> not exist.", hex.EncodeToString(act.LendingID))
 	}
 
 	// 回退赎回操作，增加HAC余额
@@ -536,7 +542,7 @@ func (act *Action_18_BitcoinsSystemLendingRansom) RecoverChainState(state interf
 	}
 
 	// 回退减少比特币余额
-	addSat := btclendObj.MortgageBitcoinPortion * 100 * 10000
+	addSat := uint64(btclendObj.MortgageBitcoinPortion) * 100 * 10000
 	e9 := DoSubSatoshiFromChainState(state, feeAddr, fields.VarUint8(addSat))
 	if e9 != nil {
 		return e9
