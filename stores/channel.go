@@ -12,8 +12,8 @@ const (
 
 //
 type Channel struct {
-	BelongHeight fields.VarUint5 // 通道开启时的区块高度
-	LockBlock    fields.VarUint2 // 单方面结束通道要锁定的区块数量
+	BelongHeight fields.BlockHeight // 通道开启时的区块高度
+	LockBlock    fields.VarUint2    // 单方面结束通道要锁定的区块数量
 	LeftAddress  fields.Address
 	LeftAmount   fields.Amount // 抵押数额1  【6位定宽】
 	RightAddress fields.Address

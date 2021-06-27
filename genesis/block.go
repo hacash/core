@@ -28,7 +28,7 @@ func GetGenesisBlock() interfaces.Block {
 	//fmt.Println(time.Now().In(loc))
 	ttt := time.Date(2019, time.February, 4, 11, 25, 0, 0, loc_chongqing).Unix()
 	//fmt.Println( ttt )
-	genesis.Timestamp = fields.VarUint5(ttt)
+	genesis.Timestamp = fields.BlockTxTimestamp(ttt)
 	genesis.Nonce = fields.VarUint4(160117829)
 	genesis.Difficulty = fields.VarUint4(0)
 	// coinbase

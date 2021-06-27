@@ -14,8 +14,8 @@ import (
 type Block_v1 struct {
 	// head
 	/* Version   fields.VarUint1 */
-	Height           fields.VarUint5
-	Timestamp        fields.VarUint5
+	Height           fields.BlockHeight
+	Timestamp        fields.BlockTxTimestamp
 	PrevHash         fields.Bytes32
 	MrklRoot         fields.Bytes32
 	TransactionCount fields.VarUint4
@@ -39,7 +39,7 @@ func NewEmptyBlock_v1(prevBlockHead interfaces.Block) *Block_v1 {
 	curt := time.Now().Unix()
 	empty := &Block_v1{
 		Height:           0,
-		Timestamp:        fields.VarUint5(curt),
+		Timestamp:        fields.BlockTxTimestamp(curt),
 		PrevHash:         fields.EmptyZeroBytes32,
 		MrklRoot:         fields.EmptyZeroBytes32,
 		TransactionCount: 0,
@@ -50,7 +50,7 @@ func NewEmptyBlock_v1(prevBlockHead interfaces.Block) *Block_v1 {
 	}
 	if prevBlockHead != nil {
 		empty.PrevHash = prevBlockHead.Hash()
-		empty.Height = fields.VarUint5(prevBlockHead.GetHeight() + 1)
+		empty.Height = fields.BlockHeight(prevBlockHead.GetHeight() + 1)
 		empty.Difficulty = fields.VarUint4(prevBlockHead.GetDifficulty())
 	}
 	return empty

@@ -19,7 +19,7 @@ import (
 /////////////////////////////////////////////
 
 type Transaction_1_DO_NOT_USE_WITH_BUG struct {
-	Timestamp fields.VarUint5
+	Timestamp fields.BlockTxTimestamp
 	Address   fields.Address
 	Fee       fields.Amount
 
@@ -43,7 +43,7 @@ func NewEmptyTransaction_1_Simple(master fields.Address) (*Transaction_1_DO_NOT_
 	}
 	timeUnix := time.Now().Unix()
 	return &Transaction_1_DO_NOT_USE_WITH_BUG{
-		Timestamp:      fields.VarUint5(uint64(timeUnix)),
+		Timestamp:      fields.BlockTxTimestamp(uint64(timeUnix)),
 		Address:        master,
 		Fee:            *fields.NewEmptyAmount(),
 		ActionCount:    fields.VarUint2(0),

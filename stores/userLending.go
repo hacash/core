@@ -14,8 +14,8 @@ type UserLending struct {
 	IsRedemptionOvertime fields.Bool // 是否超期仍可赎回（自动展期）
 	IsPublicRedeemable   fields.Bool // 到期后是否公共可赎回
 
-	CreateBlockHeight fields.VarUint5 // 借贷开启时的区块高度
-	ExpireBlockHeight fields.VarUint5 // 约定到期的区块高度
+	CreateBlockHeight fields.BlockHeight // 借贷开启时的区块高度
+	ExpireBlockHeight fields.BlockHeight // 约定到期的区块高度
 
 	MortgagorAddress fields.Address // 抵押人地址
 	LendersAddress   fields.Address // 放款人地址
@@ -27,10 +27,15 @@ type UserLending struct {
 	AgreedRedemptionAmount fields.Amount // 约定的赎回金额
 
 	PreBurningInterestAmount fields.Amount // 预先销毁的利息，必须大于等于 借出金额的 1%
+
+	// 如已经赎回则写入数据
+	RansomBlockHeight              fields.BlockHeight     // 赎回时的区块高度
+	RansomAmount                   fields.Amount          // 赎回金额
+	RansomAddressIfPublicOperation fields.OptionalAddress // 如果是第三方赎回则记录第三方地址
 }
 
 func (elm *UserLending) Size() uint32 {
-	return elm.IsRansomed.Size() +
+	sz := elm.IsRansomed.Size() +
 		elm.IsRedemptionOvertime.Size() +
 		elm.IsPublicRedeemable.Size() +
 		elm.CreateBlockHeight.Size() +
@@ -42,6 +47,13 @@ func (elm *UserLending) Size() uint32 {
 		elm.LoanTotalAmount.Size() +
 		elm.AgreedRedemptionAmount.Size() +
 		elm.PreBurningInterestAmount.Size()
+	// 已经赎回状态
+	if elm.IsRansomed.Check() {
+		sz += elm.RansomBlockHeight.Size() +
+			elm.RansomAmount.Size() +
+			elm.RansomAddressIfPublicOperation.Size()
+	}
+	return sz
 }
 
 func (elm *UserLending) Serialize() ([]byte, error) {
@@ -70,6 +82,15 @@ func (elm *UserLending) Serialize() ([]byte, error) {
 	buffer.Write(b10)
 	buffer.Write(b11)
 	buffer.Write(b12)
+	// 已赎回状态
+	if elm.IsRansomed.Check() {
+		var b0, _ = elm.RansomBlockHeight.Serialize()
+		var b1, _ = elm.RansomAmount.Serialize()
+		var b2, _ = elm.RansomAddressIfPublicOperation.Serialize()
+		buffer.Write(b0)
+		buffer.Write(b1)
+		buffer.Write(b2)
+	}
 	return buffer.Bytes(), nil
 }
 
@@ -123,5 +144,41 @@ func (elm *UserLending) Parse(buf []byte, seek uint32) (uint32, error) {
 	if e != nil {
 		return 0, e
 	}
+	// 已赎回状态
+	if elm.IsRansomed.Check() {
+		seek, e = elm.RansomBlockHeight.Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
+		seek, e = elm.RansomAmount.Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
+		seek, e = elm.RansomAddressIfPublicOperation.Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
+	}
 	return seek, nil
+}
+
+// 修改、回退赎回状态
+
+func (elm *UserLending) SetRansomedStatus(height uint64, amount *fields.Amount, address fields.Address) error {
+	elm.IsRansomed.Set(true) // 设置赎回状态
+	elm.RansomBlockHeight = fields.BlockHeight(height)
+	elm.RansomAmount = *amount
+	elm.RansomAddressIfPublicOperation = fields.NewEmptyOptionalAddress()
+	// 是否为非抵押、非放款人的第三方地址公共赎回
+	if address.NotEqual(elm.MortgagorAddress) && address.NotEqual(elm.LendersAddress) {
+		elm.RansomAddressIfPublicOperation.Exist = fields.CreateBool(true)
+		elm.RansomAddressIfPublicOperation.Addr = address
+	}
+	return nil
+}
+
+// 移除赎回状态
+func (elm *UserLending) DropRansomedStatus() error {
+	elm.IsRansomed.Set(false) // 回退赎回状态
+	return nil
 }

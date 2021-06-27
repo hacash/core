@@ -12,13 +12,13 @@ import (
 )
 
 type Action_9_LockblsCreate struct {
-	LockblsId           fields.Bytes18  // 线性锁仓id
-	PaymentAddress      fields.Address  // 付款地址
-	MasterAddress       fields.Address  // 主地址（领取权）
-	EffectBlockHeight   fields.VarUint5 // 生效（开始）区块
-	LinearBlockNumber   fields.VarUint3 // 步进区块数 < 17000000 约 160年
-	TotalStockAmount    fields.Amount   // 总共存入额度
-	LinearReleaseAmount fields.Amount   // 每次释放额度
+	LockblsId           fields.Bytes18     // 线性锁仓id
+	PaymentAddress      fields.Address     // 付款地址
+	MasterAddress       fields.Address     // 主地址（领取权）
+	EffectBlockHeight   fields.BlockHeight // 生效（开始）区块
+	LinearBlockNumber   fields.VarUint3    // 步进区块数 < 17000000 约 160年
+	TotalStockAmount    fields.Amount      // 总共存入额度
+	LinearReleaseAmount fields.Amount      // 每次释放额度
 
 	// data ptr
 	belong_trs interfaces.Transaction

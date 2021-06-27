@@ -85,6 +85,7 @@ func (elm *Bool) Set(v bool) {
 // 判断
 func (elm Bool) Is(v bool) bool { return elm.Check() == v }
 func (elm Bool) Check() bool    { return int(elm) != 0 }
+func (elm Bool) Value() uint8   { return uint8(elm) }
 func CreateBoolPtr(v bool) *Bool {
 	b := CreateBool(v)
 	return &b

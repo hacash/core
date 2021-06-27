@@ -46,9 +46,9 @@ type Action_19_UsersLendingCreate struct {
 	//
 	LendingID fields.Bytes17 // 借贷合约ID
 
-	IsRedemptionOvertime    fields.Bool     // 是否超期仍可赎回（自动展期）
-	IsPublicRedeemable      fields.Bool     // 到期后是否公共可赎回
-	AgreedExpireBlockHeight fields.VarUint5 // 约定到期的区块高度
+	IsRedemptionOvertime    fields.Bool        // 是否超期仍可赎回（自动展期）
+	IsPublicRedeemable      fields.Bool        // 到期后是否公共可赎回
+	AgreedExpireBlockHeight fields.BlockHeight // 约定到期的区块高度
 
 	MortgagorAddress fields.Address // 抵押人地址
 	LendersAddress   fields.Address // 放款人地址
@@ -312,7 +312,7 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 		IsRansomed:               fields.CreateBool(false), // 标记未赎回
 		IsRedemptionOvertime:     act.IsRedemptionOvertime,
 		IsPublicRedeemable:       act.IsPublicRedeemable,
-		CreateBlockHeight:        fields.VarUint5(paddingHeight),
+		CreateBlockHeight:        fields.BlockHeight(paddingHeight),
 		ExpireBlockHeight:        act.AgreedExpireBlockHeight,
 		MortgagorAddress:         act.MortgagorAddress,
 		LendersAddress:           act.LendersAddress,
@@ -670,7 +670,10 @@ func (act *Action_20_UsersLendingRansom) WriteinChainState(state interfaces.Chai
 	}
 
 	// 修改抵押合约状态
-	usrlendObj.IsRansomed.Set(true) // 标记已经赎回，避免重复赎回
+	e13 := usrlendObj.SetRansomedStatus(paddingHeight, &act.RansomAmount, feeAddr) // 标记已经赎回，避免重复赎回
+	if e13 != nil {
+		return e13
+	}
 	e11 := state.UserLendingUpdate(act.LendingID, usrlendObj)
 	if e11 != nil {
 		return e11
@@ -734,7 +737,7 @@ func (act *Action_20_UsersLendingRansom) RecoverChainState(state interfaces.Chai
 	}
 
 	// 修改抵押合约状态
-	usrlendObj.IsRansomed.Set(false) // 标记未赎回或扣押
+	usrlendObj.DropRansomedStatus() // 标记未赎回、扣押
 	state.UserLendingUpdate(act.LendingID, usrlendObj)
 
 	return nil

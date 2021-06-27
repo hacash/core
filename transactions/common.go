@@ -28,8 +28,8 @@ func CreateOneTxOfSimpleTransfer(payacc *account.Account, toaddr fields.Address,
 
 	// 创建普通转账交易
 	newTrs, _ := NewEmptyTransaction_2_Simple(payacc.Address)
-	newTrs.Timestamp = fields.VarUint5(timestamp) // 使用时间戳
-	newTrs.Fee = *fee                             // set fee
+	newTrs.Timestamp = fields.BlockTxTimestamp(timestamp) // 使用时间戳
+	newTrs.Fee = *fee                                     // set fee
 	tranact := actions.NewAction_1_SimpleToTransfer(toaddr, amount)
 	e9 := newTrs.AppendAction(tranact)
 	// sign 私钥签名
@@ -52,7 +52,7 @@ func CreateOneTxOfBTCTransfer(payacc *account.Account, toaddr fields.Address, am
 
 	// 创建交易
 	newTrs, _ := NewEmptyTransaction_2_Simple(feeacc.Address) // 使用手续费地址为主地址
-	newTrs.Timestamp = fields.VarUint5(timestamp)             // 使用时间戳
+	newTrs.Timestamp = fields.BlockTxTimestamp(timestamp)     // 使用时间戳
 	newTrs.Fee = *fee                                         // set fee
 	var tranact interfaces.Action = nil
 	if bytes.Compare(payacc.Address, feeacc.Address) == 0 {
@@ -93,7 +93,7 @@ func CreateOneTxOfOutfeeQuantityHACDTransfer(payacc *account.Account, toaddr fie
 
 	// 创建交易
 	newTrs, _ := NewEmptyTransaction_2_Simple(feeacc.Address) // 使用手续费地址为主地址
-	newTrs.Timestamp = fields.VarUint5(timestamp)             // 使用时间戳
+	newTrs.Timestamp = fields.BlockTxTimestamp(timestamp)     // 使用时间戳
 	newTrs.Fee = *fee                                         // set fee
 	tranact := &actions.Action_6_OutfeeQuantityDiamondTransfer{
 		FromAddress: payacc.Address,

@@ -234,7 +234,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	var diamondstore = &stores.DiamondSmelt{
 		Diamond:              act.Diamond,
 		Number:               act.Number,
-		ContainBlockHeight:   fields.VarUint5(blkhei),
+		ContainBlockHeight:   fields.BlockHeight(blkhei),
 		ContainBlockHash:     nil, // current block not exist !!!
 		PrevContainBlockHash: act.PrevHash,
 		MinerAddress:         act.Address,

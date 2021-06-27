@@ -141,7 +141,7 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	curheight := state.GetPendingBlockHeight()
 	// 创建 channel
 	var storeItem stores.Channel
-	storeItem.BelongHeight = fields.VarUint5(curheight)
+	storeItem.BelongHeight = fields.BlockHeight(curheight)
 	storeItem.LockBlock = fields.VarUint2(uint16(5000)) // 单方面提出的锁定期约为 17 天
 	storeItem.LeftAddress = act.LeftAddress
 	storeItem.LeftAmount = act.LeftAmount

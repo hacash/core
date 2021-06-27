@@ -1,4 +1,4 @@
 package fields
 
-type BlockHeight VarUint5
-type BlockTimestamp VarUint5
+type BlockHeight = VarUint5
+type BlockTxTimestamp = VarUint5

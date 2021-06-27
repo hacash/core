@@ -15,7 +15,7 @@ import (
 )
 
 type Transaction_2_Simple struct {
-	Timestamp   fields.VarUint5
+	Timestamp   fields.BlockTxTimestamp
 	MainAddress fields.Address
 	Fee         fields.Amount
 
@@ -39,7 +39,7 @@ func NewEmptyTransaction_2_Simple(master fields.Address) (*Transaction_2_Simple,
 	}
 	timeUnix := time.Now().Unix()
 	return &Transaction_2_Simple{
-		Timestamp:      fields.VarUint5(uint64(timeUnix)),
+		Timestamp:      fields.BlockTxTimestamp(uint64(timeUnix)),
 		MainAddress:    master,
 		Fee:            *fields.NewEmptyAmount(),
 		ActionCount:    fields.VarUint2(0),

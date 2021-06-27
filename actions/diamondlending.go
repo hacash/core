@@ -220,7 +220,7 @@ func (act *Action_15_DiamondsSystemLendingCreate) WriteinChainState(state interf
 	paddingHei := state.GetPendingBlockHeight()
 	dlsto := &stores.DiamondSystemLending{
 		IsRansomed:          fields.CreateBool(false), // 标记未赎回
-		CreateBlockHeight:   fields.VarUint5(paddingHei),
+		CreateBlockHeight:   fields.BlockHeight(paddingHei),
 		MainAddress:         feeAddr,
 		MortgageDiamondList: act.MortgageDiamondList,
 		LoanTotalAmountMei:  fields.VarUint4(totalLoanHAC),
@@ -497,8 +497,11 @@ func (act *Action_16_DiamondsSystemLendingRansom) WriteinChainState(state interf
 		return e9
 	}
 
-	// 修改抵押合约状态
-	dmdlendObj.IsRansomed.Set(true) // 标记已经赎回，避免重复赎回
+	// 修改抵押合约状态，标记已经赎回，避免重复赎回
+	e20 := dmdlendObj.SetRansomedStatus(paddingHeight, &act.RansomAmount, feeAddr)
+	if e20 != nil {
+		return e20
+	}
 	e10 := state.DiamondLendingUpdate(act.LendingID, dmdlendObj)
 	if e10 != nil {
 		return e10
@@ -547,8 +550,11 @@ func (act *Action_16_DiamondsSystemLendingRansom) RecoverChainState(state interf
 		return fmt.Errorf("Diamond Lending <%d> not exist.", hex.EncodeToString(act.LendingID))
 	}
 
-	// 删除抵押合约
-	state.DiamondLendingDelete(act.LendingID)
+	// 回退赎回状态
+	e1 := dmdlendObj.DropRansomedStatus()
+	if e1 != nil {
+		return e1
+	}
 
 	// 钻石批量恢复抵押
 	for i := 0; i < len(dmdlendObj.MortgageDiamondList.Diamonds); i++ {

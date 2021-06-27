@@ -211,7 +211,7 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteinChainState(state interf
 	paddingHei := state.GetPendingBlockHeight()
 	dlsto := &stores.BitcoinSystemLending{
 		IsRansomed:               fields.CreateBool(false), // 标记未赎回
-		CreateBlockHeight:        fields.VarUint5(paddingHei),
+		CreateBlockHeight:        fields.BlockHeight(paddingHei),
 		MainAddress:              feeAddr,
 		MortgageBitcoinPortion:   act.MortgageBitcoinPortion,
 		LoanTotalAmount:          act.LoanTotalAmount,
@@ -486,7 +486,10 @@ func (act *Action_18_BitcoinsSystemLendingRansom) WriteinChainState(state interf
 	}
 
 	// 修改抵押合约状态
-	btclendObj.IsRansomed.Set(true) // 标记已经赎回，避免重复赎回
+	e20 := btclendObj.SetRansomedStatus(paddingHeight, &act.RansomAmount, feeAddr)
+	if e20 != nil {
+		return e20
+	}
 	e10 := state.BitcoinLendingUpdate(act.LendingID, btclendObj)
 	if e10 != nil {
 		return e10
@@ -549,7 +552,10 @@ func (act *Action_18_BitcoinsSystemLendingRansom) RecoverChainState(state interf
 	}
 
 	// 修改抵押合约状态
-	btclendObj.IsRansomed.Set(false) // 标记为未赎回状态
+	e20 := btclendObj.DropRansomedStatus() // 移除已赎回状态
+	if e20 != nil {
+		return e20
+	}
 	e10 := state.BitcoinLendingUpdate(act.LendingID, btclendObj)
 	if e10 != nil {
 		return e10
