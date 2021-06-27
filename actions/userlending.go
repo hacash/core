@@ -51,7 +51,7 @@ type Action_19_UsersLendingCreate struct {
 	AgreedExpireBlockHeight fields.BlockHeight // 约定到期的区块高度
 
 	MortgagorAddress fields.Address // 抵押人地址
-	LendersAddress   fields.Address // 放款人地址
+	LenderAddress    fields.Address // 放款人地址
 
 	MortgageBitcoin     fields.SatoshiVariation     // 抵押比特币数量 单位：SAT
 	MortgageDiamondList fields.DiamondListMaxLen200 // 抵押钻石列表
@@ -85,7 +85,7 @@ func (elm *Action_19_UsersLendingCreate) Serialize() ([]byte, error) {
 	var b3, _ = elm.IsPublicRedeemable.Serialize()
 	var b4, _ = elm.AgreedExpireBlockHeight.Serialize()
 	var b5, _ = elm.MortgagorAddress.Serialize()
-	var b6, _ = elm.LendersAddress.Serialize()
+	var b6, _ = elm.LenderAddress.Serialize()
 	var b7, _ = elm.MortgageBitcoin.Serialize()
 	var b8, _ = elm.MortgageDiamondList.Serialize()
 	var b9, _ = elm.LoanTotalAmount.Serialize()
@@ -127,7 +127,7 @@ func (elm *Action_19_UsersLendingCreate) Parse(buf []byte, seek uint32) (uint32,
 	if e != nil {
 		return 0, e
 	}
-	seek, e = elm.LendersAddress.Parse(buf, seek)
+	seek, e = elm.LenderAddress.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -160,7 +160,7 @@ func (elm *Action_19_UsersLendingCreate) Size() uint32 {
 		elm.IsPublicRedeemable.Size() +
 		elm.AgreedExpireBlockHeight.Size() +
 		elm.MortgagorAddress.Size() +
-		elm.LendersAddress.Size() +
+		elm.LenderAddress.Size() +
 		elm.MortgageBitcoin.Size() +
 		elm.MortgageDiamondList.Size() +
 		elm.LoanTotalAmount.Size() +
@@ -171,7 +171,7 @@ func (elm *Action_19_UsersLendingCreate) Size() uint32 {
 func (act *Action_19_UsersLendingCreate) RequestSignAddresses() []fields.Address {
 	return []fields.Address{
 		act.MortgagorAddress,
-		act.LendersAddress,
+		act.LenderAddress,
 	} // 抵押人和放款人都需要签名
 }
 
@@ -186,7 +186,7 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 	}
 
 	// 不能自己借给自己
-	if act.MortgagorAddress.Equal(act.LendersAddress) {
+	if act.MortgagorAddress.Equal(act.LenderAddress) {
 		return fmt.Errorf("Cannot lending to myself.")
 	}
 
@@ -296,13 +296,13 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 	}
 
 	// 销毁利息，由放款人支付
-	e10 := DoSubBalanceFromChainState(state, act.LendersAddress, act.PreBurningInterestAmount)
+	e10 := DoSubBalanceFromChainState(state, act.LenderAddress, act.PreBurningInterestAmount)
 	if e10 != nil {
 		return e10 // 销毁利息余额不足
 	}
 
 	// 抵押成功，转移余额：  放款人 -> 抵押借款者
-	e11 := DoSimpleTransferFromChainState(state, act.LendersAddress, act.MortgagorAddress, act.LoanTotalAmount)
+	e11 := DoSimpleTransferFromChainState(state, act.LenderAddress, act.MortgagorAddress, act.LoanTotalAmount)
 	if e11 != nil {
 		return e11 // 放款人余额不足
 	}
@@ -315,7 +315,7 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 		CreateBlockHeight:        fields.BlockHeight(paddingHeight),
 		ExpireBlockHeight:        act.AgreedExpireBlockHeight,
 		MortgagorAddress:         act.MortgagorAddress,
-		LendersAddress:           act.LendersAddress,
+		LenderAddress:            act.LenderAddress,
 		MortgageBitcoin:          act.MortgageBitcoin,
 		MortgageDiamondList:      act.MortgageDiamondList,
 		LoanTotalAmount:          act.LoanTotalAmount,
@@ -407,10 +407,10 @@ func (act *Action_19_UsersLendingCreate) RecoverChainState(state interfaces.Chai
 	}
 
 	// 回退 销毁利息 增加
-	DoAddBalanceFromChainState(state, act.LendersAddress, act.PreBurningInterestAmount)
+	DoAddBalanceFromChainState(state, act.LenderAddress, act.PreBurningInterestAmount)
 
 	// 抵押成功，转移余额： 回退  放款人 <- 抵押借款者
-	DoSimpleTransferFromChainState(state, act.MortgagorAddress, act.LendersAddress, act.LoanTotalAmount)
+	DoSimpleTransferFromChainState(state, act.MortgagorAddress, act.LenderAddress, act.LoanTotalAmount)
 
 	// 删除抵押借贷合约
 	state.UserLendingDelete(act.LendingID)
@@ -576,7 +576,7 @@ func (act *Action_20_UsersLendingRansom) WriteinChainState(state interfaces.Chai
 
 	// 赎回人类型
 	isMortgagorDoRedeem := feeAddr.Equal(usrlendObj.MortgagorAddress)
-	isLendersDoRedeem := feeAddr.Equal(usrlendObj.LendersAddress)
+	isLendersDoRedeem := feeAddr.Equal(usrlendObj.LenderAddress)
 	isPublicDoRedeem := !isMortgagorDoRedeem && !isLendersDoRedeem
 	// 是否处于抵押期内
 	isWithinMortgageTime := paddingHeight <= uint64(usrlendObj.ExpireBlockHeight)
@@ -599,12 +599,12 @@ func (act *Action_20_UsersLendingRansom) WriteinChainState(state interfaces.Chai
 		usrlendObj.IsRedemptionOvertime.Is(false) &&
 		isMortgagorDoRedeem {
 		// 抵押期外，没有约定自动展期和公共可赎回，则抵押人不能赎回
-		return fmt.Errorf("only %s can do redeem after height %d.", usrlendObj.LendersAddress.ToReadable(), usrlendObj.ExpireBlockHeight)
+		return fmt.Errorf("only %s can do redeem after height %d.", usrlendObj.LenderAddress.ToReadable(), usrlendObj.ExpireBlockHeight)
 	}
 
 	// 放款人扣留抵押品，赎回金额必须为零
 	if isLendersDoRedeem && act.RansomAmount.IsNotEmpty() {
-		return fmt.Errorf("Ransom amount must be zore but got %s with lender address %s do redeem", act.RansomAmount.ToFinString(), usrlendObj.LendersAddress.ToReadable())
+		return fmt.Errorf("Ransom amount must be zore but got %s with lender address %s do redeem", act.RansomAmount.ToFinString(), usrlendObj.LenderAddress.ToReadable())
 	}
 
 	// 非放款人扣留，抵押人或第三方赎回，则检查赎回金额
@@ -619,7 +619,7 @@ func (act *Action_20_UsersLendingRansom) WriteinChainState(state interfaces.Chai
 	} else {
 		// 抵押人或第三方 赎回
 		// 转移 HAC，支付赎金
-		e2 := DoSimpleTransferFromChainState(state, feeAddr, usrlendObj.LendersAddress, act.RansomAmount)
+		e2 := DoSimpleTransferFromChainState(state, feeAddr, usrlendObj.LenderAddress, act.RansomAmount)
 		if e2 != nil {
 			return e2
 		}
@@ -702,14 +702,14 @@ func (act *Action_20_UsersLendingRansom) RecoverChainState(state interfaces.Chai
 	}
 
 	// 赎回类型
-	isLendersDoRedeem := feeAddr.Equal(usrlendObj.LendersAddress)
+	isLendersDoRedeem := feeAddr.Equal(usrlendObj.LenderAddress)
 
 	// 借款人按约定赎回
 	if isLendersDoRedeem {
 		// 放款人 无需支付任何赎金
 	} else {
 		// 转移 HAC  回退HAC
-		DoSimpleTransferFromChainState(state, usrlendObj.LendersAddress, usrlendObj.MortgagorAddress, act.RansomAmount)
+		DoSimpleTransferFromChainState(state, usrlendObj.LenderAddress, usrlendObj.MortgagorAddress, act.RansomAmount)
 	}
 
 	// 操作赎回或扣押

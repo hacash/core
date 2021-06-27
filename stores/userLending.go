@@ -18,7 +18,7 @@ type UserLending struct {
 	ExpireBlockHeight fields.BlockHeight // 约定到期的区块高度
 
 	MortgagorAddress fields.Address // 抵押人地址
-	LendersAddress   fields.Address // 放款人地址
+	LenderAddress    fields.Address // 放款人地址
 
 	MortgageBitcoin     fields.SatoshiVariation     // 抵押比特币数量 单位：SAT
 	MortgageDiamondList fields.DiamondListMaxLen200 // 抵押钻石表
@@ -29,9 +29,9 @@ type UserLending struct {
 	PreBurningInterestAmount fields.Amount // 预先销毁的利息，必须大于等于 借出金额的 1%
 
 	// 如已经赎回则写入数据
-	RansomBlockHeight              fields.BlockHeight     // 赎回时的区块高度
-	RansomAmount                   fields.Amount          // 赎回金额
-	RansomAddressIfPublicOperation fields.OptionalAddress // 如果是第三方赎回则记录第三方地址
+	RansomBlockHeight fields.BlockHeight // 赎回时的区块高度
+	RansomAmount      fields.Amount      // 赎回金额
+	RansomAddress     fields.Address     // 赎回人地址
 }
 
 func (elm *UserLending) Size() uint32 {
@@ -41,7 +41,7 @@ func (elm *UserLending) Size() uint32 {
 		elm.CreateBlockHeight.Size() +
 		elm.ExpireBlockHeight.Size() +
 		elm.MortgagorAddress.Size() +
-		elm.LendersAddress.Size() +
+		elm.LenderAddress.Size() +
 		elm.MortgageBitcoin.Size() +
 		elm.MortgageDiamondList.Size() +
 		elm.LoanTotalAmount.Size() +
@@ -51,7 +51,7 @@ func (elm *UserLending) Size() uint32 {
 	if elm.IsRansomed.Check() {
 		sz += elm.RansomBlockHeight.Size() +
 			elm.RansomAmount.Size() +
-			elm.RansomAddressIfPublicOperation.Size()
+			elm.RansomAddress.Size()
 	}
 	return sz
 }
@@ -64,7 +64,7 @@ func (elm *UserLending) Serialize() ([]byte, error) {
 	var b4, _ = elm.CreateBlockHeight.Serialize()
 	var b5, _ = elm.ExpireBlockHeight.Serialize()
 	var b6, _ = elm.MortgagorAddress.Serialize()
-	var b7, _ = elm.LendersAddress.Serialize()
+	var b7, _ = elm.LenderAddress.Serialize()
 	var b8, _ = elm.MortgageBitcoin.Serialize()
 	var b9, _ = elm.MortgageDiamondList.Serialize()
 	var b10, _ = elm.LoanTotalAmount.Serialize()
@@ -86,7 +86,7 @@ func (elm *UserLending) Serialize() ([]byte, error) {
 	if elm.IsRansomed.Check() {
 		var b0, _ = elm.RansomBlockHeight.Serialize()
 		var b1, _ = elm.RansomAmount.Serialize()
-		var b2, _ = elm.RansomAddressIfPublicOperation.Serialize()
+		var b2, _ = elm.RansomAddress.Serialize()
 		buffer.Write(b0)
 		buffer.Write(b1)
 		buffer.Write(b2)
@@ -120,7 +120,7 @@ func (elm *UserLending) Parse(buf []byte, seek uint32) (uint32, error) {
 	if e != nil {
 		return 0, e
 	}
-	seek, e = elm.LendersAddress.Parse(buf, seek)
+	seek, e = elm.LenderAddress.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -154,7 +154,7 @@ func (elm *UserLending) Parse(buf []byte, seek uint32) (uint32, error) {
 		if e != nil {
 			return 0, e
 		}
-		seek, e = elm.RansomAddressIfPublicOperation.Parse(buf, seek)
+		seek, e = elm.RansomAddress.Parse(buf, seek)
 		if e != nil {
 			return 0, e
 		}
@@ -168,12 +168,7 @@ func (elm *UserLending) SetRansomedStatus(height uint64, amount *fields.Amount, 
 	elm.IsRansomed.Set(true) // 设置赎回状态
 	elm.RansomBlockHeight = fields.BlockHeight(height)
 	elm.RansomAmount = *amount
-	elm.RansomAddressIfPublicOperation = fields.NewEmptyOptionalAddress()
-	// 是否为非抵押、非放款人的第三方地址公共赎回
-	if address.NotEqual(elm.MortgagorAddress) && address.NotEqual(elm.LendersAddress) {
-		elm.RansomAddressIfPublicOperation.Exist = fields.CreateBool(true)
-		elm.RansomAddressIfPublicOperation.Addr = address
-	}
+	elm.RansomAddress = address
 	return nil
 }
 

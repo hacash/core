@@ -210,12 +210,13 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteinChainState(state interf
 	// 保存比特币抵押
 	paddingHei := state.GetPendingBlockHeight()
 	dlsto := &stores.BitcoinSystemLending{
-		IsRansomed:               fields.CreateBool(false), // 标记未赎回
-		CreateBlockHeight:        fields.BlockHeight(paddingHei),
-		MainAddress:              feeAddr,
-		MortgageBitcoinPortion:   act.MortgageBitcoinPortion,
-		LoanTotalAmount:          act.LoanTotalAmount,
-		PreBurningInterestAmount: act.PreBurningInterestAmount,
+		IsRansomed:                 fields.CreateBool(false), // 标记未赎回
+		CreateBlockHeight:          fields.BlockHeight(paddingHei),
+		MainAddress:                feeAddr,
+		MortgageBitcoinPortion:     act.MortgageBitcoinPortion,
+		LoanTotalAmount:            act.LoanTotalAmount,
+		PreBurningInterestAmount:   act.PreBurningInterestAmount,
+		RealtimeTotalMortgageRatio: fields.VarUint2(alllendper * 100), // 系统实时算上自己后的总抵押比例，单位：万分之，取值范围 0 ~ 10000
 	}
 	e11 := state.BitcoinLendingCreate(act.LendingID, dlsto)
 	if e11 != nil {
