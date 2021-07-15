@@ -85,7 +85,7 @@ func CalculateBlockHash(block interfaces.Block) fields.Hash {
 /*
 func CalculateBlockHashByStuff(loopnum int, stuff []byte) fields.Hash {
 	hashbase := sha3.Sum256(stuff)
-	return x16rs.HashX16RS_Optimize(loopnum, hashbase[:])
+	return x16rs.HashX16RS(loopnum, hashbase[:])
 }
 */
 
