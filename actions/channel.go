@@ -98,7 +98,10 @@ func (elm *Action_2_OpenPaymentChannel) RequestSignAddresses() []fields.Address 
 func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.ChainStateOperation) error {
 	// 查询通道是否存在
 	sto := state.Channel(act.ChannelId)
-	if sto != nil {
+	// 左右地址相同且已经关闭的通道ID可以被重用
+	var isIdCanUse = (sto == nil) ||
+		(sto.IsClosed.Check() && sto.LeftAddress.Equal(act.LeftAddress) && sto.RightAddress.Equal(act.RightAddress))
+	if isIdCanUse == false {
 		return fmt.Errorf("Payment Channel Id <%s> already exist.", hex.EncodeToString(act.ChannelId))
 	}
 	// 通道id合法性
@@ -147,7 +150,7 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	storeItem.LeftAmount = act.LeftAmount
 	storeItem.RightAddress = act.RightAddress
 	storeItem.RightAmount = act.RightAmount
-	storeItem.IsClosed = 0 // 打开状态
+	storeItem.IsClosed.Set(false) // 打开状态
 	// 扣除余额
 	DoSubBalanceFromChainState(state, act.LeftAddress, act.LeftAmount)
 	DoSubBalanceFromChainState(state, act.RightAddress, act.RightAmount)
@@ -255,7 +258,7 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
 	// 判断通道已经关闭
-	if paychan.IsClosed > 0 {
+	if paychan.IsClosed.Check() {
 		return fmt.Errorf("Payment Channel <%s> is be closed.", hex.EncodeToString(act.ChannelId))
 	}
 	// 检查两个账户的签名 // 仅仅验证这两个地址
@@ -427,7 +430,7 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(channelId))
 	}
-	if paychan.IsClosed > 0 {
+	if paychan.IsClosed.Check() {
 		return fmt.Errorf("Payment Channel <%s> is be closed.", hex.EncodeToString(channelId))
 	}
 	// 通过时间计算利息
@@ -454,7 +457,7 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 		return e
 	}
 	// 暂时保留通道用于数据回退
-	paychan.IsClosed = fields.VarUint1(1) // 标记通道已经关闭了
+	paychan.IsClosed.Set(true) // 标记通道已经关闭了
 	e = state.ChannelUpdate(channelId, paychan)
 	if e != nil {
 		return e
@@ -500,7 +503,7 @@ func closePaymentChannelRecoverChainState(state interfaces.ChainStateOperation, 
 		panic(fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(channelId)))
 	}
 	// 判断通道必须是已经关闭的状态
-	if paychan.IsClosed != 0 {
+	if paychan.IsClosed.Check() {
 		panic(fmt.Errorf("Payment Channel <%s> is be closed.", hex.EncodeToString(channelId)))
 	}
 	if newLeftAmt == nil || newRightAmt == nil {
@@ -525,7 +528,7 @@ func closePaymentChannelRecoverChainState(state interfaces.ChainStateOperation, 
 		return e
 	}
 	// 恢复通道状态
-	paychan.IsClosed = fields.VarUint1(0) // 重新标记通道为开启状态
+	paychan.IsClosed.Set(false) // 重新标记通道为开启状态
 	e = state.ChannelUpdate(channelId, paychan)
 	if e != nil {
 		return e

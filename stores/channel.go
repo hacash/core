@@ -18,7 +18,7 @@ type Channel struct {
 	LeftAmount   fields.Amount // 抵押数额1  【6位定宽】
 	RightAddress fields.Address
 	RightAmount  fields.Amount   // 抵押数额2  【6位定宽】
-	IsClosed     fields.VarUint1 // 已经关闭并结算
+	IsClosed     fields.Bool     // 已经关闭并结算
 	ConfigMark   fields.VarUint2 // 标志位
 	Others       fields.Bytes16  // 扩展位
 

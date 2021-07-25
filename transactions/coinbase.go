@@ -19,9 +19,9 @@ type Transaction_0_Coinbase struct {
 	Reward  fields.Amount
 	Message fields.TrimString16
 	// 版本号
-	BodyVersion fields.VarUint1 // 220000高度之前都等于 0
+	ExtendDataVersion fields.VarUint1 // 220000高度之前都等于 0
 
-	// 当 BodyVersion >= 1 时 具有以下字段：
+	// 当 ExtendDataVersion >= 1 时 具有以下字段：
 	MinerNonce   fields.Bytes32
 	WitnessCount fields.VarUint1 // 投票见证人数量
 	WitnessSigs  []uint8         // 见证人指定哈希尾数
@@ -36,15 +36,15 @@ type Transaction_0_Coinbase struct {
 
 func NewTransaction_0_CoinbaseV0() *Transaction_0_Coinbase {
 	return &Transaction_0_Coinbase{
-		BodyVersion: 0,
+		ExtendDataVersion: 0,
 	}
 }
 
 func NewTransaction_0_CoinbaseV1() *Transaction_0_Coinbase {
 	return &Transaction_0_Coinbase{
-		BodyVersion:  1,
-		MinerNonce:   make([]byte, 32),
-		WitnessCount: 0,
+		ExtendDataVersion: 1,
+		MinerNonce:        make([]byte, 32),
+		WitnessCount:      0,
 	}
 }
 
@@ -57,9 +57,9 @@ func (trs *Transaction_0_Coinbase) Describe(isUnitMei, isForMining bool) map[str
 		cbinfo["message_hex"] = hex.EncodeToString(msg)
 	}
 	cbinfo["message"] = trs.Message
-	bodyVersion := uint8(trs.BodyVersion)
-	cbinfo["body_version"] = bodyVersion
-	if bodyVersion >= 1 {
+	extendDataVersion := uint8(trs.ExtendDataVersion)
+	cbinfo["extend_data_version"] = extendDataVersion
+	if extendDataVersion >= 1 {
 		if !isForMining {
 			cbinfo["miner_nonce"] = trs.MinerNonce.ToHex() // 不需要
 		}
@@ -117,7 +117,7 @@ func (trs *Transaction_0_Coinbase) Serialize() ([]byte, error) {
 	b1, _ := trs.Address.Serialize()
 	b2, _ := trs.Reward.Serialize()
 	b3, _ := trs.Message.Serialize()
-	b4, _ := trs.BodyVersion.Serialize()
+	b4, _ := trs.ExtendDataVersion.Serialize()
 	// fmt.Println("trs.Message=", trs.Message)
 	buffer.Write([]byte{trs.Type()}) // type
 	buffer.Write(b1)
@@ -125,7 +125,7 @@ func (trs *Transaction_0_Coinbase) Serialize() ([]byte, error) {
 	buffer.Write(b3)
 	buffer.Write(b4)
 	// 版本号
-	version := uint8(trs.BodyVersion)
+	version := uint8(trs.ExtendDataVersion)
 	// ----------- 按版本区分 ----------- //
 	if version == 0 {
 		// 没有后续字段
@@ -158,13 +158,13 @@ func (trs *Transaction_0_Coinbase) Parse(buf []byte, seek uint32) (uint32, error
 	if e != nil {
 		return 0, e
 	}
-	seek, e = trs.BodyVersion.Parse(buf, seek)
+	seek, e = trs.ExtendDataVersion.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
 	// ----------- 按版本区分 ----------- //
 	// 判断版本号
-	version := uint8(trs.BodyVersion)
+	version := uint8(trs.ExtendDataVersion)
 	if version == 0 {
 		// 没有后续字段
 	}
@@ -228,10 +228,10 @@ func (trs *Transaction_0_Coinbase) Size() uint32 {
 		trs.Address.Size() +
 		trs.Reward.Size() +
 		trs.Message.Size() +
-		trs.BodyVersion.Size()
+		trs.ExtendDataVersion.Size()
 	// ----------- 按版本区分 ----------- //
 	// 判断版本号
-	version := uint8(trs.BodyVersion)
+	version := uint8(trs.ExtendDataVersion)
 	if version == 0 {
 		// 没有后续字段
 	}
