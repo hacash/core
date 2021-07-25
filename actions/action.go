@@ -51,6 +51,8 @@ func NewActionByKind(kind uint16) (interfaces.Action, error) {
 		return new(Action_19_UsersLendingCreate), nil
 	case 20:
 		return new(Action_20_UsersLendingRansom), nil
+	case 21:
+		return new(Action_21_ClosePaymentChannelBySetupOnlyLeftAmount), nil
 	}
 	////////////////////    END      ////////////////////
 	return nil, fmt.Errorf("Cannot find Action kind of " + string(kind))

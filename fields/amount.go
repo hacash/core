@@ -175,7 +175,7 @@ func (bill Amount) GetValue() *big.Int {
 }
 
 func (bill Amount) IsEmpty() bool {
-	return bill.Dist == int8(0) || len(bill.Numeral) == 0
+	return bill.Unit == 0 || bill.Dist == int8(0) || len(bill.Numeral) == 0
 }
 func (bill Amount) IsNotEmpty() bool {
 	return bill.IsEmpty() == false
