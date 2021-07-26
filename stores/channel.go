@@ -10,6 +10,12 @@ const (
 	ChannelIdLength = 16
 )
 
+const (
+	ChannelStatusOpening     fields.VarUint1 = 0 // 正常开启
+	ChannelStatusChallenging fields.VarUint1 = 0 // 挑战期
+	ChannelStatusClosed      fields.VarUint1 = 0 // 已关闭
+)
+
 //
 type Channel struct {
 	BelongHeight fields.BlockHeight // 通道开启时的区块高度
@@ -18,7 +24,7 @@ type Channel struct {
 	LeftAmount   fields.Amount // 抵押数额1  【6位定宽】
 	RightAddress fields.Address
 	RightAmount  fields.Amount   // 抵押数额2  【6位定宽】
-	IsClosed     fields.Bool     // 已经关闭并结算
+	Status       fields.VarUint1 // 已经关闭并结算
 	ConfigMark   fields.VarUint2 // 标志位
 	Others       fields.Bytes16  // 扩展位
 
@@ -38,7 +44,7 @@ func (this *Channel) Parse(buf []byte, seek uint32) (uint32, error) {
 	seek, _ = this.RightAddress.Parse(buf, seek)
 	this.RightAmount.Parse(buf, seek)
 	seek += 6 // 6位定宽
-	seek, _ = this.IsClosed.Parse(buf, seek)
+	seek, _ = this.Status.Parse(buf, seek)
 	seek, _ = this.ConfigMark.Parse(buf, seek)
 	seek, _ = this.Others.Parse(buf, seek)
 	return seek, nil
@@ -62,7 +68,7 @@ func (this *Channel) Serialize() ([]byte, error) {
 		copy(mb6, b6)
 		b6 = mb6
 	}
-	b7, _ := this.IsClosed.Serialize()
+	b7, _ := this.Status.Serialize()
 	b8, _ := this.ConfigMark.Serialize()
 	b9, _ := this.Others.Serialize()
 	buffer.Write(b1)
