@@ -9,7 +9,6 @@ import (
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/actions"
 	"github.com/hacash/core/crypto/btcec"
-	"github.com/hacash/core/crypto/sha3"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
 )
@@ -222,7 +221,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) HashWithFee() fields.Hash {
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) HashWithFeeFresh() fields.Hash {
 	stuff, _ := trs.SerializeNoSign()
-	digest := sha3.Sum256(stuff)
+	digest := fields.CalculateHash(stuff)
 	trs.hash = digest[:]
 	return trs.hash
 }
@@ -236,7 +235,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Hash() fields.Hash {
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) HashFresh() fields.Hash {
 	notFee := true
 	stuff, _ := trs.SerializeNoSignEx(notFee)
-	digest := sha3.Sum256(stuff)
+	digest := fields.CalculateHash(stuff)
 	trs.hashnofee = digest[:]
 	return trs.hashnofee
 }

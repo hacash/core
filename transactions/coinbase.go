@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/actions"
-	"github.com/hacash/core/crypto/sha3"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/stores"
@@ -250,8 +249,8 @@ func (trs *Transaction_0_Coinbase) Size() uint32 {
 // 交易唯一哈希值
 func (trs *Transaction_0_Coinbase) HashWithFee() fields.Hash {
 	stuff, _ := trs.Serialize()
-	digest := sha3.Sum256(stuff)
-	return digest[:]
+	digest := fields.CalculateHash(stuff)
+	return digest
 }
 
 func (trs *Transaction_0_Coinbase) Hash() fields.Hash {

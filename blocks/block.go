@@ -3,7 +3,6 @@ package blocks
 import (
 	"bytes"
 	"fmt"
-	"github.com/hacash/core/crypto/sha3"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
 
@@ -133,8 +132,8 @@ func hashMerge(hashs []fields.Hash) []fields.Hash {
 		} else {
 			buf.Write(h1) // repeat h1
 		}
-		digest := sha3.Sum256(buf.Bytes())
-		mergehashs[m/2] = digest[:]
+		digest := fields.CalculateHash(buf.Bytes())
+		mergehashs[m/2] = digest
 	}
 	return mergehashs
 }

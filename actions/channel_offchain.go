@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/hacash/core/account"
-	"github.com/hacash/core/crypto/sha3"
 	"github.com/hacash/core/fields"
 )
 
@@ -61,7 +60,7 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) Serialize() ([]byte
 
 func (elm *OffChainFormPaymentChannelRealtimeReconciliation) SignStuffHash() []byte {
 	var conbt, _ = elm.SerializeNoSign() // 数据体
-	conhx := sha3.Sum256(conbt)
+	conhx := fields.CalculateHash(conbt)
 	return conhx[:]
 }
 
@@ -132,12 +131,15 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) CheckAddressAndSign
 // 通道链支付
 
 // 通道链转账交易（链下签署）可以上链仲裁
+// 采用零知识证明模式
 type OffChainFormPaymentChannelTransfer struct {
 	Timestamp     fields.BlockTxTimestamp // 时间戳
 	OrderNoteHash fields.Hash             // 订单详情数据哈希
 
 	ChannelCount              fields.VarUint1 // 途径通道数量，最大值 200
 	ChannelTransferProveHashs []fields.Hash   // 通道转账证明哈希，顺序为从付款到最后收款
+
+	MustSignAddress []fields.Address // 顺序打乱/随机的通道必须签名的地址
 
 	SignCount fields.VarUint1 // 签名数量，最大值 200
 	Signs     []fields.Sign   // 有序签名，顺序为从付款到最后收款
@@ -185,7 +187,7 @@ func (elm *OffChainFormPaymentChannelTransfer) Serialize() ([]byte, error) {
 
 func (elm *OffChainFormPaymentChannelTransfer) SignStuffHash() []byte {
 	var conbt, _ = elm.SerializeNoSign() // 数据体
-	conhx := sha3.Sum256(conbt)
+	conhx := fields.CalculateHash(conbt)
 	return conhx[:]
 }
 

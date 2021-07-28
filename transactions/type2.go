@@ -8,7 +8,6 @@ import (
 
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/actions"
-	"github.com/hacash/core/crypto/sha3"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
 )
@@ -218,8 +217,8 @@ func (trs *Transaction_2_Simple) HashWithFee() fields.Hash {
 
 func (trs *Transaction_2_Simple) HashWithFeeFresh() fields.Hash {
 	stuff, _ := trs.SerializeNoSign()
-	digest := sha3.Sum256(stuff)
-	trs.hashwithfee = digest[:] // 缓存
+	digest := fields.CalculateHash(stuff)
+	trs.hashwithfee = digest // 缓存
 	return trs.hashwithfee
 }
 
@@ -233,8 +232,8 @@ func (trs *Transaction_2_Simple) Hash() fields.Hash {
 func (trs *Transaction_2_Simple) HashFresh() fields.Hash {
 	is_has_fee := false
 	stuff, _ := trs.SerializeNoSignEx(is_has_fee)
-	digest := sha3.Sum256(stuff)
-	trs.hashnofee = digest[:]
+	digest := fields.CalculateHash(stuff)
+	trs.hashnofee = digest
 	return trs.hashnofee
 }
 
