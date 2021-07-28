@@ -29,11 +29,11 @@ const DiamondStatisticsAverageBiddingBurningPriceAboveNumber uint32 = 32000
 
 // 挖出钻石
 type Action_4_DiamondCreate struct {
-	Diamond  fields.Bytes6   // 钻石字面量 WTYUIAHXVMEKBSZN
-	Number   fields.VarUint3 // 钻石序号，用于难度检查
-	PrevHash fields.Hash     // 上一个包含钻石的区块hash
-	Nonce    fields.Bytes8   // 随机数
-	Address  fields.Address  // 所属账户
+	Diamond  fields.DiamondName   // 钻石字面量 WTYUIAHXVMEKBSZN
+	Number   fields.DiamondNumber // 钻石序号，用于难度检查
+	PrevHash fields.Hash          // 上一个包含钻石的区块hash
+	Nonce    fields.Bytes8        // 随机数
+	Address  fields.Address       // 所属账户
 	// 客户消息
 	CustomMessage fields.Bytes32
 
@@ -355,8 +355,8 @@ func (act *Action_4_DiamondCreate) IsBurning90PersentTxFees() bool {
 
 // 转移钻石
 type Action_5_DiamondTransfer struct {
-	Diamond   fields.Bytes6  // 钻石字面量 WTYUIAHXVMEKBSZN
-	ToAddress fields.Address // 收钻方账户
+	Diamond   fields.DiamondName // 钻石字面量 WTYUIAHXVMEKBSZN
+	ToAddress fields.Address     // 收钻方账户
 
 	// 数据指针
 	// 所属交易
@@ -591,7 +591,7 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 		}
 	}
 	// 转移钻石余额
-	e9 := DoSimpleDiamondTransferFromChainState(state, act.FromAddress, act.ToAddress, fields.VarUint3(dianum))
+	e9 := DoSimpleDiamondTransferFromChainState(state, act.FromAddress, act.ToAddress, fields.DiamondNumber(dianum))
 	if e9 != nil {
 		return e9
 	}
@@ -619,7 +619,7 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) RecoverChainState(state inter
 		}
 	}
 	// 回退钻石余额
-	e9 := DoSimpleDiamondTransferFromChainState(state, act.ToAddress, act.FromAddress, fields.VarUint3(act.DiamondList.Count))
+	e9 := DoSimpleDiamondTransferFromChainState(state, act.ToAddress, act.FromAddress, fields.DiamondNumber(act.DiamondList.Count))
 	if e9 != nil {
 		return e9
 	}

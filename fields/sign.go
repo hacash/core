@@ -7,6 +7,10 @@ import (
 
 //////////////////////////////////////////////////////////////////
 
+const (
+	SignSize uint32 = 33 + 64
+)
+
 type Sign struct {
 	PublicKey Bytes33
 	Signature Bytes64

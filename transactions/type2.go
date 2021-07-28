@@ -8,7 +8,6 @@ import (
 
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/actions"
-	"github.com/hacash/core/crypto/btcec"
 	"github.com/hacash/core/crypto/sha3"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
@@ -466,20 +465,8 @@ func verifyOneSignature(allSigns map[string]fields.Sign, address fields.Address,
 	if !ok {
 		return false, fmt.Errorf("address %s signature not find!", address.ToReadable())
 	}
-	sigobj, e3 := btcec.ParseSignatureByte64(main.Signature)
-	if e3 != nil {
-		return false, e3
-	}
-	pubKey, e4 := btcec.ParsePubKey(main.PublicKey, btcec.S256())
-	if e4 != nil {
-		return false, e4
-	}
-	verok := sigobj.Verify(hash, pubKey)
-	if !verok {
-		return false, fmt.Errorf("verify address %s signature fail.", address.ToReadable())
-	}
-	// ok
-	return true, nil
+	// 检查签名
+	return account.CheckSignByHash32(hash, main.PublicKey, main.Signature)
 }
 
 // 需要的余额检查

@@ -6,17 +6,17 @@ import (
 )
 
 const (
-	DiamondSmeltSize = 6 + 3 + 5 + 32 + 32 + fields.AddressSize + 4 + 8 + 32 + 2
+//DiamondSmeltSize = 6 + 3 + 5 + 32 + 32 + fields.AddressSize + 4 + 8 + 32 + 2
 )
 
 type DiamondSmelt struct {
-	Diamond              fields.Bytes6 // WTYUIAHXVMEKBSZN
-	Number               fields.VarUint3
+	Diamond              fields.DiamondName // WTYUIAHXVMEKBSZN
+	Number               fields.DiamondNumber
 	ContainBlockHeight   fields.BlockHeight
 	ContainBlockHash     fields.Hash // current pending block hash
 	PrevContainBlockHash fields.Hash // prev block hash
 	MinerAddress         fields.Address
-	ApproxFeeOffer       fields.Bytes4  // Fee Amount
+	ApproxFeeOffer       fields.Amount  // Fee Amount
 	Nonce                fields.Bytes8  // nonce
 	CustomMessage        fields.Bytes32 // msg
 	// data statistics
@@ -24,13 +24,20 @@ type DiamondSmelt struct {
 }
 
 func (this *DiamondSmelt) Size() uint32 {
-	return uint32(DiamondSmeltSize)
+	return this.Diamond.Size() +
+		this.Number.Size() +
+		this.ContainBlockHeight.Size() +
+		this.ContainBlockHash.Size() +
+		this.PrevContainBlockHash.Size() +
+		this.MinerAddress.Size() +
+		this.ApproxFeeOffer.Size() +
+		this.Nonce.Size() +
+		this.CustomMessage.Size() +
+		this.AverageBidBurnPrice.Size()
 }
 
 func (this *DiamondSmelt) GetApproxFeeOffer() *fields.Amount {
-	amt := fields.Amount{}
-	amt.Parse(this.ApproxFeeOffer, 0)
-	return &amt
+	return &this.ApproxFeeOffer
 }
 
 func (this *DiamondSmelt) ParseApproxFeeOffer(amt *fields.Amount) error {
@@ -39,13 +46,7 @@ func (this *DiamondSmelt) ParseApproxFeeOffer(amt *fields.Amount) error {
 	if e11 != nil {
 		return e11
 	}
-	approxfeeofferBytes, e12 := approxfeeoffer.Serialize()
-	if e12 != nil {
-		return e12
-	}
-	approxfeeofferBytesStores := make([]byte, 4)
-	copy(approxfeeofferBytesStores, approxfeeofferBytes)
-	this.ApproxFeeOffer = fields.Bytes4(approxfeeofferBytesStores)
+	this.ApproxFeeOffer = *approxfeeoffer
 	return nil
 }
 
@@ -75,15 +76,46 @@ func (this *DiamondSmelt) Serialize() ([]byte, error) {
 }
 
 func (this *DiamondSmelt) Parse(buf []byte, seek uint32) (uint32, error) {
-	seek, _ = this.Diamond.Parse(buf, seek)
-	seek, _ = this.Number.Parse(buf, seek)
-	seek, _ = this.ContainBlockHeight.Parse(buf, seek)
-	seek, _ = this.ContainBlockHash.Parse(buf, seek)
-	seek, _ = this.PrevContainBlockHash.Parse(buf, seek)
-	seek, _ = this.MinerAddress.Parse(buf, seek)
-	seek, _ = this.ApproxFeeOffer.Parse(buf, seek)
-	seek, _ = this.Nonce.Parse(buf, seek)
-	seek, _ = this.CustomMessage.Parse(buf, seek)
-	seek, _ = this.AverageBidBurnPrice.Parse(buf, seek)
+	var e error
+	seek, e = this.Diamond.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = this.Number.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = this.ContainBlockHeight.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = this.ContainBlockHash.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = this.PrevContainBlockHash.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = this.MinerAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = this.ApproxFeeOffer.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = this.Nonce.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = this.CustomMessage.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = this.AverageBidBurnPrice.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
 	return seek, nil
 }

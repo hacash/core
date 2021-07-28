@@ -205,7 +205,7 @@ func (act *Action_15_DiamondsSystemLendingCreate) WriteinChainState(state interf
 	}
 
 	// 减少钻石余额
-	e9 := DoSubDiamondFromChainState(state, feeAddr, fields.VarUint3(dianum))
+	e9 := DoSubDiamondFromChainState(state, feeAddr, fields.DiamondNumber(dianum))
 	if e9 != nil {
 		return e9
 	}
@@ -284,7 +284,7 @@ func (act *Action_15_DiamondsSystemLendingCreate) RecoverChainState(state interf
 
 	// 回退钻石余额
 	dianum := act.MortgageDiamondList.Count
-	e9 := DoAddDiamondFromChainState(state, feeAddr, fields.VarUint3(dianum))
+	e9 := DoAddDiamondFromChainState(state, feeAddr, fields.DiamondNumber(dianum))
 	if e9 != nil {
 		return e9
 	}
@@ -492,7 +492,7 @@ func (act *Action_16_DiamondsSystemLendingRansom) WriteinChainState(state interf
 	}
 
 	// 增加钻石余额
-	e9 := DoAddDiamondFromChainState(state, feeAddr, fields.VarUint3(dianum))
+	e9 := DoAddDiamondFromChainState(state, feeAddr, fields.DiamondNumber(dianum))
 	if e9 != nil {
 		return e9
 	}
@@ -572,7 +572,7 @@ func (act *Action_16_DiamondsSystemLendingRansom) RecoverChainState(state interf
 
 	// 回退钻石余额
 	dianum := dmdlendObj.MortgageDiamondList.Count
-	e9 := DoSubDiamondFromChainState(state, feeAddr, fields.VarUint3(dianum))
+	e9 := DoSubDiamondFromChainState(state, feeAddr, fields.DiamondNumber(dianum))
 	if e9 != nil {
 		return e9
 	}

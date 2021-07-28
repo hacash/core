@@ -5,9 +5,7 @@ import (
 	"github.com/hacash/core/fields"
 )
 
-const (
-	BalanceSize = 3 + 8 + 11 // len = 22
-)
+const ()
 
 type Balance struct {
 	Diamond fields.VarUint3
@@ -38,7 +36,9 @@ func NewBalanceWithAmount(amt *fields.Amount) *Balance {
 ///////////////////////////////////////
 
 func (this *Balance) Size() uint32 {
-	return uint32(BalanceSize)
+	return this.Diamond.Size() +
+		this.Satoshi.Size() +
+		this.Hacash.Size()
 }
 
 func (this *Balance) Serialize() ([]byte, error) {

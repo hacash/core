@@ -224,29 +224,10 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 		lockbls := stores.NewEmptyLockbls(act.OriginAddress)
 		lockbls.EffectBlockHeight = fields.BlockHeight(state.GetPendingBlockHeight())
 		lockbls.LinearBlockNumber = fields.VarUint3(weekhei) // 2000
-		// amts
-		allamtstorebytes := make([]*fields.Bytes8, 3)
-		allamtstorebytes[0] = &lockbls.TotalLockAmountBytes
-		allamtstorebytes[1] = &lockbls.BalanceAmountBytes
-		allamtstorebytes[2] = &lockbls.LinearReleaseAmountBytes
-		allamts := make([]*fields.Amount, 3)
-		// 锁的总额
-		allamts[0] = totaladdhacamt
-		// 余额
-		allamts[1] = totaladdhacamt
-		// 每周可以解锁的币
-		/*
-			hacweekbig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount) / uint64(lockweek))
-		*/
+		lockbls.TotalLockAmount = *totaladdhacamt            // 总锁仓
+		lockbls.BalanceAmount = *totaladdhacamt              // 余额
 		wklkhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount) / int64(lockweek))
-		allamts[2] = wklkhacamt // 每周解锁
-		// 赋值
-		for i := 0; i < 3; i++ {
-			ea := lockbls.PutAmount(allamtstorebytes[i], allamts[i])
-			if ea != nil {
-				return ea
-			}
-		}
+		lockbls.LinearReleaseAmount = *wklkhacamt // 每周可以解锁的币
 		// stores
 		// 创建线性锁仓
 		state.LockblsCreate(lkblsid, lockbls)

@@ -271,7 +271,7 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 	}
 
 	// 减少抵押人钻石余额
-	e9 := DoSubDiamondFromChainState(state, act.MortgagorAddress, fields.VarUint3(dianum))
+	e9 := DoSubDiamondFromChainState(state, act.MortgagorAddress, fields.DiamondNumber(dianum))
 	if e9 != nil {
 		return e9
 	}
@@ -398,7 +398,7 @@ func (act *Action_19_UsersLendingCreate) RecoverChainState(state interfaces.Chai
 
 	// 回退 钻石余额 增加
 	if dianum > 0 {
-		DoAddDiamondFromChainState(state, act.MortgagorAddress, fields.VarUint3(dianum))
+		DoAddDiamondFromChainState(state, act.MortgagorAddress, fields.DiamondNumber(dianum))
 	}
 
 	// 回退  扣除比特币 增加
@@ -655,7 +655,7 @@ func (act *Action_20_UsersLendingRansom) WriteinChainState(state interfaces.Chai
 
 	// 增加钻石余额（赎回人或放款人）
 	if dianum > 0 {
-		e9 := DoAddDiamondFromChainState(state, feeAddr, fields.VarUint3(dianum))
+		e9 := DoAddDiamondFromChainState(state, feeAddr, fields.DiamondNumber(dianum))
 		if e9 != nil {
 			return e9
 		}
@@ -728,7 +728,7 @@ func (act *Action_20_UsersLendingRansom) RecoverChainState(state interfaces.Chai
 
 	// 回退 减少钻石余额
 	if dianum > 0 {
-		DoSubDiamondFromChainState(state, feeAddr, fields.VarUint3(dianum))
+		DoSubDiamondFromChainState(state, feeAddr, fields.DiamondNumber(dianum))
 	}
 
 	// 回退减少比特币余额

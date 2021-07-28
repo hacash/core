@@ -28,7 +28,7 @@ func Test_diamond_lending(t *testing.T) {
 		LendingID: hash14,
 		MortgageDiamondList: fields.DiamondListMaxLen200{
 			Count:    2,
-			Diamonds: []fields.Bytes6{[]byte("XXXYYY"), []byte("WWWMMM")},
+			Diamonds: []fields.DiamondName{[]byte("XXXYYY"), []byte("WWWMMM")},
 		},
 		LoanTotalAmount: *amt1,
 		BorrowPeriod:    20,
@@ -62,7 +62,7 @@ func Test_create_diamond(t *testing.T) {
 
 	// 创建钻石
 	act1 := actions.Action_4_DiamondCreate{
-		Diamond:       fields.Bytes6("WWWMMM"),
+		Diamond:       fields.DiamondName("WWWMMM"),
 		Number:        3,
 		PrevHash:      hash32,
 		Nonce:         hash8,

@@ -9,7 +9,7 @@ import (
 )
 
 // diamond 转账
-func DoSimpleDiamondTransferFromChainState(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, dia fields.VarUint3) error {
+func DoSimpleDiamondTransferFromChainState(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, dia fields.DiamondNumber) error {
 	if bytes.Compare(addr1, addr2) == 0 {
 		return nil // 可以自己转给自己，不改变状态，白费手续费
 	}
@@ -30,12 +30,12 @@ func DoSimpleDiamondTransferFromChainState(state interfaces.ChainStateOperation,
 		bls2 = stores.NewEmptyBalance() // create satoshi store
 	}
 	dia2 := bls2.Diamond
-	bls1.Diamond = fields.VarUint3(uint32(dia1) - uint32(dia)) // 扣除
+	bls1.Diamond = fields.DiamondNumber(uint32(dia1) - uint32(dia)) // 扣除
 	bse1 := state.BalanceSet(addr1, bls1)
 	if bse1 != nil {
 		return bse1
 	}
-	bls2.Diamond = fields.VarUint3(uint32(dia2) + uint32(dia)) // 增加
+	bls2.Diamond = fields.DiamondNumber(uint32(dia2) + uint32(dia)) // 增加
 	bse2 := state.BalanceSet(addr2, bls2)
 	if bse2 != nil {
 		return bse2
@@ -45,7 +45,7 @@ func DoSimpleDiamondTransferFromChainState(state interfaces.ChainStateOperation,
 }
 
 // 单纯增加 Diamond 余额
-func DoAddDiamondFromChainState(state interfaces.ChainStateOperation, addr fields.Address, dia fields.VarUint3) error {
+func DoAddDiamondFromChainState(state interfaces.ChainStateOperation, addr fields.Address, dia fields.DiamondNumber) error {
 	if dia == 0 {
 		return nil // 数量为0，直接成功
 	}
@@ -56,7 +56,7 @@ func DoAddDiamondFromChainState(state interfaces.ChainStateOperation, addr field
 	basedia := blssto.Diamond
 	newdia := uint64(basedia) + uint64(dia)
 	// 新余额
-	blssto.Diamond = fields.VarUint3(newdia)
+	blssto.Diamond = fields.DiamondNumber(newdia)
 	bserr := state.BalanceSet(addr, blssto)
 	if bserr != nil {
 		return bserr
@@ -65,7 +65,7 @@ func DoAddDiamondFromChainState(state interfaces.ChainStateOperation, addr field
 }
 
 // 单纯扣除 diamond 余额
-func DoSubDiamondFromChainState(state interfaces.ChainStateOperation, addr fields.Address, dia fields.VarUint3) error {
+func DoSubDiamondFromChainState(state interfaces.ChainStateOperation, addr fields.Address, dia fields.DiamondNumber) error {
 	if dia == 0 {
 		return nil // 数量为0，直接成功
 	}
@@ -79,7 +79,7 @@ func DoSubDiamondFromChainState(state interfaces.ChainStateOperation, addr field
 		return fmt.Errorf("address %s satoshi %d not enough, need more %d.", addr.ToReadable(), basedia, dia)
 	}
 	newdia := uint64(basedia) - uint64(dia)
-	blssto.Diamond = fields.VarUint3(newdia)
+	blssto.Diamond = fields.DiamondNumber(newdia)
 	bserr := state.BalanceSet(addr, blssto)
 	if bserr != nil {
 		return bserr

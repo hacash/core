@@ -28,7 +28,7 @@ type BlockStore interface {
 
 	// diamond
 	SaveDiamond(*stores.DiamondSmelt) error
-	ReadDiamond(fields.Bytes6) (*stores.DiamondSmelt, error)
+	ReadDiamond(fields.DiamondName) (*stores.DiamondSmelt, error)
 	ReadDiamondByNumber(uint32) (*stores.DiamondSmelt, error)
 
 	// delete

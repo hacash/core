@@ -45,7 +45,7 @@ type ChainStateOperation interface {
 	//Satoshi(fields.Address) *stores.Satoshi
 	Lockbls(fields.Bytes18) *stores.Lockbls
 	Channel(fields.Bytes16) *stores.Channel
-	Diamond(fields.Bytes6) *stores.Diamond
+	Diamond(fields.DiamondName) *stores.Diamond
 	DiamondSystemLending(fields.Bytes14) *stores.DiamondSystemLending
 	BitcoinSystemLending(fields.Bytes15) *stores.BitcoinSystemLending
 	UserLending(fields.Bytes17) *stores.UserLending
@@ -66,8 +66,8 @@ type ChainStateOperation interface {
 	ChannelUpdate(fields.Bytes16, *stores.Channel) error
 	ChannelDelete(fields.Bytes16) error
 
-	DiamondSet(fields.Bytes6, *stores.Diamond) error
-	DiamondDel(fields.Bytes6) error
+	DiamondSet(fields.DiamondName, *stores.Diamond) error
+	DiamondDel(fields.DiamondName) error
 
 	DiamondLendingCreate(fields.Bytes14, *stores.DiamondSystemLending) error
 	DiamondLendingUpdate(fields.Bytes14, *stores.DiamondSystemLending) error

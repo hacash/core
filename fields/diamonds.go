@@ -9,13 +9,13 @@ import (
 
 type DiamondListMaxLen200 struct {
 	Count    VarUint1
-	Diamonds []Bytes6
+	Diamonds []DiamondName
 }
 
 func NewEmptyDiamondListMaxLen200() *DiamondListMaxLen200 {
 	return &DiamondListMaxLen200{
 		Count:    VarUint1(0),
-		Diamonds: []Bytes6{},
+		Diamonds: []DiamondName{},
 	}
 }
 
@@ -50,9 +50,9 @@ func (elm *DiamondListMaxLen200) Parse(buf []byte, seek uint32) (uint32, error) 
 	if elm.Count == 0 {
 		return seek, nil // 列表为空
 	}
-	elm.Diamonds = make([]Bytes6, int(elm.Count))
+	elm.Diamonds = make([]DiamondName, int(elm.Count))
 	for i := 0; i < int(elm.Count); i++ {
-		elm.Diamonds[i] = Bytes6{}
+		elm.Diamonds[i] = DiamondName{}
 		seek, e = elm.Diamonds[i].Parse(buf, seek)
 		if e != nil {
 			return 0, e
@@ -77,7 +77,7 @@ func (elm *DiamondListMaxLen200) ParseHACDlistBySplitCommaFromString(hacdlistspl
 	if dianum > 200 {
 		return fmt.Errorf("diamonds quantity cannot over 200")
 	}
-	diamondsbytes := make([]Bytes6, dianum)
+	diamondsbytes := make([]DiamondName, dianum)
 	for i, v := range diamonds {
 		dok := x16rs.IsDiamondValueString(v)
 		if !dok {
