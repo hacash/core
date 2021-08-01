@@ -16,10 +16,10 @@ import (
 var TestDebugLocalDevelopmentMark bool = false
 
 // 最低可被当前兼容的区块链数据库（仅blockdata）版本号
-const BlockChainStateDatabaseLowestCompatibleVersion = 3
+const BlockChainStateDatabaseLowestCompatibleVersion = 6
 
 // 当前使用的区块链数据库版本号
-const BlockChainStateDatabaseCurrentUseVersion = 5
+const BlockChainStateDatabaseCurrentUseVersion = 6
 
 type Inicnf struct {
 	inicnf.File
