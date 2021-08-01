@@ -294,6 +294,9 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 }
 
 func (act *Action_4_DiamondCreate) RecoverChainState(state interfaces.ChainStateOperation) error {
+
+	panic("RecoverChainState be deprecated")
+
 	//chainstate := state.BlockStore()
 	//if chainstate == nil {
 	//	panic("Action get state.Miner() cannot be nil !")

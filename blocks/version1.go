@@ -447,6 +447,9 @@ func (block *Block_v1) WriteinChainState(blockstate interfaces.ChainStateOperati
 }
 
 func (block *Block_v1) RecoverChainState(blockstate interfaces.ChainStateOperation) error {
+
+	panic("RecoverChainState be deprecated")
+
 	txlen := len(block.Transactions)
 	totalfeeuserpay := fields.NewEmptyAmount()
 	totalfeeminergot := fields.NewEmptyAmount()

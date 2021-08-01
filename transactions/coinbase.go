@@ -335,6 +335,8 @@ func (trs *Transaction_0_Coinbase) WriteinChainState(state interfaces.ChainState
 
 func (trs *Transaction_0_Coinbase) RecoverChainState(state interfaces.ChainStateOperation) error {
 
+	panic("RecoverChainState be deprecated")
+
 	// total supply 统计
 	// reward
 	totalsupply, e2 := state.ReadTotalSupply()

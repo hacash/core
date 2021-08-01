@@ -180,6 +180,9 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 }
 
 func (act *Action_2_OpenPaymentChannel) RecoverChainState(state interfaces.ChainStateOperation) error {
+
+	panic("RecoverChainState be deprecated")
+
 	sto := state.Channel(act.ChannelId)
 	if sto.ReuseVersion > 1 {
 		sto.ReuseVersion = sto.ReuseVersion - 1 // 重用版本号减少

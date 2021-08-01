@@ -494,6 +494,9 @@ func (trs *Transaction_2_Simple) WriteinChainState(state interfaces.ChainStateOp
 }
 
 func (trs *Transaction_2_Simple) RecoverChainState(state interfaces.ChainStateOperation) error {
+
+	panic("RecoverChainState be deprecated")
+
 	// actions
 	for i := len(trs.Actions) - 1; i >= 0; i-- {
 		trs.Actions[i].SetBelongTransaction(trs)

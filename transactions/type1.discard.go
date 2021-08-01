@@ -468,6 +468,9 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteinChainState(state interfaces
 }
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RecoverChainState(state interfaces.ChainStateOperation) error {
+
+	panic("RecoverChainState be deprecated")
+
 	// actions
 	for i := len(trs.Actions) - 1; i >= 0; i-- {
 		trs.Actions[i].SetBelongTransaction(trs)
