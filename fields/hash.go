@@ -6,8 +6,14 @@ import (
 )
 
 type Hash = Bytes32
-type HashHalf = Bytes16
-type HashNonce = Bytes8
+type HashHalfChecker = Bytes16
+type HashNonceChecker = Bytes8
+
+const (
+	HashSize             = 32
+	HashHalfCheckerSize  = 16
+	HashNonceCheckerSize = 8
+)
 
 // sha3 计算32位哈希值
 func CalculateHash(stuff []byte) Hash {
@@ -15,13 +21,13 @@ func CalculateHash(stuff []byte) Hash {
 	return hx[:]
 }
 
-func (h Hash) GetHalf() HashHalf {
+func (h Hash) GetHalfChecker() HashHalfChecker {
 	half := make([]byte, 16)
 	copy(half, h)
 	return half
 }
 
-func (h Hash) GetNonce() HashNonce {
+func (h Hash) GetNonceChecker() HashNonceChecker {
 	nonce := make([]byte, 8)
 	copy(nonce, h)
 	return nonce
@@ -31,10 +37,10 @@ func (h Hash) Equal(tar Hash) bool {
 	return bytes.Compare(h, tar) == 0
 }
 
-func (h HashHalf) Equal(tar HashHalf) bool {
+func (h HashHalfChecker) Equal(tar HashHalfChecker) bool {
 	return bytes.Compare(h, tar) == 0
 }
 
-func (h HashNonce) Equal(tar HashNonce) bool {
+func (h HashNonceChecker) Equal(tar HashNonceChecker) bool {
 	return bytes.Compare(h, tar) == 0
 }

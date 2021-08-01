@@ -49,6 +49,7 @@ type ChainStateOperation interface {
 	DiamondSystemLending(fields.Bytes14) *stores.DiamondSystemLending
 	BitcoinSystemLending(fields.Bytes15) *stores.BitcoinSystemLending
 	UserLending(fields.Bytes17) *stores.UserLending
+	Chaswap(fields.HashHalfChecker) *stores.Chaswap
 
 	// operate
 
@@ -80,6 +81,9 @@ type ChainStateOperation interface {
 	UserLendingCreate(fields.Bytes17, *stores.UserLending) error
 	UserLendingUpdate(fields.Bytes17, *stores.UserLending) error
 	UserLendingDelete(fields.Bytes17) error
+
+	ChaswapCreate(fields.HashHalfChecker, *stores.Chaswap) error
+	ChaswapDelete(fields.HashHalfChecker) error
 
 	// movebtc
 	SaveMoveBTCBelongTxHash(trsno uint32, txhash []byte) error

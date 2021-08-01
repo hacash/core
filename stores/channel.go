@@ -10,9 +10,11 @@ const (
 )
 
 const (
-	ChannelStatusOpening     fields.VarUint1 = 0 // 正常开启
-	ChannelStatusChallenging fields.VarUint1 = 1 // 挑战期
-	ChannelStatusClosed      fields.VarUint1 = 2 // 已关闭
+	ChannelStatusOpening                fields.VarUint1 = 0 // 正常开启
+	ChannelStatusChallenging            fields.VarUint1 = 1 // 挑战期
+	ChannelStatusAgreementClosed        fields.VarUint1 = 2 // 协商关闭，可再次开启重用
+	ChannelStatusFinalArbitrationClosed fields.VarUint1 = 3 // 最终仲裁关闭，不可重用
+
 )
 
 //
@@ -23,19 +25,88 @@ type Channel struct {
 	LeftAmount   fields.Amount // 抵押数额1
 	RightAddress fields.Address
 	RightAmount  fields.Amount   // 抵押数额2
+	ReuseVersion fields.VarUint4 // 重用版本号 从 1 开始
 	Status       fields.VarUint1 // 已经关闭并结算等状态
+
+	// Status = 1 挑战期保存数据
+	IsHaveChallengeLog         fields.Bool        // 记录挑战期数据日志
+	ChallengeLaunchHeight      fields.BlockHeight // 挑战开始的区块高度
+	AssertBillAutoNumber       fields.VarUint8    // 账单流水编号
+	AssertAddressIsLeftOrRight fields.Bool        // 主张者是左侧地址还是右侧 true-左  false-右
+	AssertAmount               fields.Amount      // 主张者主张自己应该分配的金额
+
+	// Status = 2 or Status = 3 已经关闭资金分配
+	LeftFinalDistributionAmount fields.Amount // 左侧最终分配金额
 
 	// cache data
 }
 
+// 状态判断
+func (this *Channel) IsOpening() bool {
+	return this.Status == ChannelStatusOpening
+}
+func (this *Channel) IsChallenging() bool {
+	return this.Status == ChannelStatusChallenging
+}
+func (this *Channel) IsAgreementClosed() bool {
+	return this.Status == ChannelStatusAgreementClosed
+}
+func (this *Channel) IsFinalDistributionClosed() bool {
+	return this.Status == ChannelStatusFinalArbitrationClosed
+}
+func (this *Channel) IsClosed() bool {
+	return this.Status == ChannelStatusAgreementClosed ||
+		this.Status == ChannelStatusFinalArbitrationClosed
+}
+
+// 状态操作
+func (this *Channel) SetAgreementClosed(leftEndAmt *fields.Amount) {
+	this.Status = ChannelStatusAgreementClosed
+	this.LeftFinalDistributionAmount = *leftEndAmt
+}
+func (this *Channel) SetFinalArbitrationClosed(leftEndAmt *fields.Amount) {
+	this.Status = ChannelStatusFinalArbitrationClosed
+	this.LeftFinalDistributionAmount = *leftEndAmt
+}
+func (this *Channel) SetOpening() {
+	this.Status = ChannelStatusOpening
+}
+func (this *Channel) SetChallenging(blkhei uint64, isLeftAddr bool, assertAmount *fields.Amount, billno uint64) {
+	this.Status = ChannelStatusChallenging
+	this.IsHaveChallengeLog.Set(true)
+	this.ChallengeLaunchHeight = fields.BlockHeight(blkhei)
+	this.AssertBillAutoNumber = fields.VarUint8(billno)
+	this.AssertAddressIsLeftOrRight.Set(isLeftAddr)
+	this.AssertAmount = *assertAmount
+}
+func (this *Channel) CleanChallengingLog() {
+	this.IsHaveChallengeLog.Set(false)
+	this.ChallengeLaunchHeight = fields.BlockHeight(0)
+	this.AssertBillAutoNumber = fields.VarUint8(0)
+	this.AssertAddressIsLeftOrRight.Set(false)
+	emt := fields.NewEmptyAmount()
+	this.AssertAmount = *emt
+}
+
 func (this *Channel) Size() uint32 {
-	return this.BelongHeight.Size() +
+	size := this.BelongHeight.Size() +
 		this.LockBlock.Size() +
 		this.LeftAddress.Size() +
 		this.LeftAmount.Size() +
 		this.RightAddress.Size() +
 		this.RightAmount.Size() +
+		this.ReuseVersion.Size() +
 		this.Status.Size()
+	if this.IsHaveChallengeLog.Check() {
+		size += this.ChallengeLaunchHeight.Size() +
+			this.AssertBillAutoNumber.Size() +
+			this.AssertAddressIsLeftOrRight.Size() +
+			this.AssertAmount.Size()
+	}
+	if this.IsClosed() {
+		size += this.LeftFinalDistributionAmount.Size()
+	}
+	return size
 }
 
 func (this *Channel) Parse(buf []byte, seek uint32) (uint32, error) {
@@ -64,9 +135,37 @@ func (this *Channel) Parse(buf []byte, seek uint32) (uint32, error) {
 	if e != nil {
 		return 0, e
 	}
+	seek, e = this.ReuseVersion.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
 	seek, e = this.Status.Parse(buf, seek)
 	if e != nil {
 		return 0, e
+	}
+	if this.IsHaveChallengeLog.Check() {
+		seek, e = this.ChallengeLaunchHeight.Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
+		seek, e = this.AssertBillAutoNumber.Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
+		seek, e = this.AssertAddressIsLeftOrRight.Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
+		seek, e = this.AssertAmount.Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
+	}
+	if this.IsClosed() {
+		seek, e = this.LeftFinalDistributionAmount.Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
 	}
 	return seek, nil
 }
@@ -79,7 +178,8 @@ func (this *Channel) Serialize() ([]byte, error) {
 	b4, _ := this.LeftAmount.Serialize()
 	b5, _ := this.RightAddress.Serialize()
 	b6, _ := this.RightAmount.Serialize()
-	b7, _ := this.Status.Serialize()
+	b7, _ := this.ReuseVersion.Serialize()
+	b8, _ := this.Status.Serialize()
 	buffer.Write(b1)
 	buffer.Write(b2)
 	buffer.Write(b3)
@@ -87,6 +187,21 @@ func (this *Channel) Serialize() ([]byte, error) {
 	buffer.Write(b5)
 	buffer.Write(b6)
 	buffer.Write(b7)
+	buffer.Write(b8)
+	if this.IsHaveChallengeLog.Check() {
+		b1, _ := this.ChallengeLaunchHeight.Serialize()
+		b2, _ := this.AssertBillAutoNumber.Serialize()
+		b3, _ := this.AssertAddressIsLeftOrRight.Serialize()
+		b4, _ := this.AssertAmount.Serialize()
+		buffer.Write(b1)
+		buffer.Write(b2)
+		buffer.Write(b3)
+		buffer.Write(b4)
+	}
+	if this.IsClosed() {
+		b1, _ := this.LeftFinalDistributionAmount.Serialize()
+		buffer.Write(b1)
+	}
 	// ok return
 	return buffer.Bytes(), nil
 }
