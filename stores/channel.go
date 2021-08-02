@@ -19,14 +19,15 @@ const (
 
 //
 type Channel struct {
-	BelongHeight fields.BlockHeight // 通道开启时的区块高度
-	LockBlock    fields.VarUint2    // 单方面结束通道要锁定的区块数量
-	LeftAddress  fields.Address
-	LeftAmount   fields.Amount // 抵押数额1
-	RightAddress fields.Address
-	RightAmount  fields.Amount   // 抵押数额2
-	ReuseVersion fields.VarUint4 // 重用版本号 从 1 开始
-	Status       fields.VarUint1 // 已经关闭并结算等状态
+	BelongHeight        fields.BlockHeight // 通道开启时的区块高度
+	LockBlock           fields.VarUint2    // 单方面结束通道要锁定的区块数量
+	InterestAttribution fields.VarUint1    // 年化 1% 的利息归属： 0.按结束分配 1.全给left 2.全给right
+	LeftAddress         fields.Address
+	LeftAmount          fields.Amount // 抵押数额1
+	RightAddress        fields.Address
+	RightAmount         fields.Amount   // 抵押数额2
+	ReuseVersion        fields.VarUint4 // 重用版本号 从 1 开始
+	Status              fields.VarUint1 // 已经关闭并结算等状态
 
 	// Status = 1 挑战期保存数据
 	IsHaveChallengeLog         fields.Bool        // 记录挑战期数据日志

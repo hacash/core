@@ -151,6 +151,7 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	var storeItem stores.Channel
 	storeItem.BelongHeight = fields.BlockHeight(curheight)
 	storeItem.LockBlock = fields.VarUint2(uint16(5000)) // 单方面提出的锁定期约为 17 天
+	storeItem.InterestAttribution = fields.VarUint1(0)  // 利息分配默认两方按close金额共取
 	storeItem.LeftAddress = act.LeftAddress
 	storeItem.LeftAmount = act.LeftAmount
 	storeItem.RightAddress = act.RightAddress
@@ -585,7 +586,7 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 	//var curheight uint64 = 1
 	curheight := state.GetPendingBlockHeight()
 	leftAmount, rightAmount, haveinterest, e11 := calculateChannelInterest(
-		curheight, uint64(paychan.BelongHeight), newLeftAmt, newRightAmt)
+		curheight, uint64(paychan.BelongHeight), newLeftAmt, newRightAmt, paychan.InterestAttribution)
 	if e11 != nil {
 		return e11
 	}
@@ -642,6 +643,8 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 // 关闭通道状态回退
 func closePaymentChannelRecoverChainState(state interfaces.ChainStateOperation, channelId []byte, newLeftAmt *fields.Amount, newRightAmt *fields.Amount, backToChallenging bool) error {
 
+	panic("RecoverChainState be deprecated")
+
 	var e error = nil
 	// 查询通道
 	paychan := state.Channel(channelId)
@@ -661,7 +664,7 @@ func closePaymentChannelRecoverChainState(state interfaces.ChainStateOperation, 
 	// 计算差额
 	curheight := state.GetPendingBlockHeight()
 	// 计算利息
-	leftAmount, rightAmount, haveinterest, e11 := calculateChannelInterest(curheight, uint64(paychan.BelongHeight), newLeftAmt, newRightAmt)
+	leftAmount, rightAmount, haveinterest, e11 := calculateChannelInterest(curheight, uint64(paychan.BelongHeight), newLeftAmt, newRightAmt, 0)
 	if e11 != nil {
 		return e11
 	}
@@ -707,7 +710,8 @@ func closePaymentChannelRecoverChainState(state interfaces.ChainStateOperation, 
 
 // 计算通道利息
 // bool 是否有利息
-func calculateChannelInterest(curheight uint64, openBelongHeight uint64, leftAmount *fields.Amount, rightAmount *fields.Amount) (*fields.Amount, *fields.Amount, bool, error) {
+// interestgiveto 利息分配给谁
+func calculateChannelInterest(curheight uint64, openBelongHeight uint64, leftAmount *fields.Amount, rightAmount *fields.Amount, interestgiveto fields.VarUint1) (*fields.Amount, *fields.Amount, bool, error) {
 	// 增加利息计算，复利次数：约 2500 个区块 8.68 天增加一次万分之一的复利，少于8天忽略不计，年复合利息约 0.42%
 	//a1, a2 := DoAppendCompoundInterest1Of10000By2500Height(&leftAmount, &rightAmount, insnum)
 	var insnum = (curheight - openBelongHeight) / 2500
@@ -720,7 +724,7 @@ func calculateChannelInterest(curheight uint64, openBelongHeight uint64, leftAmo
 	}
 	if insnum > 0 {
 		// 计算通道利息奖励
-		a1, a2, e := coinbase.DoAppendCompoundInterestProportionOfHeightV2(leftAmount, rightAmount, insnum, wfzn)
+		a1, a2, e := coinbase.DoAppendCompoundInterestProportionOfHeightV2(leftAmount, rightAmount, insnum, wfzn, interestgiveto)
 		if e != nil {
 			return nil, nil, false, e
 		}
