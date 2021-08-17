@@ -9,9 +9,9 @@ import (
 
 func Test_bbb1(t *testing.T) {
 
-	amt, _ := NewAmountByBigIntWithUnit(big.NewInt(16160), 245)
+	amt, _ := NewAmountByBigIntWithUnit(big.NewInt(12345678), 243)
 
-	fmt.Println(amt.ToFinString())
+	fmt.Println(amt.ToFinStringWithMarkBySegmentSplit("ㄜ"))
 
 }
 

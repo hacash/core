@@ -151,6 +151,9 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		mustDoAllCheck = false // 数据库升级模式 不检查
 	}
 
+	var diamondResHash []byte = nil
+	var diamondStr string = ""
+
 	// 是否做全面的检查
 	if mustDoAllCheck {
 		// 交易只能包含唯一一个action
@@ -185,16 +188,16 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 			}
 		}
 		// 检查钻石挖矿计算
-		diamond_resbytes, diamond_str := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address, act.GetRealCustomMessage())
-		diamondstrval, isdia := x16rs.IsDiamondHashResultString(diamond_str)
+		diamondResHash, diamondStr = x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address, act.GetRealCustomMessage())
+		diamondstrval, isdia := x16rs.IsDiamondHashResultString(diamondStr)
 		if !isdia {
-			return fmt.Errorf("String <%s> is not diamond.", diamond_str)
+			return fmt.Errorf("String <%s> is not diamond.", diamondStr)
 		}
 		if strings.Compare(diamondstrval, string(act.Diamond)) != 0 {
 			return fmt.Errorf("Diamond need <%s> but got <%s>", act.Diamond, diamondstrval)
 		}
 		// 检查钻石难度值
-		difok := x16rs.CheckDiamondDifficulty(uint32(act.Number), diamond_resbytes)
+		difok := x16rs.CheckDiamondDifficulty(uint32(act.Number), diamondResHash)
 		if !difok {
 			return fmt.Errorf("Diamond difficulty not meet the requirements.")
 		}
@@ -230,7 +233,12 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 
 	// 设置矿工状态
 	// 标记本区块已经包含钻石
-	// 存储对象
+	// 存储对象，计算视觉基因
+	visualGene, e15 := calculateVisualGeneByDiamondStuffHash(diamondResHash, diamondStr)
+	if e15 != nil {
+		return e15
+	}
+
 	var diamondstore = &stores.DiamondSmelt{
 		Diamond:              act.Diamond,
 		Number:               act.Number,
@@ -240,6 +248,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		MinerAddress:         act.Address,
 		Nonce:                act.Nonce,
 		CustomMessage:        act.GetRealCustomMessage(),
+		VisualGene:           visualGene,
 	}
 
 	// 写入手续费报价
@@ -352,6 +361,113 @@ func (act *Action_4_DiamondCreate) IsBurning90PersentTxFees() bool {
 		return true
 	}
 	return false
+}
+
+///////////////////////////////////////////////////////////////
+
+// 计算钻石的可视化基因
+func calculateVisualGeneByDiamondStuffHash(stuffhx []byte, diamondstr string) (fields.Bytes10, error) {
+	if len(stuffhx) != 32 {
+		return nil, fmt.Errorf("stuffhx length must 32")
+	}
+	if len(diamondstr) != 16 {
+		return nil, fmt.Errorf("diamondstr length must 16")
+	}
+	genehexstr := make([]string, 18)
+	// 前6位
+	k := 0
+	for i := 10; i < 16; i++ {
+		s := diamondstr[i]
+		e := "0"
+		switch s {
+		case 'W': // WTYUIAHXVMEKBSZN
+			e = "0"
+		case 'T':
+			e = "1"
+		case 'Y':
+			e = "2"
+		case 'U':
+			e = "3"
+		case 'I':
+			e = "4"
+		case 'A':
+			e = "5"
+		case 'H':
+			e = "6"
+		case 'X':
+			e = "7"
+		case 'V':
+			e = "8"
+		case 'M':
+			e = "9"
+		case 'E':
+			e = "A"
+		case 'K':
+			e = "B"
+		case 'B':
+			e = "C"
+		case 'S':
+			e = "D"
+		case 'Z':
+			e = "E"
+		case 'N':
+			e = "F"
+		}
+		genehexstr[k] = e
+		k++
+	}
+	// 后11位
+	for i := 20; i < 31; i++ {
+		x := stuffhx[i]
+		x = x % 16
+		e := "0"
+		switch x {
+		case 0:
+			e = "0"
+		case 1:
+			e = "1"
+		case 2:
+			e = "2"
+		case 3:
+			e = "3"
+		case 4:
+			e = "4"
+		case 5:
+			e = "5"
+		case 6:
+			e = "6"
+		case 7:
+			e = "7"
+		case 8:
+			e = "8"
+		case 9:
+			e = "9"
+		case 10:
+			e = "A"
+		case 11:
+			e = "B"
+		case 12:
+			e = "C"
+		case 13:
+			e = "D"
+		case 14:
+			e = "E"
+		case 15:
+			e = "F"
+		}
+		genehexstr[k] = e
+		k++
+	}
+	// 补齐最后一位
+	genehexstr[17] = "0"
+	resbts, e1 := hex.DecodeString(strings.Join(genehexstr, ""))
+	if e1 != nil {
+		return nil, e1
+	}
+	// 哈希的最后一位作为形状选择
+	resbuf := bytes.NewBuffer([]byte{stuffhx[31]})
+	resbuf.Write(resbts) // 颜色选择器
+	return resbuf.Bytes(), nil
 }
 
 ///////////////////////////////////////////////////////////////

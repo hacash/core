@@ -16,6 +16,7 @@ type Bytes4 []byte
 type Bytes5 []byte
 type Bytes6 []byte
 type Bytes8 []byte
+type Bytes10 []byte
 type Bytes12 []byte
 type Bytes14 []byte
 type Bytes15 []byte
@@ -35,6 +36,7 @@ func (elm Bytes4) Serialize() ([]byte, error)  { return bytesSerialize(elm, 4) }
 func (elm Bytes5) Serialize() ([]byte, error)  { return bytesSerialize(elm, 5) }
 func (elm Bytes6) Serialize() ([]byte, error)  { return bytesSerialize(elm, 6) }
 func (elm Bytes8) Serialize() ([]byte, error)  { return bytesSerialize(elm, 8) }
+func (elm Bytes10) Serialize() ([]byte, error) { return bytesSerialize(elm, 10) }
 func (elm Bytes12) Serialize() ([]byte, error) { return bytesSerialize(elm, 12) }
 func (elm Bytes14) Serialize() ([]byte, error) { return bytesSerialize(elm, 14) }
 func (elm Bytes15) Serialize() ([]byte, error) { return bytesSerialize(elm, 15) }
@@ -61,6 +63,9 @@ func (elm *Bytes6) Parse(buf []byte, seek uint32) (uint32, error) {
 }
 func (elm *Bytes8) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 8)
+}
+func (elm *Bytes10) Parse(buf []byte, seek uint32) (uint32, error) {
+	return bytesParse(elm, buf, seek, 10)
 }
 func (elm *Bytes12) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 12)
@@ -101,6 +106,7 @@ func (elm Bytes4) Size() uint32  { return 4 }
 func (elm Bytes5) Size() uint32  { return 5 }
 func (elm Bytes6) Size() uint32  { return 6 }
 func (elm Bytes8) Size() uint32  { return 8 }
+func (elm Bytes10) Size() uint32 { return 10 }
 func (elm Bytes12) Size() uint32 { return 12 }
 func (elm Bytes14) Size() uint32 { return 14 }
 func (elm Bytes15) Size() uint32 { return 15 }
@@ -118,6 +124,7 @@ func (elm Bytes4) ToHex() string  { return hex.EncodeToString(elm) }
 func (elm Bytes5) ToHex() string  { return hex.EncodeToString(elm) }
 func (elm Bytes6) ToHex() string  { return hex.EncodeToString(elm) }
 func (elm Bytes8) ToHex() string  { return hex.EncodeToString(elm) }
+func (elm Bytes10) ToHex() string { return hex.EncodeToString(elm) }
 func (elm Bytes12) ToHex() string { return hex.EncodeToString(elm) }
 func (elm Bytes14) ToHex() string { return hex.EncodeToString(elm) }
 func (elm Bytes15) ToHex() string { return hex.EncodeToString(elm) }
@@ -155,6 +162,10 @@ func bytesParse(elm interface{}, buf []byte, seek uint32, maxlen uint32) (uint32
 		*a = (Bytes6(addrbytes))
 	case *Bytes8:
 		*a = (Bytes8(addrbytes))
+	case *Bytes10:
+		*a = (Bytes10(addrbytes))
+	case *Bytes12:
+		*a = (Bytes12(addrbytes))
 	case *Bytes14:
 		*a = (Bytes14(addrbytes))
 	case *Bytes15:
@@ -165,8 +176,6 @@ func bytesParse(elm interface{}, buf []byte, seek uint32, maxlen uint32) (uint32
 		*a = (Bytes17(addrbytes))
 	case *Bytes18:
 		*a = (Bytes18(addrbytes))
-	case *Bytes12:
-		*a = (Bytes12(addrbytes))
 	case *Bytes21:
 		*a = (Bytes21(addrbytes))
 	case *Bytes24:

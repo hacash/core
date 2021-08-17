@@ -21,6 +21,8 @@ type DiamondSmelt struct {
 	CustomMessage        fields.Bytes32 // msg
 	// data statistics
 	AverageBidBurnPrice fields.VarUint2 // 平均竞价销毁的HAC枚数，向下取整，最低一枚，最高65535枚
+	// other data
+	VisualGene fields.Bytes10 // 可视化外观基因
 }
 
 func (this *DiamondSmelt) Size() uint32 {
@@ -33,7 +35,8 @@ func (this *DiamondSmelt) Size() uint32 {
 		this.ApproxFeeOffer.Size() +
 		this.Nonce.Size() +
 		this.CustomMessage.Size() +
-		this.AverageBidBurnPrice.Size()
+		this.AverageBidBurnPrice.Size() +
+		this.VisualGene.Size()
 }
 
 func (this *DiamondSmelt) GetApproxFeeOffer() *fields.Amount {
@@ -62,6 +65,7 @@ func (this *DiamondSmelt) Serialize() ([]byte, error) {
 	b8, _ := this.Nonce.Serialize()
 	b9, _ := this.CustomMessage.Serialize()
 	b10, _ := this.AverageBidBurnPrice.Serialize()
+	b11, _ := this.VisualGene.Serialize()
 	buffer.Write(b1)
 	buffer.Write(b2)
 	buffer.Write(b3)
@@ -72,6 +76,7 @@ func (this *DiamondSmelt) Serialize() ([]byte, error) {
 	buffer.Write(b8)
 	buffer.Write(b9)
 	buffer.Write(b10)
+	buffer.Write(b11)
 	return buffer.Bytes(), nil
 }
 
@@ -114,6 +119,10 @@ func (this *DiamondSmelt) Parse(buf []byte, seek uint32) (uint32, error) {
 		return 0, e
 	}
 	seek, e = this.AverageBidBurnPrice.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = this.VisualGene.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}

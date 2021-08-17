@@ -387,6 +387,42 @@ func (bill Amount) ToFinStringWithMark(mark string) string {
 	return mark + sig + numStrX + ":" + unitStr
 }
 
+func (bill Amount) ToFinStringWithMarkBySegmentSplit(mark string) string {
+	// 248 256
+	var unitnum = int(bill.Unit)
+	unitStr := strconv.Itoa(unitnum) // string(bytes.Repeat([]byte{48}, int(bill.Unit)))
+	numStr := new(big.Int).SetBytes(bill.Numeral).String()
+	sig := ""
+	if bill.Dist < 0 {
+		sig = "-"
+	}
+	var numStrX = make([]string, 0)
+	var nl = len(numStr)
+	var mx int = unitnum + len(numStr)
+	for i := 248 + 32; i >= 0 && i >= unitnum; i -= 8 {
+		x1 := 0
+		x2 := nl
+		if i >= mx+8 {
+			continue
+		}
+		if i > mx {
+			x2 = 8 - (i - mx)
+		} else {
+			x1 = mx - i
+			x2 = x1 + 8
+		}
+		if x2 > nl {
+			x2 = nl
+		}
+		if x1 == x2 {
+			continue
+		}
+		fmt.Println(i, unitnum, mx, ", ", x1, x2)
+		numStrX = append(numStrX, numStr[x1:x2])
+	}
+	return mark + sig + strings.Join(numStrX, ",") + ":" + unitStr
+}
+
 // 省略小数部分 为了存进 4 位空间里面
 // enlarge 表示是否扩大（向上取整）
 func (bill *Amount) CompressForMainNumLen(numlen int, enlarge bool) (*Amount, bool, error) {
