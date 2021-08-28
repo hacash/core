@@ -1,4 +1,4 @@
-package actions
+package channel
 
 import (
 	"bytes"
@@ -144,9 +144,9 @@ func (elm *ChannelChainTransferProveBodyInfo) SignStuff() []byte {
 	var conbt, _ = elm.Serialize() // 数据体
 	return conbt                   // 哈希
 }
-func (elm *ChannelChainTransferProveBodyInfo) SignStuffHash() fields.Hash {
-	var conbt = elm.SignStuff()        // 数据体
-	return fields.CalculateHash(conbt) // 哈希
+func (elm *ChannelChainTransferProveBodyInfo) SignStuffHashHalfChecker() fields.HashHalfChecker {
+	var conbt = elm.SignStuff()                         // 数据体
+	return fields.CalculateHash(conbt).GetHalfChecker() // 哈希检测
 }
 
 // 检查签名

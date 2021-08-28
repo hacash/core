@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"github.com/hacash/core/channel"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/stores"
@@ -141,7 +142,7 @@ type Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeReconcil
 	// 主张者地址
 	AssertAddress fields.Address
 	// 对账单
-	Reconciliation OffChainFormPaymentChannelRealtimeReconciliation
+	Reconciliation channel.OffChainFormPaymentChannelRealtimeReconciliation
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -204,7 +205,7 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 	}
 
 	// 快速模式无法用于挑战或仲裁，只有普通模式可以
-	if act.Reconciliation.TranferProveBody.Mode != ChannelTransferProveBodyPayModeNormal {
+	if act.Reconciliation.TranferProveBody.Mode != channel.ChannelTransferProveBodyPayModeNormal {
 		// 快速通道模式不能用来发起挑战和仲裁
 		// 只有普通模式才可以
 		return fmt.Errorf("ChannelTransferProveBody Mode is not Normal.")
@@ -254,9 +255,9 @@ type Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelChainTran
 	// 主张者地址
 	AssertAddress fields.Address
 	// 通道整体支付数据
-	ChannelChainTransferData OffChainFormPaymentChannelTransfer
+	ChannelChainTransferData channel.OffChainFormPaymentChannelTransfer
 	// 本通道支付体数据
-	ChannelChainTransferTargetProveBody ChannelChainTransferProveBodyInfo
+	ChannelChainTransferTargetProveBody channel.ChannelChainTransferProveBodyInfo
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -330,7 +331,7 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 
 	// 快速通道模式不能用来发起挑战和仲裁
 	// 只有普通模式才可以
-	if act.ChannelChainTransferTargetProveBody.Mode != ChannelTransferProveBodyPayModeNormal {
+	if act.ChannelChainTransferTargetProveBody.Mode != channel.ChannelTransferProveBodyPayModeNormal {
 		return fmt.Errorf("ChannelTransferProveBody Mode is not Normal.")
 	}
 
@@ -408,7 +409,7 @@ type Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnchainAt
 	// 凭据
 	ProveBodyHashChecker fields.HashHalfChecker
 	// 对账数据
-	ChannelChainTransferTargetProveBody ChannelChainTransferProveBodyInfo
+	ChannelChainTransferTargetProveBody channel.ChannelChainTransferProveBodyInfo
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -482,7 +483,7 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 
 	// 快速通道模式不能用来发起挑战和仲裁
 	// 只有普通模式才可以
-	if act.ChannelChainTransferTargetProveBody.Mode != ChannelTransferProveBodyPayModeNormal {
+	if act.ChannelChainTransferTargetProveBody.Mode != channel.ChannelTransferProveBodyPayModeNormal {
 		return fmt.Errorf("ChannelTransferProveBody Mode is not Normal.")
 	}
 
@@ -553,7 +554,7 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 //////////////////////////////////////////////////////////////
 
 // 检查通道进入挑战期或者最终仲裁
-func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interfaces.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj PaymentChannelRealtimeReconciliationInterface) error {
+func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interfaces.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj channel.PaymentChannelRealtimeReconciliationInterface) error {
 
 	channelId := obj.GetChannelId()
 
@@ -637,7 +638,7 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interf
 }
 
 // 挑战期或最终仲裁回退
-func checkChannelGotoChallegingOrFinalDistributionRecoverChainState(state interfaces.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj PaymentChannelRealtimeReconciliationInterface) error {
+func checkChannelGotoChallegingOrFinalDistributionRecoverChainState(state interfaces.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj channel.PaymentChannelRealtimeReconciliationInterface) error {
 
 	channelId := obj.GetChannelId()
 

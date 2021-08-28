@@ -11,6 +11,7 @@ import (
 var EmptyZeroBytes32 = bytes.Repeat([]byte{0}, 32)
 var EmptyZeroBytes512 = bytes.Repeat([]byte{0}, 512)
 
+type Bytes2 []byte
 type Bytes3 []byte
 type Bytes4 []byte
 type Bytes5 []byte
@@ -31,6 +32,11 @@ type Bytes64 []byte
 
 ////////////////////////////////////////////////////////
 
+// Copy
+func (elm Bytes2) Copy() Bytes2 { cp := make([]byte, 2); copy(cp, elm); return Bytes2(cp) }
+
+// Serialize
+func (elm Bytes2) Serialize() ([]byte, error)  { return bytesSerialize(elm, 2) }
 func (elm Bytes3) Serialize() ([]byte, error)  { return bytesSerialize(elm, 3) }
 func (elm Bytes4) Serialize() ([]byte, error)  { return bytesSerialize(elm, 4) }
 func (elm Bytes5) Serialize() ([]byte, error)  { return bytesSerialize(elm, 5) }
@@ -49,6 +55,9 @@ func (elm Bytes32) Serialize() ([]byte, error) { return bytesSerialize(elm, 32) 
 func (elm Bytes33) Serialize() ([]byte, error) { return bytesSerialize(elm, 33) }
 func (elm Bytes64) Serialize() ([]byte, error) { return bytesSerialize(elm, 64) }
 
+func (elm *Bytes2) Parse(buf []byte, seek uint32) (uint32, error) {
+	return bytesParse(elm, buf, seek, 2)
+}
 func (elm *Bytes3) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 3)
 }
@@ -101,6 +110,7 @@ func (elm *Bytes64) Parse(buf []byte, seek uint32) (uint32, error) {
 	return bytesParse(elm, buf, seek, 64)
 }
 
+func (elm Bytes2) Size() uint32  { return 2 }
 func (elm Bytes3) Size() uint32  { return 3 }
 func (elm Bytes4) Size() uint32  { return 4 }
 func (elm Bytes5) Size() uint32  { return 5 }
@@ -119,6 +129,7 @@ func (elm Bytes32) Size() uint32 { return 32 }
 func (elm Bytes33) Size() uint32 { return 33 }
 func (elm Bytes64) Size() uint32 { return 64 }
 
+func (elm Bytes2) ToHex() string  { return hex.EncodeToString(elm) }
 func (elm Bytes3) ToHex() string  { return hex.EncodeToString(elm) }
 func (elm Bytes4) ToHex() string  { return hex.EncodeToString(elm) }
 func (elm Bytes5) ToHex() string  { return hex.EncodeToString(elm) }
@@ -152,6 +163,8 @@ func bytesParse(elm interface{}, buf []byte, seek uint32, maxlen uint32) (uint32
 	copy(addrbytes, nnnold)
 	//var sd = string(addrbytes)
 	switch a := elm.(type) {
+	case *Bytes2:
+		*a = (Bytes2(addrbytes))
 	case *Bytes3:
 		*a = (Bytes3(addrbytes))
 	case *Bytes4:
