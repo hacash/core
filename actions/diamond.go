@@ -151,9 +151,8 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		mustDoAllCheck = false // 数据库升级模式 不检查
 	}
 
-	var diamondResHash []byte = nil
-	var diamondStr string = ""
-
+	// 计算钻石哈希
+	diamondResHash, diamondStr := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address, act.GetRealCustomMessage())
 	// 是否做全面的检查
 	if mustDoAllCheck {
 		// 交易只能包含唯一一个action
@@ -188,7 +187,6 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 			}
 		}
 		// 检查钻石挖矿计算
-		diamondResHash, diamondStr = x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address, act.GetRealCustomMessage())
 		diamondstrval, isdia := x16rs.IsDiamondHashResultString(diamondStr)
 		if !isdia {
 			return fmt.Errorf("String <%s> is not diamond.", diamondStr)

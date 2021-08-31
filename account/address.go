@@ -2,6 +2,7 @@ package account
 
 import (
 	"crypto/sha256"
+	"fmt"
 	"github.com/hacash/core/crypto/ripemd160"
 )
 
@@ -25,4 +26,21 @@ func NewAddressReadableFromAddress(address []byte) string {
 	addr := Base58CheckEncode(address)
 	// 原始以及编码后的
 	return addr
+}
+
+// check address is ok ?
+func CheckReadableAddress(readable string) ([]byte, error) {
+	if len(readable) > 34 {
+		return nil, fmt.Errorf("Address format error")
+	}
+	hashhex, e1 := Base58CheckDecode(readable)
+	if e1 != nil {
+		return nil, fmt.Errorf("Address format error")
+	}
+	version := uint8(hashhex[0])
+	if version > 2 {
+		return nil, fmt.Errorf("Address version error")
+	}
+	addr := hashhex
+	return addr, nil
 }
