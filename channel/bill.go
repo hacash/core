@@ -40,6 +40,7 @@ type ReconciliationBalanceBill interface {
 
 	// 通道重用序号 & 通道账单流水序号
 	ChannelReuseVersionAndAutoNumber() (uint32, uint64)
+	ChannelAutoNumber() uint64
 
 	CheckValidity() error   // 检查数据可用性
 	VerifySignature() error // 验证对票据的签名

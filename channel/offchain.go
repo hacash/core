@@ -157,6 +157,53 @@ func (elm *ChannelChainTransferProveBodyInfo) CheckAddressAndSign(state interfac
 
 ////////////////////////////////
 
+type ChannelPayProveBodyList struct {
+	Count      fields.VarUint1
+	ProveBodys []*ChannelChainTransferProveBodyInfo
+}
+
+func (c ChannelPayProveBodyList) Size() uint32 {
+	size := c.Count.Size()
+	for i := 0; i < int(c.Count); i++ {
+		size += c.ProveBodys[i].Size()
+	}
+	// ok
+	return size
+}
+
+func (c ChannelPayProveBodyList) Serialize() ([]byte, error) {
+	var buffer bytes.Buffer
+	var bt1, _ = c.Count.Serialize() // 数据体
+	buffer.Write(bt1)
+	for i := 0; i < len(c.ProveBodys); i++ {
+		var bt6, _ = c.ProveBodys[i].Serialize()
+		buffer.Write(bt6)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (c *ChannelPayProveBodyList) Parse(buf []byte, seek uint32) (uint32, error) {
+	var e error
+	// 通道
+	seek, e = c.Count.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	ccn := int(c.Count)
+	c.ProveBodys = make([]*ChannelChainTransferProveBodyInfo, ccn)
+	for i := 0; i < ccn; i++ {
+		c.ProveBodys[i] = &ChannelChainTransferProveBodyInfo{}
+		seek, e = c.ProveBodys[i].Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
+	}
+	// 完成
+	return seek, nil
+}
+
+////////////////////////////////
+
 // 通道实时对账（链下签署）
 type OffChainFormPaymentChannelRealtimeReconciliation struct {
 	TranferProveBody ChannelChainTransferProveBodyInfo
@@ -387,6 +434,24 @@ func (elm *OffChainFormPaymentChannelTransfer) Parse(buf []byte, seek uint32) (u
 	return seek, nil
 }
 
+// 按位置填充签名
+func (elm *OffChainFormPaymentChannelTransfer) FillSignByPosition(sign fields.Sign) error {
+	sgaddr := sign.GetAddress()
+	sn := int(elm.MustSignCount)
+	var istok = false
+	for i := 0; i < sn; i++ {
+		addr := elm.MustSignAddresses[i]
+		if addr.Equal(sgaddr) {
+			istok = true
+			elm.MustSigns[i] = sign
+		}
+	}
+	if istok == false {
+		return fmt.Errorf(" sign address %s not find in must list.", sgaddr.ToReadable())
+	}
+	return nil
+}
+
 // 检查所有签名
 func (elm *OffChainFormPaymentChannelTransfer) CheckMustAddressAndSigns() error {
 	var e error
@@ -425,4 +490,43 @@ func (elm *OffChainFormPaymentChannelTransfer) CheckMustAddressAndSigns() error 
 
 	// 全部签名验证成功
 	return nil
+}
+
+/*******************************************/
+
+// 通道链支付票据集合
+type ChannelPayBillAssemble struct {
+	// 对账票据表
+	ProveBodys *ChannelPayProveBodyList
+	// 支付签名票据
+	ChainPayment *OffChainFormPaymentChannelTransfer
+}
+
+func (c ChannelPayBillAssemble) Size() uint32 {
+	return c.ProveBodys.Size() + c.ChainPayment.Size()
+}
+
+func (c ChannelPayBillAssemble) Serialize() ([]byte, error) {
+	var buffer bytes.Buffer
+	var bt1, _ = c.ProveBodys.Serialize()
+	buffer.Write(bt1)
+	var bt2, _ = c.ChainPayment.Serialize()
+	buffer.Write(bt2)
+	return buffer.Bytes(), nil
+}
+
+func (c *ChannelPayBillAssemble) Parse(buf []byte, seek uint32) (uint32, error) {
+	var e error
+	// 通道
+	c.ProveBodys = &ChannelPayProveBodyList{}
+	seek, e = c.ProveBodys.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	c.ChainPayment = &OffChainFormPaymentChannelTransfer{}
+	seek, e = c.ChainPayment.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	return seek, nil
 }

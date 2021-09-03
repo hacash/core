@@ -118,6 +118,10 @@ func (c CrossNodeSimplePaymentReconciliationBill) ChannelReuseVersionAndAutoNumb
 		uint64(c.ChannelChainTransferTargetProveBody.BillAutoNumber)
 }
 
+func (c CrossNodeSimplePaymentReconciliationBill) ChannelAutoNumber() uint64 {
+	return uint64(c.ChannelChainTransferTargetProveBody.BillAutoNumber)
+}
+
 // 检查数据可用性
 func (c CrossNodeSimplePaymentReconciliationBill) CheckValidity() error {
 	var checkIsOk bool = false

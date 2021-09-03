@@ -3,6 +3,7 @@ package fields
 import (
 	"bytes"
 	"fmt"
+	"github.com/hacash/core/account"
 )
 
 //////////////////////////////////////////////////////////////////
@@ -31,6 +32,129 @@ func (this *Sign) Parse(buf []byte, seek uint32) (uint32, error) {
 
 func (this *Sign) Size() uint32 {
 	return this.PublicKey.Size() + this.Signature.Size()
+}
+
+func (this *Sign) GetAddress() Address {
+	return account.NewAddressFromPublicKeyV0(this.PublicKey)
+}
+
+func CreateEmptySign() Sign {
+	b1 := bytes.Repeat([]byte{0}, 33)
+	b2 := bytes.Repeat([]byte{0}, 64)
+	return Sign{
+		PublicKey: b1,
+		Signature: b2,
+	}
+}
+
+/********************************/
+
+type SignListMax255 struct {
+	Count VarUint1
+	Signs []Sign
+}
+
+func CreateEmptySignListMax255() *SignListMax255 {
+	return &SignListMax255{
+		Count: 0,
+		Signs: make([]Sign, 0),
+	}
+}
+
+func (this *SignListMax255) Append(sign Sign) {
+	this.Count += 1
+	this.Signs = append(this.Signs, sign)
+}
+
+func (this *SignListMax255) Serialize() ([]byte, error) {
+	var buffer bytes.Buffer
+	bt, _ := this.Count.Serialize()
+	buffer.Write(bt)
+	for i := 0; i < int(this.Count); i++ {
+		bt, _ := this.Signs[i].Serialize()
+		buffer.Write(bt)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (this *SignListMax255) Parse(buf []byte, seek uint32) (uint32, error) {
+	var e error = nil
+	if seek >= uint32(len(buf)) {
+		return 0, fmt.Errorf("[Sign.Parse] seek out of buf len.")
+	}
+	this.Count = VarUint1(0)
+	seek, e = this.Count.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	if this.Count == 0 {
+		return seek, nil // 列表为空
+	}
+	this.Signs = make([]Sign, int(this.Count))
+	for i := 0; i < int(this.Count); i++ {
+		this.Signs[i] = Sign{}
+		seek, e = this.Signs[i].Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
+	}
+	return seek, nil
+}
+
+func (this *SignListMax255) Size() uint32 {
+	size := this.Count.Size()
+	for i := 0; i < int(this.Count); i++ {
+		size += this.Signs[i].Size()
+	}
+	return size
+}
+
+type SignListMax65535 struct {
+	Count VarUint2
+	Signs []Sign
+}
+
+func (this *SignListMax65535) Serialize() ([]byte, error) {
+	var buffer bytes.Buffer
+	bt, _ := this.Count.Serialize()
+	buffer.Write(bt)
+	for i := 0; i < int(this.Count); i++ {
+		bt, _ := this.Signs[i].Serialize()
+		buffer.Write(bt)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (this *SignListMax65535) Parse(buf []byte, seek uint32) (uint32, error) {
+	var e error = nil
+	if seek >= uint32(len(buf)) {
+		return 0, fmt.Errorf("[Sign.Parse] seek out of buf len.")
+	}
+	this.Count = VarUint2(0)
+	seek, e = this.Count.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	if this.Count == 0 {
+		return seek, nil // 列表为空
+	}
+	this.Signs = make([]Sign, int(this.Count))
+	for i := 0; i < int(this.Count); i++ {
+		this.Signs[i] = Sign{}
+		seek, e = this.Signs[i].Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
+	}
+	return seek, nil
+}
+
+func (this *SignListMax65535) Size() uint32 {
+	size := this.Count.Size()
+	for i := 0; i < int(this.Count); i++ {
+		size += this.Signs[i].Size()
+	}
+	return size
 }
 
 //////////////////////////////////////////////////////////////////
