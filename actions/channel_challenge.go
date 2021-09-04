@@ -348,22 +348,25 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 	}
 
 	// 检查通道哈希是否正确
-	prefixstuff := bytes.NewBuffer(nil)
-	prstfbts, e := act.ChannelChainTransferData.SerializeForPrefixSignStuff()
-	if e != nil {
-		return e
-	}
-	prefixstuff.Write(prstfbts)
-	bodystuff, e := act.ChannelChainTransferTargetProveBody.Serialize()
-	if e != nil {
-		return e
-	}
-	prefixstuff.Write(bodystuff)
-	// 计算哈希值
-	objhx := fields.CalculateHash(prefixstuff.Bytes())
-	hxhalf := objhx.GetHalfChecker()
-	var isHashCheckOk = false
+	/*
+			prefixstuff := bytes.NewBuffer(nil)
+		prstfbts, e := act.ChannelChainTransferData.SerializeForPrefixSignStuff()
+		if e != nil {
+			return e
+		}
+		prefixstuff.Write(prstfbts)
+		bodystuff, e := act.ChannelChainTransferTargetProveBody.Serialize()
+		if e != nil {
+			return e
+		}
+		prefixstuff.Write(bodystuff)
+		// 计算哈希值
+		objhx := fields.CalculateHash(prefixstuff.Bytes())
+		hxhalf := objhx.GetHalfChecker()
+	*/
+	hxhalf := act.ChannelChainTransferTargetProveBody.SignStuffHashHalfChecker()
 	// 检查哈希值是否包含在列表内
+	var isHashCheckOk = false
 	for _, hxckr := range act.ChannelChainTransferData.ChannelTransferProveHashHalfCheckers {
 		if hxhalf.Equal(hxckr) {
 			isHashCheckOk = true
