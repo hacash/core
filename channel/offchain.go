@@ -11,9 +11,11 @@ import (
 // 实时对账单接口
 type PaymentChannelRealtimeReconciliationInterface interface {
 	GetChannelId() fields.Bytes16
-	GetLeftAmount() fields.Amount                                                                // 左侧实时金额
-	GetRightAmount() fields.Amount                                                               // 右侧实时金额
-	GetChannelReuseVersion() fields.VarUint4                                                     // 通道重用序号
+	GetLeftAddress() fields.Address
+	GetLeftBalance() fields.Amount // 左侧实时金额
+	GetRightAddress() fields.Address
+	GetRightBalance() fields.Amount                                                              // 右侧实时金额
+	GetReuseVersion() fields.VarUint4                                                            // 通道重用序号
 	GetBillAutoNumber() fields.VarUint8                                                          // 对账序号
 	CheckAddressAndSign(state interfaces.ChainStateOperation, laddr, raddr fields.Address) error // 检查地址和签名
 }
@@ -32,34 +34,37 @@ const (
 type ChannelChainTransferProveBodyInfo struct {
 	ChannelId fields.Bytes16 // 通道id
 
-	ChannelReuseVersion fields.VarUint4 // 通道重用序号
-	BillAutoNumber      fields.VarUint8 // 通道账单流水序号
+	ReuseVersion   fields.VarUint4 // 通道重用序号
+	BillAutoNumber fields.VarUint8 // 通道账单流水序号
 
-	Direction fields.VarUint1 // 资金流动方向： 1.左侧支付给右侧； 2.右侧付给左侧
-	PayAmount fields.Amount   // 支付金额，不能为负
+	PayDirection fields.VarUint1 // 资金流动方向： 1.左侧支付给右侧； 2.右侧付给左侧
+	PayAmount    fields.Amount   // 支付金额，不能为负
 
-	Mode fields.VarUint1 // 模式，普通模式、快速转账模式等等
+	LeftAddress  fields.Address // 左侧地址
+	RightAddress fields.Address // 右侧地址
 
-	// Mode = 1 // 普通模式（实时对账）可以上链仲裁，但有负值是则为信用透支额度，债权方仅可仲裁无信用部分，即债务清除
-	LeftAmount  fields.Amount // 左侧实时金额
-	RightAmount fields.Amount // 右侧实时金额
-
-	// Mode = 2 快速转账模式，则没有对账字段
-
+	LeftBalance  fields.Amount // 左侧实时金额
+	RightBalance fields.Amount // 右侧实时金额
 }
 
 // interface
 func (e *ChannelChainTransferProveBodyInfo) GetChannelId() fields.Bytes16 {
 	return e.ChannelId
 }
-func (e *ChannelChainTransferProveBodyInfo) GetLeftAmount() fields.Amount {
-	return e.LeftAmount
+func (e *ChannelChainTransferProveBodyInfo) GetLeftBalance() fields.Amount {
+	return e.LeftBalance
 }
-func (e *ChannelChainTransferProveBodyInfo) GetRightAmount() fields.Amount {
-	return e.RightAmount
+func (e *ChannelChainTransferProveBodyInfo) GetLeftAddress() fields.Address {
+	return e.LeftAddress
 }
-func (e *ChannelChainTransferProveBodyInfo) GetChannelReuseVersion() fields.VarUint4 {
-	return e.ChannelReuseVersion
+func (e *ChannelChainTransferProveBodyInfo) GetRightAddress() fields.Address {
+	return e.RightAddress
+}
+func (e *ChannelChainTransferProveBodyInfo) GetRightBalance() fields.Amount {
+	return e.RightBalance
+}
+func (e *ChannelChainTransferProveBodyInfo) GetReuseVersion() fields.VarUint4 {
+	return e.ReuseVersion
 }
 func (e *ChannelChainTransferProveBodyInfo) GetBillAutoNumber() fields.VarUint8 {
 	return e.BillAutoNumber
@@ -67,16 +72,14 @@ func (e *ChannelChainTransferProveBodyInfo) GetBillAutoNumber() fields.VarUint8 
 
 func (elm *ChannelChainTransferProveBodyInfo) Size() uint32 {
 	size := elm.ChannelId.Size() +
-		elm.Mode.Size()
-	if elm.Mode == ChannelTransferProveBodyPayModeNormal {
-		size += elm.LeftAmount.Size() +
-			elm.RightAmount.Size()
-	} else if elm.Mode == ChannelTransferProveBodyPayModeFastPay {
-		size += elm.Direction.Size() +
-			elm.PayAmount.Size()
-	}
-	size += elm.ChannelReuseVersion.Size() +
-		elm.BillAutoNumber.Size()
+		elm.ReuseVersion.Size() +
+		elm.BillAutoNumber.Size() +
+		elm.PayDirection.Size() +
+		elm.PayAmount.Size() +
+		elm.LeftAddress.Size() +
+		elm.RightAddress.Size() +
+		elm.LeftBalance.Size() +
+		elm.RightBalance.Size()
 	// ok
 	return size
 }
@@ -86,23 +89,22 @@ func (elm *ChannelChainTransferProveBodyInfo) Serialize() ([]byte, error) {
 	var buffer bytes.Buffer
 	bt, _ = elm.ChannelId.Serialize()
 	buffer.Write(bt)
-	bt, _ = elm.ChannelReuseVersion.Serialize()
+	bt, _ = elm.ReuseVersion.Serialize()
 	buffer.Write(bt)
 	bt, _ = elm.BillAutoNumber.Serialize()
 	buffer.Write(bt)
-	bt, _ = elm.Direction.Serialize()
+	bt, _ = elm.PayDirection.Serialize()
 	buffer.Write(bt)
 	bt, _ = elm.PayAmount.Serialize()
 	buffer.Write(bt)
-	bt, _ = elm.Mode.Serialize()
+	bt, _ = elm.LeftAddress.Serialize()
 	buffer.Write(bt)
-	// 实时对账
-	if elm.Mode == ChannelTransferProveBodyPayModeNormal {
-		bt, _ = elm.LeftAmount.Serialize()
-		buffer.Write(bt)
-		bt, _ = elm.RightAmount.Serialize()
-		buffer.Write(bt)
-	}
+	bt, _ = elm.RightAddress.Serialize()
+	buffer.Write(bt)
+	bt, _ = elm.LeftBalance.Serialize()
+	buffer.Write(bt)
+	bt, _ = elm.RightBalance.Serialize()
+	buffer.Write(bt)
 	return buffer.Bytes(), nil
 }
 
@@ -112,7 +114,7 @@ func (elm *ChannelChainTransferProveBodyInfo) Parse(buf []byte, seek uint32) (ui
 	if e != nil {
 		return 0, e
 	}
-	seek, e = elm.ChannelReuseVersion.Parse(buf, seek)
+	seek, e = elm.ReuseVersion.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -120,7 +122,7 @@ func (elm *ChannelChainTransferProveBodyInfo) Parse(buf []byte, seek uint32) (ui
 	if e != nil {
 		return 0, e
 	}
-	seek, e = elm.Direction.Parse(buf, seek)
+	seek, e = elm.PayDirection.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -128,29 +130,31 @@ func (elm *ChannelChainTransferProveBodyInfo) Parse(buf []byte, seek uint32) (ui
 	if e != nil {
 		return 0, e
 	}
-	seek, e = elm.Mode.Parse(buf, seek)
+	seek, e = elm.LeftAddress.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
-	if elm.Mode == ChannelTransferProveBodyPayModeNormal {
-		seek, e = elm.LeftAmount.Parse(buf, seek)
-		if e != nil {
-			return 0, e
-		}
-		seek, e = elm.RightAmount.Parse(buf, seek)
-		if e != nil {
-			return 0, e
-		}
+	seek, e = elm.RightAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.LeftBalance.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.RightBalance.Parse(buf, seek)
+	if e != nil {
+		return 0, e
 	}
 	return seek, nil
 }
 
-func (elm *ChannelChainTransferProveBodyInfo) SignStuff() []byte {
+func (elm *ChannelChainTransferProveBodyInfo) GetSignStuff() []byte {
 	var conbt, _ = elm.Serialize() // 数据体
 	return conbt                   // 哈希
 }
-func (elm *ChannelChainTransferProveBodyInfo) SignStuffHashHalfChecker() fields.HashHalfChecker {
-	var conbt = elm.SignStuff()                         // 数据体
+func (elm *ChannelChainTransferProveBodyInfo) GetSignStuffHashHalfChecker() fields.HashHalfChecker {
+	var conbt = elm.GetSignStuff()                      // 数据体
 	return fields.CalculateHash(conbt).GetHalfChecker() // 哈希检测
 }
 
@@ -211,8 +215,9 @@ func (c *ChannelPayProveBodyList) Parse(buf []byte, seek uint32) (uint32, error)
 
 // 通道实时对账（链下签署）
 type OffChainFormPaymentChannelRealtimeReconciliation struct {
+	Timestamp fields.BlockTxTimestamp // 对账时间戳
+
 	TranferProveBody ChannelChainTransferProveBodyInfo
-	Timestamp        fields.BlockTxTimestamp // 对账时间戳
 
 	// 两侧签名
 	LeftSign  fields.Sign // 左侧地址对账签名
@@ -223,30 +228,36 @@ type OffChainFormPaymentChannelRealtimeReconciliation struct {
 func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetChannelId() fields.Bytes16 {
 	return e.TranferProveBody.ChannelId
 }
-func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetLeftAmount() fields.Amount {
-	return e.TranferProveBody.LeftAmount
+func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetLeftAddress() fields.Address {
+	return e.TranferProveBody.LeftAddress
 }
-func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetRightAmount() fields.Amount {
-	return e.TranferProveBody.RightAmount
+func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetLeftBalance() fields.Amount {
+	return e.TranferProveBody.LeftBalance
 }
-func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetChannelReuseVersion() fields.VarUint4 {
-	return e.TranferProveBody.ChannelReuseVersion
+func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetRightAddress() fields.Address {
+	return e.TranferProveBody.RightAddress
+}
+func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetRightBalance() fields.Amount {
+	return e.TranferProveBody.RightBalance
+}
+func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetReuseVersion() fields.VarUint4 {
+	return e.TranferProveBody.ReuseVersion
 }
 func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetBillAutoNumber() fields.VarUint8 {
 	return e.TranferProveBody.BillAutoNumber
 }
 
 func (elm *OffChainFormPaymentChannelRealtimeReconciliation) Size() uint32 {
-	return elm.TranferProveBody.Size() +
-		elm.Timestamp.Size() +
+	return elm.Timestamp.Size() +
+		elm.TranferProveBody.Size() +
 		elm.LeftSign.Size() +
 		elm.RightSign.Size()
 }
 
 func (elm *OffChainFormPaymentChannelRealtimeReconciliation) SerializeNoSign() ([]byte, error) {
 	var buffer bytes.Buffer
-	var bt1, _ = elm.TranferProveBody.Serialize()
-	var bt2, _ = elm.Timestamp.Serialize()
+	var bt1, _ = elm.Timestamp.Serialize()
+	var bt2, _ = elm.TranferProveBody.Serialize()
 	buffer.Write(bt1)
 	buffer.Write(bt2)
 	return buffer.Bytes(), nil
@@ -271,11 +282,11 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) SignStuffHash() fie
 
 func (elm *OffChainFormPaymentChannelRealtimeReconciliation) Parse(buf []byte, seek uint32) (uint32, error) {
 	var e error
-	seek, e = elm.TranferProveBody.Parse(buf, seek)
+	seek, e = elm.Timestamp.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
-	seek, e = elm.Timestamp.Parse(buf, seek)
+	seek, e = elm.TranferProveBody.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -379,7 +390,7 @@ func (elm *OffChainFormPaymentChannelTransfer) SerializeNoSign() ([]byte, error)
 	return buffer.Bytes(), nil
 }
 
-func (elm *OffChainFormPaymentChannelTransfer) SignStuffHash() fields.Hash {
+func (elm *OffChainFormPaymentChannelTransfer) GetSignStuffHash() fields.Hash {
 	var conbt, _ = elm.SerializeNoSign() // 数据体
 	return fields.CalculateHash(conbt)   // 哈希
 }
@@ -464,7 +475,7 @@ func (elm *OffChainFormPaymentChannelTransfer) FillSignByPosition(sign fields.Si
 // 签名并填充至指定位置
 func (elm *OffChainFormPaymentChannelTransfer) DoSignFillPosition(acc *account.Account) (*fields.Sign, error) {
 	// 计算哈希
-	hash := elm.SignStuffHash()
+	hash := elm.GetSignStuffHash()
 	// 签名
 	signature, e2 := acc.Private.Sign(hash)
 	if e2 != nil {
@@ -491,6 +502,22 @@ func (elm *OffChainFormPaymentChannelTransfer) DoSignFillPosition(acc *account.A
 	return &sigObj, nil
 }
 
+// 检查某一个地址是否签名
+func (elm *OffChainFormPaymentChannelTransfer) CheckOneAddressSign(addr fields.Address) error {
+	hx := elm.GetSignStuffHash()
+	for _, v := range elm.MustSigns {
+		if v.GetAddress().Equal(addr) {
+			ok, _ := account.CheckSignByHash32(hx, v.PublicKey, v.Signature)
+			if !ok {
+				return fmt.Errorf("address %s verify signature fail.", addr.ToReadable())
+			} else {
+				return nil // 验证成功
+			}
+		}
+	}
+	return fmt.Errorf("address %s signature not find.", addr.ToReadable())
+}
+
 // 检查所有签名
 func (elm *OffChainFormPaymentChannelTransfer) CheckMustAddressAndSigns() error {
 	var e error
@@ -504,10 +531,10 @@ func (elm *OffChainFormPaymentChannelTransfer) CheckMustAddressAndSigns() error 
 	// 检查数量
 	sn := int(elm.MustSignCount)
 	if sn < 2 || sn > 200 {
-		fmt.Errorf("MustSignCount error.")
+		return fmt.Errorf("MustSignCount error.")
 	}
 	if sn != len(elm.MustSignAddresses) || sn != len(elm.MustSigns) {
-		fmt.Errorf("Addresses or Signs length error.")
+		return fmt.Errorf("Addresses or Signs length error.")
 	}
 
 	// 签名按地址排列，检查所有地址和签名是否匹配
@@ -523,7 +550,7 @@ func (elm *OffChainFormPaymentChannelTransfer) CheckMustAddressAndSigns() error 
 		// 检查签名
 		ok, _ := account.CheckSignByHash32(conhx, sign.PublicKey, sign.Signature)
 		if !ok {
-			return fmt.Errorf("Left account %s verify signature fail.", addr.ToReadable())
+			return fmt.Errorf("account %s verify signature fail.", addr.ToReadable())
 		}
 	}
 

@@ -205,12 +205,6 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 	}
 
 	// 快速模式无法用于挑战或仲裁，只有普通模式可以
-	if act.Reconciliation.TranferProveBody.Mode != channel.ChannelTransferProveBodyPayModeNormal {
-		// 快速通道模式不能用来发起挑战和仲裁
-		// 只有普通模式才可以
-		return fmt.Errorf("ChannelTransferProveBody Mode is not Normal.")
-	}
-
 	channelId := act.Reconciliation.TranferProveBody.ChannelId
 
 	// 查询通道
@@ -329,12 +323,7 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 快速通道模式不能用来发起挑战和仲裁
-	// 只有普通模式才可以
-	if act.ChannelChainTransferTargetProveBody.Mode != channel.ChannelTransferProveBodyPayModeNormal {
-		return fmt.Errorf("ChannelTransferProveBody Mode is not Normal.")
-	}
-
+	// 快速通道模式不能用来发起挑战和仲裁，只有普通模式才可以
 	// 查询通道
 	paychan := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
 	if paychan == nil {
@@ -364,7 +353,7 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 		objhx := fields.CalculateHash(prefixstuff.Bytes())
 		hxhalf := objhx.GetHalfChecker()
 	*/
-	hxhalf := act.ChannelChainTransferTargetProveBody.SignStuffHashHalfChecker()
+	hxhalf := act.ChannelChainTransferTargetProveBody.GetSignStuffHashHalfChecker()
 	// 检查哈希值是否包含在列表内
 	var isHashCheckOk = false
 	for _, hxckr := range act.ChannelChainTransferData.ChannelTransferProveHashHalfCheckers {
@@ -484,11 +473,7 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 快速通道模式不能用来发起挑战和仲裁
-	// 只有普通模式才可以
-	if act.ChannelChainTransferTargetProveBody.Mode != channel.ChannelTransferProveBodyPayModeNormal {
-		return fmt.Errorf("ChannelTransferProveBody Mode is not Normal.")
-	}
+	// 快速通道模式不能用来发起挑战和仲裁，只有普通模式才可以
 
 	// 查询通道
 	paychan := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
@@ -577,15 +562,15 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interf
 		return e20
 	}
 	// 检查对账单资金数额和重用版本
-	channelReuseVersion := obj.GetChannelReuseVersion()
+	channelReuseVersion := obj.GetReuseVersion()
 	billAutoNumber := obj.GetBillAutoNumber()
 	if channelReuseVersion != paychan.ReuseVersion {
 		return fmt.Errorf("Payment Channel ReuseVersion is not match, need <%d> but got <%d>.",
 			paychan.ReuseVersion, channelReuseVersion)
 	}
 	// 检查对账单资金数额和重用版本
-	objlamt := obj.GetLeftAmount()
-	objramt := obj.GetRightAmount()
+	objlamt := obj.GetLeftBalance()
+	objramt := obj.GetRightBalance()
 	billTotalAmt, e21 := objlamt.Add(&objramt)
 	if e21 != nil {
 		return e21

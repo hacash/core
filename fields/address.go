@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	base58check "github.com/hacash/core/account"
+	"sort"
 )
 
 const (
@@ -59,4 +60,52 @@ func (this Address) Copy() Address {
 	addr := make([]byte, AddressSize)
 	copy(addr, this)
 	return addr
+}
+
+////////////////////////////////////////////////////////////
+
+// 字母顺序排序
+type AddressListByCharacterSort []Address
+
+func (n AddressListByCharacterSort) Len() int {
+	return len(n)
+}
+func (n AddressListByCharacterSort) Less(i, j int) bool {
+	a, b := n[i], n[j]
+	for k := 0; k < AddressSize; k++ {
+		if a[k] < b[k] {
+			return true // 字符排序
+		}
+	}
+	return false
+}
+func (n AddressListByCharacterSort) Swap(i, j int) {
+	n[i], n[j] = n[j], n[i]
+}
+
+// 去重并排序地址列表
+func CleanAddressListByCharacterSort(addrs []Address, addradds []Address) (VarUint1, []Address) {
+	// 去重
+	addrsclear := make([]Address, 0)
+	repeats := map[string]bool{}
+	if addrs != nil {
+		for _, v := range addrs {
+			if _, hav := repeats[string(v)]; hav == false {
+				addrsclear = append(addrsclear, v)
+			}
+			repeats[string(v)] = true
+		}
+	}
+	// 添加
+	if addradds != nil {
+		for _, v := range addradds {
+			if _, hav := repeats[string(v)]; hav == false {
+				addrsclear = append(addrsclear, v)
+			}
+			repeats[string(v)] = true
+		}
+	}
+	// 排序
+	sort.Sort(AddressListByCharacterSort(addrsclear))
+	return VarUint1(len(addrsclear)), addrsclear
 }

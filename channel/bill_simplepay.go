@@ -94,11 +94,11 @@ func (c CrossNodeSimplePaymentReconciliationBill) ChannelId() fields.Bytes16 {
 }
 
 func (c CrossNodeSimplePaymentReconciliationBill) LeftAmount() fields.Amount {
-	return c.ChannelChainTransferTargetProveBody.LeftAmount
+	return c.ChannelChainTransferTargetProveBody.LeftBalance
 }
 
 func (c CrossNodeSimplePaymentReconciliationBill) RightAmount() fields.Amount {
-	return c.ChannelChainTransferTargetProveBody.RightAmount
+	return c.ChannelChainTransferTargetProveBody.RightBalance
 }
 
 func (c CrossNodeSimplePaymentReconciliationBill) LeftAddress() fields.Address {
@@ -114,7 +114,7 @@ func (c CrossNodeSimplePaymentReconciliationBill) Timestamp() uint64 {
 }
 
 func (c CrossNodeSimplePaymentReconciliationBill) ChannelReuseVersionAndAutoNumber() (uint32, uint64) {
-	return uint32(c.ChannelChainTransferTargetProveBody.ChannelReuseVersion),
+	return uint32(c.ChannelChainTransferTargetProveBody.ReuseVersion),
 		uint64(c.ChannelChainTransferTargetProveBody.BillAutoNumber)
 }
 
@@ -125,7 +125,7 @@ func (c CrossNodeSimplePaymentReconciliationBill) ChannelAutoNumber() uint64 {
 // 检查数据可用性
 func (c CrossNodeSimplePaymentReconciliationBill) CheckValidity() error {
 	var checkIsOk bool = false
-	hxchecker := c.ChannelChainTransferTargetProveBody.SignStuffHashHalfChecker()
+	hxchecker := c.ChannelChainTransferTargetProveBody.GetSignStuffHashHalfChecker()
 	cks := c.ChannelChainTransferData.ChannelTransferProveHashHalfCheckers
 	for _, v := range cks {
 		if v.Equal(hxchecker) {
@@ -137,10 +137,6 @@ func (c CrossNodeSimplePaymentReconciliationBill) CheckValidity() error {
 	if checkIsOk == false {
 		return fmt.Errorf("ProveBody's HashHalfChecker <%s> not included in ChannelTransferProveHashHalfCheckers.",
 			hxchecker.ToHex())
-	}
-	// 对账模式
-	if c.ChannelChainTransferTargetProveBody.Mode != ChannelTransferProveBodyPayModeNormal {
-		return fmt.Errorf("ProveBody's pay Mode is not Normal.")
 	}
 	// 检查成功
 	return nil
