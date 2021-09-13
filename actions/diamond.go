@@ -27,6 +27,9 @@ const DiamondCreateBurning90PercentTxFeesAboveNumber uint32 = 30000
 // 在此时刚好一共销毁 10000.9506 枚HAC
 const DiamondStatisticsAverageBiddingBurningPriceAboveNumber uint32 = 32000
 
+// 第 40001 个钻石，开始用 sha3_hash(diamondreshash, blockhash) 决定钻石形状和配色
+const DiamondResourceHashAndContainBlockHashDecideVisualGeneAboveNumber uint32 = 40000
+
 // 挖出钻石
 type Action_4_DiamondCreate struct {
 	Diamond  fields.DiamondName   // 钻石字面量 WTYUIAHXVMEKBSZN
@@ -139,6 +142,11 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 
 	//区块高度
 	blkhei := state.GetPendingBlockHeight()
+	blkhash := state.GetPendingBlockHash()
+	diamondVisualUseContainBlockHash := blkhash
+	if diamondVisualUseContainBlockHash == nil || len(diamondVisualUseContainBlockHash) != 32 {
+		diamondVisualUseContainBlockHash = bytes.Repeat([]byte{0}, 32)
+	}
 
 	// 是否必须全面检查
 	var mustDoAllCheck = true
@@ -232,7 +240,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	// 设置矿工状态
 	// 标记本区块已经包含钻石
 	// 存储对象，计算视觉基因
-	visualGene, e15 := calculateVisualGeneByDiamondStuffHash(diamondResHash, diamondStr)
+	visualGene, e15 := calculateVisualGeneByDiamondStuffHash(uint32(act.Number), diamondResHash, diamondStr, diamondVisualUseContainBlockHash)
 	if e15 != nil {
 		return e15
 	}
@@ -364,13 +372,23 @@ func (act *Action_4_DiamondCreate) IsBurning90PersentTxFees() bool {
 ///////////////////////////////////////////////////////////////
 
 // 计算钻石的可视化基因
-func calculateVisualGeneByDiamondStuffHash(stuffhx []byte, diamondstr string) (fields.Bytes10, error) {
-	if len(stuffhx) != 32 {
-		return nil, fmt.Errorf("stuffhx length must 32")
+func calculateVisualGeneByDiamondStuffHash(number uint32, stuffhx []byte, diamondstr string, peddingblkhash []byte) (fields.Bytes10, error) {
+	if len(stuffhx) != 32 || len(peddingblkhash) != 32 {
+		return nil, fmt.Errorf("stuffhx and peddingblkhash length must 32")
 	}
 	if len(diamondstr) != 16 {
 		return nil, fmt.Errorf("diamondstr length must 16")
 	}
+	vgenehash := make([]byte, 32)
+	copy(vgenehash, stuffhx)
+	if number > DiamondResourceHashAndContainBlockHashDecideVisualGeneAboveNumber {
+		// 第 40001 个钻石，开始用 sha3_hash(diamondreshash, blockhash) 决定钻石形状和配色
+		vgenestuff := bytes.NewBuffer(stuffhx)
+		vgenestuff.Write(peddingblkhash) // 开盲盒
+		vgenehash = fields.CalculateHash(vgenestuff.Bytes())
+		// 跟区块哈希一样是随机的，需要等待钻石确认的那一刻才能知晓形状和配色
+	}
+
 	genehexstr := make([]string, 18)
 	// 前6位
 	k := 0
@@ -416,7 +434,7 @@ func calculateVisualGeneByDiamondStuffHash(stuffhx []byte, diamondstr string) (f
 	}
 	// 后11位
 	for i := 20; i < 31; i++ {
-		x := stuffhx[i]
+		x := vgenehash[i]
 		x = x % 16
 		e := "0"
 		switch x {
@@ -463,7 +481,7 @@ func calculateVisualGeneByDiamondStuffHash(stuffhx []byte, diamondstr string) (f
 		return nil, e1
 	}
 	// 哈希的最后一位作为形状选择
-	resbuf := bytes.NewBuffer([]byte{stuffhx[31]})
+	resbuf := bytes.NewBuffer([]byte{vgenehash[31]})
 	resbuf.Write(resbts) // 颜色选择器
 	return resbuf.Bytes(), nil
 }
