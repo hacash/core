@@ -8,16 +8,22 @@ import (
 	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/transactions"
 	"time"
+	"sync"
 )
 
 var (
 	genesisBlock interfaces.Block = nil
 )
 
+var genesisblockLock sync.RWMutex
+
 /**
  * 创世区块
  */
 func GetGenesisBlock() interfaces.Block {
+	genesisblockLock.Lock()
+	defer genesisblockLock.Lock()
+
 	if genesisBlock != nil {
 		return genesisBlock
 	}
