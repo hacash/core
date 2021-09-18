@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"time"
+	"sync"
 
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
@@ -33,6 +34,8 @@ type Block_v1 struct {
 
 	// mark data
 	originMark string // 原产地标志: "", "miner", "discover"
+
+	insertLock sync.RWMutex
 }
 
 func NewEmptyBlock_v1(prevBlockHead interfaces.Block) *Block_v1 {
@@ -47,6 +50,7 @@ func NewEmptyBlock_v1(prevBlockHead interfaces.Block) *Block_v1 {
 		Difficulty:       0,
 		WitnessStage:     0,
 		originMark:       "",
+		insertLock:       sync.RWMutex{},
 	}
 	if prevBlockHead != nil {
 		empty.PrevHash = prevBlockHead.Hash()
@@ -315,7 +319,19 @@ func (block *Block_v1) Size() uint32 {
 }
 
 // HASH
+// 关于函数 Hash() 中实现的锁的注意事项
+// 获得的锁基于对 block.HashFresh() 的调用将始终从 Hash() 进行的假设
+// 如果以后的代码通过直接调用 block.HashFresh() 来改变这种关系，
+// 这样的更改将需要更改锁以正确序列化对变量 block.hash 的访问
+// =-=-=-=-=-
+// Note regarding lock implemented in function Hash()
+// The lock obtained works on the assumption that the call to block.HashFresh() will always be made from Hash()
+// If future code changes this relationship by calling block.HashFresh() directly,
+// such a change will necessitate that the locks be changed in order to properly searialize access to variable block.hash
+
 func (block *Block_v1) Hash() fields.Hash {
+	block.insertLock.Lock()
+	defer block.insertLock.Unlock()
 	if block.hash == nil {
 		block.hash = block.HashFresh()
 	}
