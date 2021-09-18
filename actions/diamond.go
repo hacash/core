@@ -387,7 +387,9 @@ func calculateVisualGeneByDiamondStuffHash(number uint32, stuffhx []byte, diamon
 		vgenestuff.Write(peddingblkhash) // 开盲盒
 		vgenehash = fields.CalculateHash(vgenestuff.Bytes())
 		// 跟区块哈希一样是随机的，需要等待钻石确认的那一刻才能知晓形状和配色
+		// fmt.Println(hex.EncodeToString(vgenestuff.Bytes()))
 	}
+	// fmt.Printf("Calculate Visual Gene #%d, vgenehash: %s, stuffhx: %s, peddingblkhash: %s\n", number, hex.EncodeToString(vgenehash), hex.EncodeToString(stuffhx), hex.EncodeToString(peddingblkhash))
 
 	genehexstr := make([]string, 18)
 	// 前6位

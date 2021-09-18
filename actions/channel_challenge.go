@@ -142,7 +142,7 @@ type Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeReconcil
 	// 主张者地址
 	AssertAddress fields.Address
 	// 对账单
-	Reconciliation channel.OffChainFormPaymentChannelRealtimeReconciliation
+	Reconciliation channel.OnChainArbitrationBasisReconciliation
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -205,7 +205,7 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 	}
 
 	// 快速模式无法用于挑战或仲裁，只有普通模式可以
-	channelId := act.Reconciliation.TranferProveBody.ChannelId
+	channelId := act.Reconciliation.GetChannelId()
 
 	// 查询通道
 	paychan := state.Channel(channelId)
@@ -219,7 +219,7 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 
 func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeReconciliation) RecoverChainState(state interfaces.ChainStateOperation) error {
 
-	channelId := act.Reconciliation.TranferProveBody.ChannelId
+	channelId := act.Reconciliation.GetChannelId()
 
 	// 查询通道
 	paychan := state.Channel(channelId)
@@ -542,7 +542,7 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 //////////////////////////////////////////////////////////////
 
 // 检查通道进入挑战期或者最终仲裁
-func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interfaces.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj channel.PaymentChannelRealtimeReconciliationInterface) error {
+func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interfaces.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj channel.OnChainChannelPaymentArbitrationReconciliationBasis) error {
 
 	channelId := obj.GetChannelId()
 
@@ -557,14 +557,14 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interf
 		return fmt.Errorf("Payment Channel AssertAddress is not match left or right.")
 	}
 	// 检查两个账户地址签名，双方都检查
-	e20 := obj.CheckAddressAndSign(state, paychan.LeftAddress, paychan.RightAddress)
+	e20 := obj.CheckAddressAndSign(paychan.LeftAddress, paychan.RightAddress)
 	if e20 != nil {
 		return e20
 	}
 	// 检查对账单资金数额和重用版本
 	channelReuseVersion := obj.GetReuseVersion()
-	billAutoNumber := obj.GetBillAutoNumber()
-	if channelReuseVersion != paychan.ReuseVersion {
+	billAutoNumber := obj.GetAutoNumber()
+	if channelReuseVersion != uint32(paychan.ReuseVersion) {
 		return fmt.Errorf("Payment Channel ReuseVersion is not match, need <%d> but got <%d>.",
 			paychan.ReuseVersion, channelReuseVersion)
 	}
@@ -603,7 +603,7 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interf
 	} else if paychan.IsChallenging() {
 
 		// 判断仲裁，是否夺取对方资金
-		if billAutoNumber <= paychan.AssertBillAutoNumber {
+		if billAutoNumber <= uint64(paychan.AssertBillAutoNumber) {
 			// 账单流水号不满足（必须大于等待挑战的流水号）
 			return fmt.Errorf("Payment Channel BillAutoNumber must more than %d.", paychan.AssertBillAutoNumber)
 		}
@@ -626,7 +626,7 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interf
 }
 
 // 挑战期或最终仲裁回退
-func checkChannelGotoChallegingOrFinalDistributionRecoverChainState(state interfaces.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj channel.PaymentChannelRealtimeReconciliationInterface) error {
+func checkChannelGotoChallegingOrFinalDistributionRecoverChainState(state interfaces.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj channel.OnChainChannelPaymentArbitrationReconciliationBasis) error {
 
 	channelId := obj.GetChannelId()
 

@@ -12,11 +12,7 @@ import (
 
 */
 
-type CrossNodeSimplePaymentReconciliationBill struct {
-
-	// 地址
-	LeftAddr  fields.Address
-	RightAddr fields.Address
+type OffChainCrossNodeSimplePaymentReconciliationBill struct {
 
 	// 本通道对账单
 	ChannelChainTransferTargetProveBody ChannelChainTransferProveBodyInfo
@@ -25,27 +21,17 @@ type CrossNodeSimplePaymentReconciliationBill struct {
 	ChannelChainTransferData OffChainFormPaymentChannelTransfer
 }
 
-func (c CrossNodeSimplePaymentReconciliationBill) TypeCode() uint8 {
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) TypeCode() uint8 {
 	return BillTypeCodeSimplePay // 类型
 }
 
-func (c CrossNodeSimplePaymentReconciliationBill) Size() uint32 {
-	return c.LeftAddr.Size() +
-		c.RightAddr.Size() +
-		c.ChannelChainTransferTargetProveBody.Size() +
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) Size() uint32 {
+	return c.ChannelChainTransferTargetProveBody.Size() +
 		c.ChannelChainTransferData.Size()
 }
 
-func (c *CrossNodeSimplePaymentReconciliationBill) Parse(buf []byte, seek uint32) (uint32, error) {
+func (c *OffChainCrossNodeSimplePaymentReconciliationBill) Parse(buf []byte, seek uint32) (uint32, error) {
 	var err error
-	seek, err = c.LeftAddr.Parse(buf, seek)
-	if err != nil {
-		return 0, err
-	}
-	seek, err = c.RightAddr.Parse(buf, seek)
-	if err != nil {
-		return 0, err
-	}
 	seek, err = c.ChannelChainTransferTargetProveBody.Parse(buf, seek)
 	if err != nil {
 		return 0, err
@@ -53,18 +39,8 @@ func (c *CrossNodeSimplePaymentReconciliationBill) Parse(buf []byte, seek uint32
 	return c.ChannelChainTransferData.Parse(buf, seek)
 }
 
-func (c CrossNodeSimplePaymentReconciliationBill) Serialize() ([]byte, error) {
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) Serialize() ([]byte, error) {
 	buf := bytes.NewBuffer(nil)
-	b1, err := c.LeftAddr.Serialize()
-	if err != nil {
-		return nil, err
-	}
-	buf.Write(b1)
-	b2, err := c.RightAddr.Serialize()
-	if err != nil {
-		return nil, err
-	}
-	buf.Write(b2)
 	b3, err := c.ChannelChainTransferTargetProveBody.Serialize()
 	if err != nil {
 		return nil, err
@@ -79,7 +55,7 @@ func (c CrossNodeSimplePaymentReconciliationBill) Serialize() ([]byte, error) {
 
 }
 
-func (c CrossNodeSimplePaymentReconciliationBill) SerializeWithTypeCode() ([]byte, error) {
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) SerializeWithTypeCode() ([]byte, error) {
 	buf := bytes.NewBuffer([]byte{c.TypeCode()})
 	b1, err := c.Serialize()
 	if err != nil {
@@ -89,41 +65,45 @@ func (c CrossNodeSimplePaymentReconciliationBill) SerializeWithTypeCode() ([]byt
 	return buf.Bytes(), nil
 }
 
-func (c CrossNodeSimplePaymentReconciliationBill) ChannelId() fields.Bytes16 {
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetChannelId() fields.Bytes16 {
 	return c.ChannelChainTransferTargetProveBody.ChannelId
 }
 
-func (c CrossNodeSimplePaymentReconciliationBill) LeftAmount() fields.Amount {
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetLeftBalance() fields.Amount {
 	return c.ChannelChainTransferTargetProveBody.LeftBalance
 }
 
-func (c CrossNodeSimplePaymentReconciliationBill) RightAmount() fields.Amount {
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetRightBalance() fields.Amount {
 	return c.ChannelChainTransferTargetProveBody.RightBalance
 }
 
-func (c CrossNodeSimplePaymentReconciliationBill) LeftAddress() fields.Address {
-	return c.LeftAddr
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetLeftAddress() fields.Address {
+	return c.ChannelChainTransferTargetProveBody.LeftAddress
 }
 
-func (c CrossNodeSimplePaymentReconciliationBill) RightAddress() fields.Address {
-	return c.RightAddr
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetRightAddress() fields.Address {
+	return c.ChannelChainTransferTargetProveBody.RightAddress
 }
 
-func (c CrossNodeSimplePaymentReconciliationBill) Timestamp() uint64 {
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetTimestamp() uint64 {
 	return uint64(c.ChannelChainTransferData.Timestamp)
 }
 
-func (c CrossNodeSimplePaymentReconciliationBill) ChannelReuseVersionAndAutoNumber() (uint32, uint64) {
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetReuseVersionAndAutoNumber() (uint32, uint64) {
 	return uint32(c.ChannelChainTransferTargetProveBody.ReuseVersion),
 		uint64(c.ChannelChainTransferTargetProveBody.BillAutoNumber)
 }
 
-func (c CrossNodeSimplePaymentReconciliationBill) ChannelAutoNumber() uint64 {
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetReuseVersion() uint32 {
+	return uint32(c.ChannelChainTransferTargetProveBody.ReuseVersion)
+}
+
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetAutoNumber() uint64 {
 	return uint64(c.ChannelChainTransferTargetProveBody.BillAutoNumber)
 }
 
 // 检查数据可用性
-func (c CrossNodeSimplePaymentReconciliationBill) CheckValidity() error {
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) CheckValidity() error {
 	var checkIsOk bool = false
 	hxchecker := c.ChannelChainTransferTargetProveBody.GetSignStuffHashHalfChecker()
 	cks := c.ChannelChainTransferData.ChannelTransferProveHashHalfCheckers
@@ -143,7 +123,7 @@ func (c CrossNodeSimplePaymentReconciliationBill) CheckValidity() error {
 }
 
 // 验证对票据的签名
-func (c CrossNodeSimplePaymentReconciliationBill) VerifySignature() error {
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) VerifySignature() error {
 
 	return c.ChannelChainTransferData.CheckMustAddressAndSigns()
 }

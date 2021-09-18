@@ -5,29 +5,11 @@ import (
 	"fmt"
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfaces"
 )
 
-// 实时对账单接口
-type PaymentChannelRealtimeReconciliationInterface interface {
-	GetChannelId() fields.Bytes16
-	GetLeftAddress() fields.Address
-	GetLeftBalance() fields.Amount // 左侧实时金额
-	GetRightAddress() fields.Address
-	GetRightBalance() fields.Amount                                                              // 右侧实时金额
-	GetReuseVersion() fields.VarUint4                                                            // 通道重用序号
-	GetBillAutoNumber() fields.VarUint8                                                          // 对账序号
-	CheckAddressAndSign(state interfaces.ChainStateOperation, laddr, raddr fields.Address) error // 检查地址和签名
-}
-
-////////////////////////////////
-
 const (
-	ChannelTransferProveBodyPayModeNormal  fields.VarUint1 = 1
-	ChannelTransferProveBodyPayModeFastPay fields.VarUint1 = 2
-
-	ChannelTransferProveBodyPayDirectionLeftToRight fields.VarUint1 = 1
-	ChannelTransferProveBodyPayDirectionRightToLeft fields.VarUint1 = 2
+	ChannelTransferDirectionLeftToRight uint8 = 1
+	ChannelTransferDirectionRightToLeft uint8 = 2
 )
 
 // 通道转账，数据体
@@ -63,11 +45,11 @@ func (e *ChannelChainTransferProveBodyInfo) GetRightAddress() fields.Address {
 func (e *ChannelChainTransferProveBodyInfo) GetRightBalance() fields.Amount {
 	return e.RightBalance
 }
-func (e *ChannelChainTransferProveBodyInfo) GetReuseVersion() fields.VarUint4 {
-	return e.ReuseVersion
+func (e *ChannelChainTransferProveBodyInfo) GetReuseVersion() uint32 {
+	return uint32(e.ReuseVersion)
 }
-func (e *ChannelChainTransferProveBodyInfo) GetBillAutoNumber() fields.VarUint8 {
-	return e.BillAutoNumber
+func (e *ChannelChainTransferProveBodyInfo) GetAutoNumber() uint64 {
+	return uint64(e.BillAutoNumber)
 }
 
 func (elm *ChannelChainTransferProveBodyInfo) Size() uint32 {
@@ -159,7 +141,7 @@ func (elm *ChannelChainTransferProveBodyInfo) GetSignStuffHashHalfChecker() fiel
 }
 
 // 检查签名
-func (elm *ChannelChainTransferProveBodyInfo) CheckAddressAndSign(state interfaces.ChainStateOperation, leftAddress, rightAddress fields.Address) error {
+func (elm *ChannelChainTransferProveBodyInfo) CheckAddressAndSign(leftAddress, rightAddress fields.Address) error {
 	// 全部检查成功
 	return nil
 }
@@ -209,125 +191,6 @@ func (c *ChannelPayProveBodyList) Parse(buf []byte, seek uint32) (uint32, error)
 	}
 	// 完成
 	return seek, nil
-}
-
-////////////////////////////////
-
-// 通道实时对账（链下签署）
-type OffChainFormPaymentChannelRealtimeReconciliation struct {
-	Timestamp fields.BlockTxTimestamp // 对账时间戳
-
-	TranferProveBody ChannelChainTransferProveBodyInfo
-
-	// 两侧签名
-	LeftSign  fields.Sign // 左侧地址对账签名
-	RightSign fields.Sign // 右侧地址对账签名
-}
-
-// interface
-func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetChannelId() fields.Bytes16 {
-	return e.TranferProveBody.ChannelId
-}
-func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetLeftAddress() fields.Address {
-	return e.TranferProveBody.LeftAddress
-}
-func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetLeftBalance() fields.Amount {
-	return e.TranferProveBody.LeftBalance
-}
-func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetRightAddress() fields.Address {
-	return e.TranferProveBody.RightAddress
-}
-func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetRightBalance() fields.Amount {
-	return e.TranferProveBody.RightBalance
-}
-func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetReuseVersion() fields.VarUint4 {
-	return e.TranferProveBody.ReuseVersion
-}
-func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetBillAutoNumber() fields.VarUint8 {
-	return e.TranferProveBody.BillAutoNumber
-}
-
-func (elm *OffChainFormPaymentChannelRealtimeReconciliation) Size() uint32 {
-	return elm.Timestamp.Size() +
-		elm.TranferProveBody.Size() +
-		elm.LeftSign.Size() +
-		elm.RightSign.Size()
-}
-
-func (elm *OffChainFormPaymentChannelRealtimeReconciliation) SerializeNoSign() ([]byte, error) {
-	var buffer bytes.Buffer
-	var bt1, _ = elm.Timestamp.Serialize()
-	var bt2, _ = elm.TranferProveBody.Serialize()
-	buffer.Write(bt1)
-	buffer.Write(bt2)
-	return buffer.Bytes(), nil
-
-}
-
-func (elm *OffChainFormPaymentChannelRealtimeReconciliation) Serialize() ([]byte, error) {
-	var bt1, _ = elm.SerializeNoSign() // 数据体
-	var bt2, _ = elm.LeftSign.Serialize()
-	var bt3, _ = elm.RightSign.Serialize()
-	var buffer bytes.Buffer
-	buffer.Write(bt1)
-	buffer.Write(bt2)
-	buffer.Write(bt3)
-	return buffer.Bytes(), nil
-}
-
-func (elm *OffChainFormPaymentChannelRealtimeReconciliation) SignStuffHash() fields.Hash {
-	var conbt, _ = elm.SerializeNoSign() // 数据体
-	return fields.CalculateHash(conbt)
-}
-
-func (elm *OffChainFormPaymentChannelRealtimeReconciliation) Parse(buf []byte, seek uint32) (uint32, error) {
-	var e error
-	seek, e = elm.Timestamp.Parse(buf, seek)
-	if e != nil {
-		return 0, e
-	}
-	seek, e = elm.TranferProveBody.Parse(buf, seek)
-	if e != nil {
-		return 0, e
-	}
-	seek, e = elm.LeftSign.Parse(buf, seek)
-	if e != nil {
-		return 0, e
-	}
-	seek, e = elm.RightSign.Parse(buf, seek)
-	if e != nil {
-		return 0, e
-	}
-	return seek, nil
-}
-
-// 检查签名
-func (elm *OffChainFormPaymentChannelRealtimeReconciliation) CheckAddressAndSign(state interfaces.ChainStateOperation, leftAddress, rightAddress fields.Address) error {
-	// 检查公钥和地址是否匹配
-	addr1 := account.NewAddressFromPublicKeyV0(elm.LeftSign.PublicKey)
-	if leftAddress.NotEqual(fields.Address(addr1)) {
-		return fmt.Errorf("Left sign address %s is not request address %s",
-			fields.Address(addr1).ToReadable(),
-			leftAddress.ToReadable())
-	}
-	addr2 := account.NewAddressFromPublicKeyV0(elm.RightSign.PublicKey)
-	if rightAddress.NotEqual(fields.Address(addr2)) {
-		return fmt.Errorf("Right sign address %s is not request address %s",
-			fields.Address(addr2).ToReadable(),
-			rightAddress.ToReadable())
-	}
-	// 验证哈希
-	var conhx = elm.SignStuffHash() // 数据体hx
-	ok1, _ := account.CheckSignByHash32(conhx, elm.LeftSign.PublicKey, elm.LeftSign.Signature)
-	if !ok1 {
-		return fmt.Errorf("Left account %s verify signature fail.", leftAddress.ToReadable())
-	}
-	ok2, _ := account.CheckSignByHash32(conhx, elm.LeftSign.PublicKey, elm.LeftSign.Signature)
-	if !ok2 {
-		return fmt.Errorf("Right account %s verify signature fail.", leftAddress.ToReadable())
-	}
-	// 全部检查成功
-	return nil
 }
 
 ////////////////////////////////
@@ -452,6 +315,16 @@ func (elm *OffChainFormPaymentChannelTransfer) Parse(buf []byte, seek uint32) (u
 	}
 	// 完成
 	return seek, nil
+}
+
+// 检查数据可用性
+func (elm *OffChainFormPaymentChannelTransfer) CheckValidity() error {
+	return nil
+}
+
+// 验证对票据的签名
+func (elm *OffChainFormPaymentChannelTransfer) VerifySignature() error {
+	return elm.CheckMustAddressAndSigns()
 }
 
 // 按位置填充签名

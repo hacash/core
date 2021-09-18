@@ -72,6 +72,10 @@ func (elm *DiamondListMaxLen200) SerializeHACDlistToCommaSplitString() string {
 
 // 创建钻石
 func (elm *DiamondListMaxLen200) ParseHACDlistBySplitCommaFromString(hacdlistsplitcomma string) error {
+	// 去除空格和换行符
+	hacdlistsplitcomma = strings.Replace(hacdlistsplitcomma, " ", "", -1)
+	hacdlistsplitcomma = strings.Replace(hacdlistsplitcomma, "\n", "", -1)
+	// 分割
 	diamonds := strings.Split(hacdlistsplitcomma, ",")
 	dianum := len(diamonds)
 	if dianum > 200 {

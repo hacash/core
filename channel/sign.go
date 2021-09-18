@@ -10,12 +10,12 @@ import (
  */
 
 // 排序单元
-type sortAddresses []fields.Address
+type SortAddresses []fields.Address
 
-func (n sortAddresses) Len() int {
+func (n SortAddresses) Len() int {
 	return len(n)
 }
-func (n sortAddresses) Less(i, j int) bool {
+func (n SortAddresses) Less(i, j int) bool {
 	a, b := n[i], n[j]
 	for k := 0; k < fields.AddressSize; k++ {
 		if a[k] < b[k] {
@@ -24,7 +24,7 @@ func (n sortAddresses) Less(i, j int) bool {
 	}
 	return false
 }
-func (n sortAddresses) Swap(i, j int) {
+func (n SortAddresses) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
 }
 
@@ -40,6 +40,6 @@ func CleanSortMustSignAddresses(addrs []fields.Address) (fields.VarUint1, []fiel
 		repeats[string(v)] = true
 	}
 	// 排序
-	sort.Sort(sortAddresses(addrsclear))
+	sort.Sort(SortAddresses(addrsclear))
 	return fields.VarUint1(len(addrsclear)), addrsclear
 }

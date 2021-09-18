@@ -136,7 +136,7 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	}
 	amt1 := bls1.Hacash
 	if amt1.LessThan(&act.LeftAmount) {
-		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.RightAddress.ToReadable(), act.LeftAmount.ToFinString(), amt1.ToFinString())
+		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.LeftAddress.ToReadable(), act.LeftAmount.ToFinString(), amt1.ToFinString())
 	}
 	bls2 := state.Balance(act.RightAddress)
 	if bls2 == nil {
