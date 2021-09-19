@@ -322,14 +322,21 @@ func (block *Block_v1) Size() uint32 {
 func (block *Block_v1) Hash() fields.Hash {
 	block.insertLock.Lock()
 	defer block.insertLock.Unlock()
+
 	if block.hash == nil {
-		block.hash = block.HashFresh()
+		block.hash = block.hashFreshUnsafe()
 	}
 	return block.hash
 }
+
 func (block *Block_v1) HashFresh() fields.Hash {
 	block.insertLock.Lock()
 	defer block.insertLock.Unlock()
+
+	return block.hashFreshUnsafe()
+}
+
+func (block *Block_v1) hashFreshUnsafe() fields.Hash {
 	block.hash = CalculateBlockHash(block)
 	return block.hash
 }
