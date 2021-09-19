@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"time"
 	"sync"
+	"time"
 
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
@@ -17,8 +17,8 @@ type Block_v1 struct {
 	/* Version   fields.VarUint1 */
 	Height           fields.BlockHeight
 	Timestamp        fields.BlockTxTimestamp
-	PrevHash         fields.Bytes32
-	MrklRoot         fields.Bytes32
+	PrevHash         fields.Hash
+	MrklRoot         fields.Hash
 	TransactionCount fields.VarUint4
 	// meta
 	Nonce        fields.VarUint4 // 挖矿随机值

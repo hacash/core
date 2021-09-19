@@ -14,7 +14,7 @@ const (
 
 // 通道转账，数据体
 type ChannelChainTransferProveBodyInfo struct {
-	ChannelId fields.Bytes16 // 通道id
+	ChannelId fields.ChannelId // 通道id
 
 	ReuseVersion   fields.VarUint4 // 通道重用序号
 	BillAutoNumber fields.VarUint8 // 通道账单流水序号
@@ -30,7 +30,7 @@ type ChannelChainTransferProveBodyInfo struct {
 }
 
 // interface
-func (e *ChannelChainTransferProveBodyInfo) GetChannelId() fields.Bytes16 {
+func (e *ChannelChainTransferProveBodyInfo) GetChannelId() fields.ChannelId {
 	return e.ChannelId
 }
 func (e *ChannelChainTransferProveBodyInfo) GetLeftBalance() fields.Amount {

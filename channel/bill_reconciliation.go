@@ -12,7 +12,7 @@ import (
  */
 type OffChainFormPaymentChannelRealtimeReconciliation struct {
 	// 签名哈希计算数据部分
-	ChannelId fields.Bytes16 // 通道id
+	ChannelId fields.ChannelId // 通道id
 
 	ReuseVersion   fields.VarUint4 // 通道重用序号
 	BillAutoNumber fields.VarUint8 // 通道账单流水序号
@@ -36,7 +36,7 @@ type OffChainFormPaymentChannelRealtimeReconciliation struct {
 func (e *OffChainFormPaymentChannelRealtimeReconciliation) TypeCode() uint8 {
 	return BillTypeCodeReconciliation
 }
-func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetChannelId() fields.Bytes16 {
+func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetChannelId() fields.ChannelId {
 	return e.ChannelId
 }
 func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetLeftAddress() fields.Address {
@@ -207,7 +207,7 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) VerifySignature() e
 
 type OnChainArbitrationBasisReconciliation struct {
 	// 签名哈希计算数据部分
-	ChannelId fields.Bytes16 // 通道id
+	ChannelId fields.ChannelId // 通道id
 
 	ReuseVersion   fields.VarUint4 // 通道重用序号
 	BillAutoNumber fields.VarUint8 // 通道账单流水序号
@@ -220,7 +220,7 @@ type OnChainArbitrationBasisReconciliation struct {
 	RightSign fields.Sign // 右侧地址对账签名
 }
 
-func (e *OnChainArbitrationBasisReconciliation) GetChannelId() fields.Bytes16 {
+func (e *OnChainArbitrationBasisReconciliation) GetChannelId() fields.ChannelId {
 	return e.ChannelId
 }
 func (e *OnChainArbitrationBasisReconciliation) GetLeftBalance() fields.Amount {

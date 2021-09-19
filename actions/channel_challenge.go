@@ -16,8 +16,8 @@ import (
 // 资金分配按初始存入计算
 type Action_22_UnilateralClosePaymentChannelByNothing struct {
 	// 通道 ID
-	ChannelId          fields.Bytes16 // 通道id
-	AssertCloseAddress fields.Address // 单方面主张关闭的提议地址
+	ChannelId          fields.ChannelId // 通道id
+	AssertCloseAddress fields.Address   // 单方面主张关闭的提议地址
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -666,7 +666,7 @@ func checkChannelGotoChallegingOrFinalDistributionRecoverChainState(state interf
 // 挑战期结束，最终按主张分配通道资金
 type Action_27_ClosePaymentChannelByClaimDistribution struct {
 	// 通道 ID
-	ChannelId fields.Bytes16 // 通道id
+	ChannelId fields.ChannelId // 通道id
 
 	// data ptr
 	belong_trs interfaces.Transaction

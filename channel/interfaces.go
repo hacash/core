@@ -13,7 +13,7 @@ import (
 
 // 链上仲裁对账依据
 type OnChainChannelPaymentArbitrationReconciliationBasis interface {
-	GetChannelId() fields.Bytes16
+	GetChannelId() fields.ChannelId
 	GetLeftBalance() fields.Amount  // 左侧实时金额
 	GetRightBalance() fields.Amount // 右侧实时金额
 	GetReuseVersion() uint32        // 通道重用序号
@@ -48,7 +48,7 @@ type ReconciliationBalanceBill interface {
 	SerializeWithTypeCode() ([]byte, error)        // 序列化
 	TypeCode() uint8                               // 类型
 
-	GetChannelId() fields.Bytes16
+	GetChannelId() fields.ChannelId
 
 	GetLeftAddress() fields.Address
 	GetRightAddress() fields.Address

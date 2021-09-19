@@ -65,7 +65,7 @@ func (c OffChainCrossNodeSimplePaymentReconciliationBill) SerializeWithTypeCode(
 	return buf.Bytes(), nil
 }
 
-func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetChannelId() fields.Bytes16 {
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetChannelId() fields.ChannelId {
 	return c.ChannelChainTransferTargetProveBody.ChannelId
 }
 

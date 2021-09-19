@@ -46,10 +46,10 @@ const ()
 // 比特币系统借贷
 type Action_17_BitcoinsSystemLendingCreate struct {
 	//
-	LendingID                fields.Bytes15  // 借贷合约ID
-	MortgageBitcoinPortion   fields.VarUint2 // 抵押比特币份数（每份 = 0.01BTC）最多抵押655枚比特币
-	LoanTotalAmount          fields.Amount   // 总共借出HAC数量，必须小于等于可借数
-	PreBurningInterestAmount fields.Amount   // 预先销毁的利息，必须大于等于销毁数量
+	LendingID                fields.BitcoinSyslendId // 借贷合约ID
+	MortgageBitcoinPortion   fields.VarUint2         // 抵押比特币份数（每份 = 0.01BTC）最多抵押655枚比特币
+	LoanTotalAmount          fields.Amount           // 总共借出HAC数量，必须小于等于可借数
+	PreBurningInterestAmount fields.Amount           // 预先销毁的利息，必须大于等于销毁数量
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -369,8 +369,8 @@ func (act *Action_17_BitcoinsSystemLendingCreate) IsBurning90PersentTxFees() boo
 // 钻石系统借贷，赎回
 type Action_18_BitcoinsSystemLendingRansom struct {
 	//
-	LendingID    fields.Bytes15 // 借贷合约ID
-	RansomAmount fields.Amount  // 赎回金额
+	LendingID    fields.BitcoinSyslendId // 借贷合约ID
+	RansomAmount fields.Amount           // 赎回金额
 	// data ptr
 	belong_trs interfaces.Transaction
 }

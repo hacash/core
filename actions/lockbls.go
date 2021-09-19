@@ -12,7 +12,7 @@ import (
 )
 
 type Action_9_LockblsCreate struct {
-	LockblsId           fields.Bytes18     // 线性锁仓id
+	LockblsId           fields.LockblsId   // 线性锁仓id
 	PaymentAddress      fields.Address     // 付款地址
 	MasterAddress       fields.Address     // 主地址（领取权）
 	EffectBlockHeight   fields.BlockHeight // 生效（开始）区块
@@ -205,8 +205,8 @@ func (act *Action_9_LockblsCreate) IsBurning90PersentTxFees() bool {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 type Action_10_LockblsRelease struct {
-	LockblsId     fields.Bytes18 // 线性锁仓id
-	ReleaseAmount fields.Amount  // 本次提取额度
+	LockblsId     fields.LockblsId // 线性锁仓id
+	ReleaseAmount fields.Amount    // 本次提取额度
 
 	// data ptr
 	belong_trs interfaces.Transaction

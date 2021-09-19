@@ -44,7 +44,7 @@ const ()
 // 用户间系统借贷
 type Action_19_UsersLendingCreate struct {
 	//
-	LendingID fields.Bytes17 // 借贷合约ID
+	LendingID fields.UserLendingId // 借贷合约ID
 
 	IsRedemptionOvertime    fields.Bool        // 是否超期仍可赎回（自动展期）
 	IsPublicRedeemable      fields.Bool        // 到期后是否公共可赎回
@@ -490,8 +490,8 @@ func (act *Action_19_UsersLendingCreate) IsBurning90PersentTxFees() bool {
 // 钻石系统借贷，赎回
 type Action_20_UsersLendingRansom struct {
 	//
-	LendingID    fields.Bytes17 // 借贷合约ID
-	RansomAmount fields.Amount  // 赎回金额
+	LendingID    fields.UserLendingId // 借贷合约ID
+	RansomAmount fields.Amount        // 赎回金额
 
 	// data ptr
 	belong_trs interfaces.Transaction

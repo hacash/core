@@ -18,11 +18,11 @@ import (
 
 // 开启支付通道
 type Action_2_OpenPaymentChannel struct {
-	ChannelId    fields.Bytes16 // 通道id
-	LeftAddress  fields.Address // 账户1
-	LeftAmount   fields.Amount  // 锁定金额
-	RightAddress fields.Address // 账户2
-	RightAmount  fields.Amount  // 锁定金额
+	ChannelId    fields.ChannelId // 通道id
+	LeftAddress  fields.Address   // 账户1
+	LeftAmount   fields.Amount    // 锁定金额
+	RightAddress fields.Address   // 账户2
+	RightAmount  fields.Amount    // 锁定金额
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -224,7 +224,7 @@ func (act *Action_2_OpenPaymentChannel) IsBurning90PersentTxFees() bool {
 
 // 关闭、结算 支付通道（资金分配不变的情况）
 type Action_3_ClosePaymentChannel struct {
-	ChannelId fields.Bytes16 // 通道id
+	ChannelId fields.ChannelId // 通道id
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -308,11 +308,11 @@ func (act *Action_3_ClosePaymentChannel) IsBurning90PersentTxFees() bool {
 
 // 关闭、结算 支付通道（资金分配改变）
 type Action_12_ClosePaymentChannelBySetupAmount struct {
-	ChannelId    fields.Bytes16 // 通道id
-	LeftAddress  fields.Address // 左侧账户
-	LeftAmount   fields.Amount  // 左侧最终分配金额
-	RightAddress fields.Address // 右侧账户
-	RightAmount  fields.Amount  // 右侧最终分配金额
+	ChannelId    fields.ChannelId // 通道id
+	LeftAddress  fields.Address   // 左侧账户
+	LeftAmount   fields.Amount    // 左侧最终分配金额
+	RightAddress fields.Address   // 右侧账户
+	RightAmount  fields.Amount    // 右侧最终分配金额
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -424,8 +424,8 @@ func (act *Action_12_ClosePaymentChannelBySetupAmount) IsBurning90PersentTxFees(
 
 // 关闭、结算 支付通道（资金分配改变）仅仅提供 left 的余额分配，自动计算 right 的分配
 type Action_21_ClosePaymentChannelBySetupOnlyLeftAmount struct {
-	ChannelId  fields.Bytes16 // 通道id
-	LeftAmount fields.Amount  // 左侧最终分配金额
+	ChannelId  fields.ChannelId // 通道id
+	LeftAmount fields.Amount    // 左侧最终分配金额
 
 	// data ptr
 	belong_trs interfaces.Transaction

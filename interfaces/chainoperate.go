@@ -43,12 +43,12 @@ type ChainStateOperation interface {
 
 	Balance(fields.Address) *stores.Balance
 	//Satoshi(fields.Address) *stores.Satoshi
-	Lockbls(fields.Bytes18) *stores.Lockbls
-	Channel(fields.Bytes16) *stores.Channel
+	Lockbls(fields.LockblsId) *stores.Lockbls
+	Channel(fields.ChannelId) *stores.Channel
 	Diamond(fields.DiamondName) *stores.Diamond
-	DiamondSystemLending(fields.Bytes14) *stores.DiamondSystemLending
-	BitcoinSystemLending(fields.Bytes15) *stores.BitcoinSystemLending
-	UserLending(fields.Bytes17) *stores.UserLending
+	DiamondSystemLending(fields.DiamondSyslendId) *stores.DiamondSystemLending
+	BitcoinSystemLending(fields.BitcoinSyslendId) *stores.BitcoinSystemLending
+	UserLending(fields.UserLendingId) *stores.UserLending
 	Chaswap(fields.HashHalfChecker) *stores.Chaswap
 
 	// operate
@@ -59,28 +59,28 @@ type ChainStateOperation interface {
 	//SatoshiSet(fields.Address, *stores.Satoshi) error
 	//SatoshiDel(fields.Address) error
 
-	LockblsCreate(fields.Bytes18, *stores.Lockbls) error // 创建线性锁仓
-	LockblsUpdate(fields.Bytes18, *stores.Lockbls) error // 更新：释放（取出部分任意可取额度）
-	LockblsDelete(fields.Bytes18) error                  // 释放完毕后自动删除
+	LockblsCreate(fields.LockblsId, *stores.Lockbls) error // 创建线性锁仓
+	LockblsUpdate(fields.LockblsId, *stores.Lockbls) error // 更新：释放（取出部分任意可取额度）
+	LockblsDelete(fields.LockblsId) error                  // 释放完毕后自动删除
 
-	ChannelCreate(fields.Bytes16, *stores.Channel) error
-	ChannelUpdate(fields.Bytes16, *stores.Channel) error
-	ChannelDelete(fields.Bytes16) error
+	ChannelCreate(fields.ChannelId, *stores.Channel) error
+	ChannelUpdate(fields.ChannelId, *stores.Channel) error
+	ChannelDelete(fields.ChannelId) error
 
 	DiamondSet(fields.DiamondName, *stores.Diamond) error
 	DiamondDel(fields.DiamondName) error
 
-	DiamondLendingCreate(fields.Bytes14, *stores.DiamondSystemLending) error
-	DiamondLendingUpdate(fields.Bytes14, *stores.DiamondSystemLending) error
-	DiamondLendingDelete(fields.Bytes14) error
+	DiamondLendingCreate(fields.DiamondSyslendId, *stores.DiamondSystemLending) error
+	DiamondLendingUpdate(fields.DiamondSyslendId, *stores.DiamondSystemLending) error
+	DiamondLendingDelete(fields.DiamondSyslendId) error
 
-	BitcoinLendingCreate(fields.Bytes15, *stores.BitcoinSystemLending) error
-	BitcoinLendingUpdate(fields.Bytes15, *stores.BitcoinSystemLending) error
-	BitcoinLendingDelete(fields.Bytes15) error
+	BitcoinLendingCreate(fields.BitcoinSyslendId, *stores.BitcoinSystemLending) error
+	BitcoinLendingUpdate(fields.BitcoinSyslendId, *stores.BitcoinSystemLending) error
+	BitcoinLendingDelete(fields.BitcoinSyslendId) error
 
-	UserLendingCreate(fields.Bytes17, *stores.UserLending) error
-	UserLendingUpdate(fields.Bytes17, *stores.UserLending) error
-	UserLendingDelete(fields.Bytes17) error
+	UserLendingCreate(fields.UserLendingId, *stores.UserLending) error
+	UserLendingUpdate(fields.UserLendingId, *stores.UserLending) error
+	UserLendingDelete(fields.UserLendingId) error
 
 	ChaswapCreate(fields.HashHalfChecker, *stores.Chaswap) error
 	ChaswapDelete(fields.HashHalfChecker) error

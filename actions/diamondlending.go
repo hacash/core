@@ -40,7 +40,7 @@ const (
 // 钻石系统借贷
 type Action_15_DiamondsSystemLendingCreate struct {
 	//
-	LendingID           fields.Bytes14              // 借贷合约ID
+	LendingID           fields.DiamondSyslendId     // 借贷合约ID
 	MortgageDiamondList fields.DiamondListMaxLen200 // 抵押钻石列表
 	LoanTotalAmount     fields.Amount               // 总共借出HAC额度，必须等于总可借额度，不能多也不能少
 	BorrowPeriod        fields.VarUint1             // 借款周期，一个周期代表 0.5%利息和10000个区块约35天，最低1最高20，则年利率为 5%
@@ -355,8 +355,8 @@ func (act *Action_15_DiamondsSystemLendingCreate) IsBurning90PersentTxFees() boo
 // 钻石系统借贷，赎回
 type Action_16_DiamondsSystemLendingRansom struct {
 	//
-	LendingID    fields.Bytes14 // 借贷合约ID
-	RansomAmount fields.Amount  // 赎回金额
+	LendingID    fields.DiamondSyslendId // 借贷合约ID
+	RansomAmount fields.Amount           // 赎回金额
 	// data ptr
 	belong_trs interfaces.Transaction
 }
