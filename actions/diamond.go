@@ -384,8 +384,8 @@ func calculateVisualGeneByDiamondStuffHash(number uint32, stuffhx []byte, diamon
 	if number > DiamondResourceHashAndContainBlockHashDecideVisualGeneAboveNumber {
 		// 第 40001 个钻石，开始用 sha3_hash(diamondreshash, blockhash) 决定钻石形状和配色
 		vgenestuff := bytes.NewBuffer(stuffhx)
-		vgenestuff.Write(peddingblkhash) // 开盲盒
-		vgenehash = fields.CalculateHash(vgenestuff.Bytes())
+		vgenestuff.Write(peddingblkhash)
+		vgenehash = fields.CalculateHash(vgenestuff.Bytes()) // 开盲盒
 		// 跟区块哈希一样是随机的，需要等待钻石确认的那一刻才能知晓形状和配色
 		// fmt.Println(hex.EncodeToString(vgenestuff.Bytes()))
 	}
