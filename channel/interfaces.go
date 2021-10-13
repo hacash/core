@@ -87,7 +87,7 @@ func SerializeReconciliationBalanceBillWithPrefixTypeCode(bill ReconciliationBal
 }
 
 // 反序列化
-func ParseReconciliationBalanceBillByPrefixTypeCode(buf []byte, seek uint32) (ReconciliationBalanceBill, error) {
+func ParseReconciliationBalanceBillByPrefixTypeCode(buf []byte, seek uint32) (ReconciliationBalanceBill, uint32, error) {
 	ty := buf[seek]
 	var bill ReconciliationBalanceBill = nil
 
@@ -98,14 +98,15 @@ func ParseReconciliationBalanceBillByPrefixTypeCode(buf []byte, seek uint32) (Re
 	case BillTypeCodeReconciliation: // 通道链对账
 		bill = &OffChainFormPaymentChannelRealtimeReconciliation{}
 	default:
-		return nil, fmt.Errorf("Unsupported bill type <%d>", ty)
+		return nil, 0, fmt.Errorf("Unsupported bill type <%d>", ty)
 	}
 
 	// 解析
-	_, e := bill.Parse(buf, seek+1)
+	var e error
+	seek, e = bill.Parse(buf, seek+1)
 	if e != nil {
-		return nil, e
+		return nil, 0, e
 	}
-	return bill, nil
+	return bill, seek, nil
 
 }
