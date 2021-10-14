@@ -280,13 +280,14 @@ func (elm *OffChainFormPaymentChannelTransfer) Parse(buf []byte, seek uint32) (u
 		return 0, e
 	}
 	// 地址
-	scn := int(elm.MustSignCount)
 	seek, e = elm.MustSignCount.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
+	scn := int(elm.MustSignCount)
 	elm.MustSignAddresses = make([]fields.Address, scn)
 	for i := 0; i < scn; i++ {
+		elm.MustSignAddresses[i] = fields.Address{}
 		seek, e = elm.MustSignAddresses[i].Parse(buf, seek)
 		if e != nil {
 			return 0, e
@@ -300,6 +301,7 @@ func (elm *OffChainFormPaymentChannelTransfer) Parse(buf []byte, seek uint32) (u
 	ccn := int(elm.ChannelCount)
 	elm.ChannelTransferProveHashHalfCheckers = make([]fields.HashHalfChecker, ccn)
 	for i := 0; i < ccn; i++ {
+		elm.ChannelTransferProveHashHalfCheckers[i] = fields.HashHalfChecker{}
 		seek, e = elm.ChannelTransferProveHashHalfCheckers[i].Parse(buf, seek)
 		if e != nil {
 			return 0, e
@@ -308,6 +310,7 @@ func (elm *OffChainFormPaymentChannelTransfer) Parse(buf []byte, seek uint32) (u
 	// 签名
 	elm.MustSigns = make([]fields.Sign, scn)
 	for i := 0; i < scn; i++ {
+		elm.MustSigns[i] = fields.CreateEmptySign()
 		seek, e = elm.MustSigns[i].Parse(buf, seek)
 		if e != nil {
 			return 0, e
