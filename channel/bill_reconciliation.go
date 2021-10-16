@@ -77,7 +77,7 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) Size() uint32 {
 		elm.RightSign.Size()
 }
 
-func (elm *OffChainFormPaymentChannelRealtimeReconciliation) SerializeNoSign() ([]byte, error) {
+func (elm *OffChainFormPaymentChannelRealtimeReconciliation) SerializeForSign() ([]byte, error) {
 	var buffer bytes.Buffer
 	var bt []byte
 	bt, _ = elm.ChannelId.Serialize()
@@ -97,7 +97,7 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) SerializeNoSign() (
 func (elm *OffChainFormPaymentChannelRealtimeReconciliation) Serialize() ([]byte, error) {
 	var buffer bytes.Buffer
 	var bt []byte
-	bt, _ = elm.SerializeNoSign() // 签名部分数据体
+	bt, _ = elm.SerializeForSign() // 签名部分数据体
 	buffer.Write(bt)
 	bt, _ = elm.LeftAddress.Serialize()
 	buffer.Write(bt)
@@ -124,7 +124,7 @@ func (e *OffChainFormPaymentChannelRealtimeReconciliation) SerializeWithTypeCode
 }
 
 func (elm *OffChainFormPaymentChannelRealtimeReconciliation) SignStuffHash() fields.Hash {
-	var conbt, _ = elm.SerializeNoSign() // 数据体
+	var conbt, _ = elm.SerializeForSign() // 数据体
 	return fields.CalculateHash(conbt)
 }
 
