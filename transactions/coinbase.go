@@ -311,7 +311,7 @@ func (trs *Transaction_0_Coinbase) WriteinChainState(state interfaces.ChainState
 	if e2 != nil {
 		return e2
 	}
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBlockMinerReward, trs.Reward.ToMei())
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBlockReward, trs.Reward.ToMei())
 	// feeBurning
 	if trs.TotalFeeMinerReceived.NotEqual(&trs.TotalFeeUserPayed) {
 		// 有销毁
@@ -343,7 +343,7 @@ func (trs *Transaction_0_Coinbase) RecoverChainState(state interfaces.ChainState
 	if e2 != nil {
 		return e2
 	}
-	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBlockMinerReward, trs.Reward.ToMei())
+	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBlockReward, trs.Reward.ToMei())
 	// feeBurning
 	if trs.TotalFeeMinerReceived.NotEqual(&trs.TotalFeeUserPayed) {
 		// 有销毁

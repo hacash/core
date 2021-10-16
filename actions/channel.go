@@ -171,6 +171,7 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	// 累加锁入的HAC
 	addamt := act.LeftAmount.ToMei() + act.RightAmount.ToMei()
 	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedInChannel, addamt)
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1)
 	// update total supply
 	e3 := state.UpdateSetTotalSupply(totalsupply)
 	if e3 != nil {
@@ -619,6 +620,7 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 	// 减少解锁的HAC
 	lockamt := paychan.LeftAmount.ToMei() + paychan.RightAmount.ToMei()
 	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfLocatedInChannel, lockamt)
+	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1)
 	// 增加通道利息统计
 	if haveinterest {
 		releaseamt := leftAmount.ToMei() + rightAmount.ToMei()
