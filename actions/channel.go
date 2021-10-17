@@ -148,7 +148,7 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	}
 	curheight := state.GetPendingBlockHeight()
 	// 创建 channel
-	var storeItem stores.Channel
+	var storeItem = stores.CreateEmptyChannel()
 	storeItem.BelongHeight = fields.BlockHeight(curheight)
 	storeItem.LockBlock = fields.VarUint2(uint16(5000)) // 单方面提出的锁定期约为 17 天
 	storeItem.InterestAttribution = fields.VarUint1(0)  // 利息分配默认两方按close金额共取
@@ -162,7 +162,7 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	DoSubBalanceFromChainState(state, act.LeftAddress, act.LeftAmount)
 	DoSubBalanceFromChainState(state, act.RightAddress, act.RightAmount)
 	// 储存通道
-	state.ChannelCreate(act.ChannelId, &storeItem)
+	state.ChannelCreate(act.ChannelId, storeItem)
 	// total supply 统计
 	totalsupply, e2 := state.ReadTotalSupply()
 	if e2 != nil {

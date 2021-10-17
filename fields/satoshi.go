@@ -13,8 +13,8 @@ type SatoshiVariation struct {
 	ValueSAT Satoshi
 }
 
-func NewEmptySatoshiVariation() *SatoshiVariation {
-	return &SatoshiVariation{
+func NewEmptySatoshiVariation() SatoshiVariation {
+	return SatoshiVariation{
 		NotEmpty: CreateBool(false),
 		ValueSAT: 0,
 	}

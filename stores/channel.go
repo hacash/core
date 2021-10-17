@@ -23,11 +23,13 @@ type Channel struct {
 	LockBlock           fields.VarUint2    // 单方面结束通道要锁定的区块数量
 	InterestAttribution fields.VarUint1    // 年化 1% 的利息归属： 0.按结束分配 1.全给left 2.全给right
 	LeftAddress         fields.Address
-	LeftAmount          fields.Amount // 抵押数额1
+	LeftAmount          fields.Amount           // HAC
+	LeftSatoshi         fields.SatoshiVariation // SAT
 	RightAddress        fields.Address
-	RightAmount         fields.Amount   // 抵押数额2
-	ReuseVersion        fields.VarUint4 // 重用版本号 从 1 开始
-	Status              fields.VarUint1 // 已经关闭并结算等状态
+	RightAmount         fields.Amount           // 抵押数额2
+	RightSatoshi        fields.SatoshiVariation // SAT
+	ReuseVersion        fields.VarUint4         // 重用版本号 从 1 开始
+	Status              fields.VarUint1         // 已经关闭并结算等状态
 
 	// Status = 1 挑战期保存数据
 	IsHaveChallengeLog         fields.Bool        // 记录挑战期数据日志
@@ -40,6 +42,22 @@ type Channel struct {
 	LeftFinalDistributionAmount fields.Amount // 左侧最终分配金额
 
 	// cache data
+}
+
+func CreateEmptyChannel() *Channel {
+	return &Channel{
+		BelongHeight:        0,
+		LockBlock:           0,
+		InterestAttribution: 0,
+		LeftAddress:         nil,
+		LeftAmount:          fields.NewEmptyAmountValue(),
+		LeftSatoshi:         fields.NewEmptySatoshiVariation(),
+		RightAddress:        nil,
+		RightAmount:         fields.NewEmptyAmountValue(),
+		RightSatoshi:        fields.NewEmptySatoshiVariation(),
+		ReuseVersion:        1,
+		Status:              0,
+	}
 }
 
 // 状态判断
@@ -94,8 +112,10 @@ func (this *Channel) Size() uint32 {
 		this.LockBlock.Size() +
 		this.LeftAddress.Size() +
 		this.LeftAmount.Size() +
+		this.LeftSatoshi.Size() +
 		this.RightAddress.Size() +
 		this.RightAmount.Size() +
+		this.RightSatoshi.Size() +
 		this.ReuseVersion.Size() +
 		this.Status.Size()
 	if this.IsHaveChallengeLog.Check() {
@@ -128,11 +148,19 @@ func (this *Channel) Parse(buf []byte, seek uint32) (uint32, error) {
 	if e != nil {
 		return 0, e
 	}
+	seek, e = this.LeftSatoshi.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
 	seek, e = this.RightAddress.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
 	seek, e = this.RightAmount.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = this.RightSatoshi.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -172,36 +200,87 @@ func (this *Channel) Parse(buf []byte, seek uint32) (uint32, error) {
 }
 
 func (this *Channel) Serialize() ([]byte, error) {
+	var e error
+	var bt []byte
 	var buffer = new(bytes.Buffer)
-	b1, _ := this.BelongHeight.Serialize()
-	b2, _ := this.LockBlock.Serialize()
-	b3, _ := this.LeftAddress.Serialize()
-	b4, _ := this.LeftAmount.Serialize()
-	b5, _ := this.RightAddress.Serialize()
-	b6, _ := this.RightAmount.Serialize()
-	b7, _ := this.ReuseVersion.Serialize()
-	b8, _ := this.Status.Serialize()
-	buffer.Write(b1)
-	buffer.Write(b2)
-	buffer.Write(b3)
-	buffer.Write(b4)
-	buffer.Write(b5)
-	buffer.Write(b6)
-	buffer.Write(b7)
-	buffer.Write(b8)
+	bt, e = this.BelongHeight.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	buffer.Write(bt)
+	bt, e = this.LockBlock.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	buffer.Write(bt)
+	bt, e = this.LeftAddress.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	buffer.Write(bt)
+	bt, e = this.LeftAmount.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	buffer.Write(bt)
+	bt, e = this.LeftSatoshi.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	buffer.Write(bt)
+	bt, e = this.RightAddress.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	buffer.Write(bt)
+	bt, e = this.RightAmount.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	buffer.Write(bt)
+	bt, e = this.RightSatoshi.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	buffer.Write(bt)
+	bt, e = this.ReuseVersion.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	buffer.Write(bt)
+	bt, e = this.Status.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	buffer.Write(bt)
 	if this.IsHaveChallengeLog.Check() {
-		b1, _ := this.ChallengeLaunchHeight.Serialize()
-		b2, _ := this.AssertBillAutoNumber.Serialize()
-		b3, _ := this.AssertAddressIsLeftOrRight.Serialize()
-		b4, _ := this.AssertAmount.Serialize()
-		buffer.Write(b1)
-		buffer.Write(b2)
-		buffer.Write(b3)
-		buffer.Write(b4)
+		bt, e = this.ChallengeLaunchHeight.Serialize()
+		if e != nil {
+			return nil, e
+		}
+		buffer.Write(bt)
+		bt, e = this.AssertBillAutoNumber.Serialize()
+		if e != nil {
+			return nil, e
+		}
+		buffer.Write(bt)
+		bt, e = this.AssertAddressIsLeftOrRight.Serialize()
+		if e != nil {
+			return nil, e
+		}
+		buffer.Write(bt)
+		bt, e = this.AssertAmount.Serialize()
+		if e != nil {
+			return nil, e
+		}
+		buffer.Write(bt)
 	}
 	if this.IsClosed() {
-		b1, _ := this.LeftFinalDistributionAmount.Serialize()
-		buffer.Write(b1)
+		bt, e = this.LeftFinalDistributionAmount.Serialize()
+		if e != nil {
+			return nil, e
+		}
+		buffer.Write(bt)
 	}
 	// ok return
 	return buffer.Bytes(), nil

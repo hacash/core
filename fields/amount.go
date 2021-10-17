@@ -20,6 +20,14 @@ func ParseAmount(buf []byte, seek uint32) *Amount {
 	return empty
 }
 
+func NewEmptyAmountValue() Amount {
+	return Amount{
+		Unit:    0,
+		Dist:    0,
+		Numeral: []byte{},
+	}
+}
+
 func NewEmptyAmount() *Amount {
 	return &Amount{
 		Unit:    0,
