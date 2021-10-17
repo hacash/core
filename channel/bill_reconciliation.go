@@ -20,6 +20,9 @@ type OffChainFormPaymentChannelRealtimeReconciliation struct {
 	LeftBalance  fields.Amount // 左侧实时金额
 	RightBalance fields.Amount // 右侧实时金额
 
+	LeftSatoshi  fields.SatoshiVariation // 左侧比特币sat数量
+	RightSatoshi fields.SatoshiVariation // 右侧比特币sat数量
+
 	// 非签名哈希计算数据部分
 	LeftAddress  fields.Address // 左侧地址
 	RightAddress fields.Address // 右侧地址
@@ -39,17 +42,23 @@ func (e *OffChainFormPaymentChannelRealtimeReconciliation) TypeCode() uint8 {
 func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetChannelId() fields.ChannelId {
 	return e.ChannelId
 }
-func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetLeftAddress() fields.Address {
-	return e.LeftAddress
-}
 func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetLeftBalance() fields.Amount {
 	return e.LeftBalance
 }
-func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetRightAddress() fields.Address {
-	return e.RightAddress
-}
 func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetRightBalance() fields.Amount {
 	return e.RightBalance
+}
+func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetLeftSatoshi() fields.Satoshi {
+	return e.LeftSatoshi.GetRealSatoshi()
+}
+func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetRightSatoshi() fields.Satoshi {
+	return e.RightSatoshi.GetRealSatoshi()
+}
+func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetLeftAddress() fields.Address {
+	return e.LeftAddress
+}
+func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetRightAddress() fields.Address {
+	return e.RightAddress
 }
 func (e *OffChainFormPaymentChannelRealtimeReconciliation) GetReuseVersion() uint32 {
 	return uint32(e.ReuseVersion)
@@ -70,6 +79,8 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) Size() uint32 {
 		elm.BillAutoNumber.Size() +
 		elm.LeftBalance.Size() +
 		elm.RightBalance.Size() +
+		elm.LeftSatoshi.Size() +
+		elm.RightSatoshi.Size() +
 		elm.LeftAddress.Size() +
 		elm.RightAddress.Size() +
 		elm.Timestamp.Size() +
@@ -89,6 +100,10 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) SerializeForSign() 
 	bt, _ = elm.LeftBalance.Serialize()
 	buffer.Write(bt)
 	bt, _ = elm.RightBalance.Serialize()
+	buffer.Write(bt)
+	bt, _ = elm.LeftSatoshi.Serialize()
+	buffer.Write(bt)
+	bt, _ = elm.RightSatoshi.Serialize()
 	buffer.Write(bt)
 	return buffer.Bytes(), nil
 
@@ -147,6 +162,14 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) Parse(buf []byte, s
 		return 0, e
 	}
 	seek, e = elm.RightBalance.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.LeftSatoshi.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.RightSatoshi.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -215,6 +238,9 @@ type OnChainArbitrationBasisReconciliation struct {
 	LeftBalance  fields.Amount // 左侧实时金额
 	RightBalance fields.Amount // 右侧实时金额
 
+	LeftSatoshi  fields.SatoshiVariation // 左侧比特币sat数量
+	RightSatoshi fields.SatoshiVariation // 右侧比特币sat数量
+
 	// 两侧签名
 	LeftSign  fields.Sign // 左侧地址对账签名
 	RightSign fields.Sign // 右侧地址对账签名
@@ -229,6 +255,12 @@ func (e *OnChainArbitrationBasisReconciliation) GetLeftBalance() fields.Amount {
 func (e *OnChainArbitrationBasisReconciliation) GetRightBalance() fields.Amount {
 	return e.RightBalance
 }
+func (e *OnChainArbitrationBasisReconciliation) GetLeftSatoshi() fields.Satoshi {
+	return e.LeftSatoshi.GetRealSatoshi()
+}
+func (e *OnChainArbitrationBasisReconciliation) GetRightSatoshi() fields.Satoshi {
+	return e.RightSatoshi.GetRealSatoshi()
+}
 func (e *OnChainArbitrationBasisReconciliation) GetReuseVersion() uint32 {
 	return uint32(e.ReuseVersion)
 }
@@ -241,6 +273,8 @@ func (elm *OnChainArbitrationBasisReconciliation) Size() uint32 {
 		elm.BillAutoNumber.Size() +
 		elm.LeftBalance.Size() +
 		elm.RightBalance.Size() +
+		elm.LeftSatoshi.Size() +
+		elm.RightSatoshi.Size() +
 		elm.LeftSign.Size() +
 		elm.RightSign.Size()
 }
@@ -257,6 +291,10 @@ func (elm *OnChainArbitrationBasisReconciliation) SerializeForSign() ([]byte, er
 	bt, _ = elm.LeftBalance.Serialize()
 	buffer.Write(bt)
 	bt, _ = elm.RightBalance.Serialize()
+	buffer.Write(bt)
+	bt, _ = elm.LeftSatoshi.Serialize()
+	buffer.Write(bt)
+	bt, _ = elm.RightSatoshi.Serialize()
 	buffer.Write(bt)
 	return buffer.Bytes(), nil
 
@@ -298,6 +336,14 @@ func (elm *OnChainArbitrationBasisReconciliation) Parse(buf []byte, seek uint32)
 		return 0, e
 	}
 	seek, e = elm.RightBalance.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.LeftSatoshi.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.RightSatoshi.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}

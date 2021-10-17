@@ -5,9 +5,12 @@ import (
 	"fmt"
 )
 
+// 比特币一亿分之一
+type Satoshi = VarUint8
+
 type SatoshiVariation struct {
 	NotEmpty Bool
-	ValueSAT VarUint8
+	ValueSAT Satoshi
 }
 
 func NewEmptySatoshiVariation() *SatoshiVariation {
@@ -52,4 +55,12 @@ func (elm *SatoshiVariation) Parse(buf []byte, seek uint32) (uint32, error) {
 		}
 	}
 	return seek, nil
+}
+
+// 获得真实值
+func (elm *SatoshiVariation) GetRealSatoshi() Satoshi {
+	if elm.NotEmpty.Check() {
+		return elm.ValueSAT
+	}
+	return Satoshi(0)
 }

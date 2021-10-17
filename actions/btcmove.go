@@ -254,7 +254,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfaces.ChainStat
 
 	// 发行 btc 到地址
 	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位： 聪 (SAT)
-	return DoAddSatoshiFromChainState(state, act.OriginAddress, fields.VarUint8(satBTC))
+	return DoAddSatoshiFromChainState(state, act.OriginAddress, fields.Satoshi(satBTC))
 }
 
 func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStateOperation) error {
@@ -313,7 +313,7 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfaces.ChainStat
 
 	// 扣除 btc
 	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位 聪
-	return DoSubSatoshiFromChainState(state, act.OriginAddress, fields.VarUint8(satBTC))
+	return DoSubSatoshiFromChainState(state, act.OriginAddress, fields.Satoshi(satBTC))
 }
 
 // 设置所属 belong_trs

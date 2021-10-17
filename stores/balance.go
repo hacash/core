@@ -9,7 +9,7 @@ const ()
 
 type Balance struct {
 	Diamond fields.VarUint3
-	Satoshi fields.VarUint8
+	Satoshi fields.Satoshi
 	Hacash  fields.Amount // max_len = 11
 }
 

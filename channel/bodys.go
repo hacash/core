@@ -8,8 +8,10 @@ import (
 )
 
 const (
-	ChannelTransferDirectionLeftToRight uint8 = 1
-	ChannelTransferDirectionRightToLeft uint8 = 2
+	ChannelTransferDirectionHacashLeftToRight  uint8 = 1
+	ChannelTransferDirectionHacashRightToLeft  uint8 = 2
+	ChannelTransferDirectionSatoshiLeftToRight uint8 = 3
+	ChannelTransferDirectionSatoshiRightToLeft uint8 = 4
 )
 
 // 通道转账，数据体
@@ -19,14 +21,41 @@ type ChannelChainTransferProveBodyInfo struct {
 	ReuseVersion   fields.VarUint4 // 通道重用序号
 	BillAutoNumber fields.VarUint8 // 通道账单流水序号
 
-	PayDirection fields.VarUint1 // 资金流动方向： 1.左侧支付给右侧； 2.右侧付给左侧
-	PayAmount    fields.Amount   // 支付金额，不能为负
-
-	LeftAddress  fields.Address // 左侧地址
-	RightAddress fields.Address // 右侧地址
+	PayDirection fields.VarUint1         // 资金流动方向： HAC 1.左=>右； 2.右=>左  BTC 3.左=>右；4.右=>左
+	PayAmount    fields.Amount           // 支付金额，不能为负
+	PaySatoshi   fields.SatoshiVariation // 支付比特币sat金额
 
 	LeftBalance  fields.Amount // 左侧实时金额
 	RightBalance fields.Amount // 右侧实时金额
+
+	LeftSatoshi  fields.SatoshiVariation // 左侧比特币sat数量
+	RightSatoshi fields.SatoshiVariation // 右侧比特币sat数量
+
+	LeftAddress  fields.Address // 左侧地址
+	RightAddress fields.Address // 右侧地址
+}
+
+func CreateEmptyProveBody(cid fields.ChannelId) *ChannelChainTransferProveBodyInfo {
+	emptyamt1 := fields.NewEmptyAmount()
+	emptyamt2 := fields.NewEmptyAmount()
+	emptyamt3 := fields.NewEmptyAmount()
+	sat1 := fields.NewEmptySatoshiVariation()
+	sat2 := fields.NewEmptySatoshiVariation()
+	sat3 := fields.NewEmptySatoshiVariation()
+	return &ChannelChainTransferProveBodyInfo{
+		ChannelId:      cid,
+		ReuseVersion:   1,
+		BillAutoNumber: 0,
+		PayDirection:   1,
+		PayAmount:      *emptyamt3,
+		PaySatoshi:     *sat3,
+		LeftBalance:    *emptyamt1,
+		RightBalance:   *emptyamt2,
+		LeftSatoshi:    *sat1,
+		RightSatoshi:   *sat2,
+		LeftAddress:    nil,
+		RightAddress:   nil,
+	}
 }
 
 // interface
@@ -36,14 +65,20 @@ func (e *ChannelChainTransferProveBodyInfo) GetChannelId() fields.ChannelId {
 func (e *ChannelChainTransferProveBodyInfo) GetLeftBalance() fields.Amount {
 	return e.LeftBalance
 }
+func (e *ChannelChainTransferProveBodyInfo) GetRightBalance() fields.Amount {
+	return e.RightBalance
+}
+func (e *ChannelChainTransferProveBodyInfo) GetLeftSatoshi() fields.Satoshi {
+	return e.LeftSatoshi.GetRealSatoshi()
+}
+func (e *ChannelChainTransferProveBodyInfo) GetRightSatoshi() fields.Satoshi {
+	return e.RightSatoshi.GetRealSatoshi()
+}
 func (e *ChannelChainTransferProveBodyInfo) GetLeftAddress() fields.Address {
 	return e.LeftAddress
 }
 func (e *ChannelChainTransferProveBodyInfo) GetRightAddress() fields.Address {
 	return e.RightAddress
-}
-func (e *ChannelChainTransferProveBodyInfo) GetRightBalance() fields.Amount {
-	return e.RightBalance
 }
 func (e *ChannelChainTransferProveBodyInfo) GetReuseVersion() uint32 {
 	return uint32(e.ReuseVersion)
@@ -58,10 +93,13 @@ func (elm *ChannelChainTransferProveBodyInfo) Size() uint32 {
 		elm.BillAutoNumber.Size() +
 		elm.PayDirection.Size() +
 		elm.PayAmount.Size() +
-		elm.LeftAddress.Size() +
-		elm.RightAddress.Size() +
+		elm.PaySatoshi.Size() +
 		elm.LeftBalance.Size() +
-		elm.RightBalance.Size()
+		elm.RightBalance.Size() +
+		elm.LeftSatoshi.Size() +
+		elm.RightSatoshi.Size() +
+		elm.LeftAddress.Size() +
+		elm.RightAddress.Size()
 	// ok
 	return size
 }
@@ -79,13 +117,19 @@ func (elm *ChannelChainTransferProveBodyInfo) Serialize() ([]byte, error) {
 	buffer.Write(bt)
 	bt, _ = elm.PayAmount.Serialize()
 	buffer.Write(bt)
-	bt, _ = elm.LeftAddress.Serialize()
-	buffer.Write(bt)
-	bt, _ = elm.RightAddress.Serialize()
+	bt, _ = elm.PaySatoshi.Serialize()
 	buffer.Write(bt)
 	bt, _ = elm.LeftBalance.Serialize()
 	buffer.Write(bt)
 	bt, _ = elm.RightBalance.Serialize()
+	buffer.Write(bt)
+	bt, _ = elm.LeftSatoshi.Serialize()
+	buffer.Write(bt)
+	bt, _ = elm.RightSatoshi.Serialize()
+	buffer.Write(bt)
+	bt, _ = elm.LeftAddress.Serialize()
+	buffer.Write(bt)
+	bt, _ = elm.RightAddress.Serialize()
 	buffer.Write(bt)
 	return buffer.Bytes(), nil
 }
@@ -112,11 +156,7 @@ func (elm *ChannelChainTransferProveBodyInfo) Parse(buf []byte, seek uint32) (ui
 	if e != nil {
 		return 0, e
 	}
-	seek, e = elm.LeftAddress.Parse(buf, seek)
-	if e != nil {
-		return 0, e
-	}
-	seek, e = elm.RightAddress.Parse(buf, seek)
+	seek, e = elm.PaySatoshi.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -125,6 +165,22 @@ func (elm *ChannelChainTransferProveBodyInfo) Parse(buf []byte, seek uint32) (ui
 		return 0, e
 	}
 	seek, e = elm.RightBalance.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.LeftSatoshi.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.RightSatoshi.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.LeftAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.RightAddress.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}

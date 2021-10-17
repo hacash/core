@@ -50,11 +50,14 @@ type ReconciliationBalanceBill interface {
 
 	GetChannelId() fields.ChannelId
 
-	GetLeftAddress() fields.Address
-	GetRightAddress() fields.Address
+	GetLeftSatoshi() fields.Satoshi
+	GetRightSatoshi() fields.Satoshi
 
 	GetLeftBalance() fields.Amount
 	GetRightBalance() fields.Amount
+
+	GetLeftAddress() fields.Address
+	GetRightAddress() fields.Address
 
 	GetTimestamp() uint64 // 对账时间戳，秒
 

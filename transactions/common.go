@@ -58,13 +58,13 @@ func CreateOneTxOfBTCTransfer(payacc *account.Account, toaddr fields.Address, am
 	if bytes.Compare(payacc.Address, feeacc.Address) == 0 {
 		tranact = &actions.Action_8_SimpleSatoshiTransfer{
 			ToAddress: toaddr,
-			Amount:    fields.VarUint8(amount),
+			Amount:    fields.Satoshi(amount),
 		}
 	} else {
 		tranact = &actions.Action_11_FromToSatoshiTransfer{
 			FromAddress: payacc.Address,
 			ToAddress:   toaddr,
-			Amount:      fields.VarUint8(amount),
+			Amount:      fields.Satoshi(amount),
 		}
 		// sign add
 		allPrivateKeyBytes[string(payacc.Address)] = payacc.PrivateKey

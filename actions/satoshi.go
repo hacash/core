@@ -10,13 +10,13 @@ import (
 
 type Action_8_SimpleSatoshiTransfer struct {
 	ToAddress fields.Address
-	Amount    fields.VarUint8
+	Amount    fields.Satoshi
 
 	// data ptr
 	belong_trs interfaces.Transaction
 }
 
-func NewAction_8_SimpleSatoshiTransfer(addr fields.Address, amt fields.VarUint8) *Action_8_SimpleSatoshiTransfer {
+func NewAction_8_SimpleSatoshiTransfer(addr fields.Address, amt fields.Satoshi) *Action_8_SimpleSatoshiTransfer {
 	return &Action_8_SimpleSatoshiTransfer{
 		ToAddress: addr,
 		Amount:    amt,
@@ -102,13 +102,13 @@ func (act *Action_8_SimpleSatoshiTransfer) IsBurning90PersentTxFees() bool {
 type Action_11_FromToSatoshiTransfer struct {
 	FromAddress fields.Address
 	ToAddress   fields.Address
-	Amount      fields.VarUint8
+	Amount      fields.Satoshi
 
 	// data ptr
 	belong_trs interfaces.Transaction
 }
 
-func NewAction_11_FromToSatoshiTransfer(fromaddr fields.Address, toaddr fields.Address, amt fields.VarUint8) *Action_11_FromToSatoshiTransfer {
+func NewAction_11_FromToSatoshiTransfer(fromaddr fields.Address, toaddr fields.Address, amt fields.Satoshi) *Action_11_FromToSatoshiTransfer {
 	return &Action_11_FromToSatoshiTransfer{
 		FromAddress: fromaddr,
 		ToAddress:   toaddr,

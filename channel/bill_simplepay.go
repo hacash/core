@@ -77,6 +77,14 @@ func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetRightBalance() fiel
 	return c.ChannelChainTransferTargetProveBody.RightBalance
 }
 
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetLeftSatoshi() fields.Satoshi {
+	return c.ChannelChainTransferTargetProveBody.LeftSatoshi.GetRealSatoshi()
+}
+
+func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetRightSatoshi() fields.Satoshi {
+	return c.ChannelChainTransferTargetProveBody.RightSatoshi.GetRealSatoshi()
+}
+
 func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetLeftAddress() fields.Address {
 	return c.ChannelChainTransferTargetProveBody.LeftAddress
 }

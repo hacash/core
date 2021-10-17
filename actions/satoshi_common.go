@@ -9,7 +9,7 @@ import (
 )
 
 // btc 转账 （amt 单位 聪）
-func DoSimpleSatoshiTransferFromChainState(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, sat fields.VarUint8) error {
+func DoSimpleSatoshiTransferFromChainState(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, sat fields.Satoshi) error {
 	if sat == 0 {
 		return nil // 数量为0，直接成功
 	}
@@ -31,12 +31,12 @@ func DoSimpleSatoshiTransferFromChainState(state interfaces.ChainStateOperation,
 		bls2 = stores.NewEmptyBalance() // create satoshi store
 	}
 	sat2 := bls2.Satoshi
-	bls1.Satoshi = fields.VarUint8(uint64(sat1) - uint64(sat)) // 扣除
+	bls1.Satoshi = fields.Satoshi(uint64(sat1) - uint64(sat)) // 扣除
 	bse1 := state.BalanceSet(addr1, bls1)
 	if bse1 != nil {
 		return bse1
 	}
-	bls2.Satoshi = fields.VarUint8(uint64(sat2) + uint64(sat)) // 增加
+	bls2.Satoshi = fields.Satoshi(uint64(sat2) + uint64(sat)) // 增加
 	bse2 := state.BalanceSet(addr2, bls2)
 	if bse2 != nil {
 		return bse2
@@ -46,7 +46,7 @@ func DoSimpleSatoshiTransferFromChainState(state interfaces.ChainStateOperation,
 }
 
 // 单纯增加 BTC 余额 （amt 单位 聪）
-func DoAddSatoshiFromChainState(state interfaces.ChainStateOperation, addr fields.Address, sat fields.VarUint8) error {
+func DoAddSatoshiFromChainState(state interfaces.ChainStateOperation, addr fields.Address, sat fields.Satoshi) error {
 	if sat == 0 {
 		return nil // 数量为0，直接成功
 	}
@@ -57,7 +57,7 @@ func DoAddSatoshiFromChainState(state interfaces.ChainStateOperation, addr field
 	basesat := blssto.Satoshi
 	newsat := uint64(basesat) + uint64(sat) // 增加
 	// 新余额
-	blssto.Satoshi = fields.VarUint8(newsat)
+	blssto.Satoshi = fields.Satoshi(newsat)
 	bserr := state.BalanceSet(addr, blssto)
 	if bserr != nil {
 		return bserr
@@ -66,7 +66,7 @@ func DoAddSatoshiFromChainState(state interfaces.ChainStateOperation, addr field
 }
 
 // 单纯扣除 BTC 余额 （amt 单位 聪）
-func DoSubSatoshiFromChainState(state interfaces.ChainStateOperation, addr fields.Address, sat fields.VarUint8) error {
+func DoSubSatoshiFromChainState(state interfaces.ChainStateOperation, addr fields.Address, sat fields.Satoshi) error {
 	if sat == 0 {
 		return nil // 数量为0，直接成功
 	}
@@ -80,7 +80,7 @@ func DoSubSatoshiFromChainState(state interfaces.ChainStateOperation, addr field
 		return fmt.Errorf("address %s satoshi %d not enough, need more %d.", addr.ToReadable(), basesat, sat)
 	}
 	newsat := uint64(basesat) - uint64(sat) // 扣除
-	blssto.Satoshi = fields.VarUint8(newsat)
+	blssto.Satoshi = fields.Satoshi(newsat)
 	bserr := state.BalanceSet(addr, blssto)
 	if bserr != nil {
 		return bserr

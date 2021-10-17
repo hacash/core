@@ -149,7 +149,7 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteinChainState(state interf
 
 	// 检查扣除比特币余额
 	realSat := uint64(act.MortgageBitcoinPortion) * 100 * 10000 // 一份 = 0.01 BTC
-	e0 := DoSubSatoshiFromChainState(state, feeAddr, fields.VarUint8(realSat))
+	e0 := DoSubSatoshiFromChainState(state, feeAddr, fields.Satoshi(realSat))
 	if e0 != nil {
 		return e0 // 比特币余额不足
 	}
@@ -275,7 +275,7 @@ func (act *Action_17_BitcoinsSystemLendingCreate) RecoverChainState(state interf
 
 	// 回退比特币余额
 	realSat := uint64(act.MortgageBitcoinPortion) * 100 * 10000 // 一份 = 0.01 BTC
-	e = DoAddSatoshiFromChainState(state, feeAddr, fields.VarUint8(realSat))
+	e = DoAddSatoshiFromChainState(state, feeAddr, fields.Satoshi(realSat))
 	if e != nil {
 		return e
 	}
@@ -481,7 +481,7 @@ func (act *Action_18_BitcoinsSystemLendingRansom) WriteinChainState(state interf
 
 	// 增加比特币余额
 	addSat := uint64(btclendObj.MortgageBitcoinPortion) * 100 * 10000
-	e9 := DoAddSatoshiFromChainState(state, feeAddr, fields.VarUint8(addSat))
+	e9 := DoAddSatoshiFromChainState(state, feeAddr, fields.Satoshi(addSat))
 	if e9 != nil {
 		return e9
 	}
@@ -547,7 +547,7 @@ func (act *Action_18_BitcoinsSystemLendingRansom) RecoverChainState(state interf
 
 	// 回退减少比特币余额
 	addSat := uint64(btclendObj.MortgageBitcoinPortion) * 100 * 10000
-	e9 := DoSubSatoshiFromChainState(state, feeAddr, fields.VarUint8(addSat))
+	e9 := DoSubSatoshiFromChainState(state, feeAddr, fields.Satoshi(addSat))
 	if e9 != nil {
 		return e9
 	}
