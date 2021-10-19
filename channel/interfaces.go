@@ -14,9 +14,11 @@ import (
 // 链上仲裁对账依据
 type OnChainChannelPaymentArbitrationReconciliationBasis interface {
 	GetChannelId() fields.ChannelId
-	GetLeftBalance() fields.Amount  // 左侧实时金额
-	GetRightBalance() fields.Amount // 右侧实时金额
-	GetReuseVersion() uint32        // 通道重用序号
+	GetLeftBalance() fields.Amount   // 左侧HAC金额
+	GetRightBalance() fields.Amount  // 右侧HAC金额
+	GetLeftSatoshi() fields.Satoshi  // 左侧分配BTC sat数额
+	GetRightSatoshi() fields.Satoshi // 右侧分配BTC sat数额
+	GetReuseVersion() uint32         // 通道重用序号
 	GetAutoNumber() uint64
 	// 检查地址和签名
 	CheckAddressAndSign(laddr, raddr fields.Address) error

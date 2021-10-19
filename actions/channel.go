@@ -9,7 +9,6 @@ import (
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/stores"
-	"github.com/hacash/core/sys"
 )
 
 /**
@@ -170,7 +169,7 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	}
 	// 累加锁入的HAC
 	addamt := act.LeftAmount.ToMei() + act.RightAmount.ToMei()
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedInChannel, addamt)
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedHACInChannel, addamt)
 	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1)
 	// update total supply
 	e3 := state.UpdateSetTotalSupply(totalsupply)
@@ -203,7 +202,7 @@ func (act *Action_2_OpenPaymentChannel) RecoverChainState(state interfaces.Chain
 	}
 	// 回退解锁的HAC
 	addamt := act.LeftAmount.ToMei() + act.RightAmount.ToMei()
-	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfLocatedInChannel, addamt)
+	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfLocatedHACInChannel, addamt)
 	// update total supply
 	e3 := state.UpdateSetTotalSupply(totalsupply)
 	if e3 != nil {
@@ -289,11 +288,15 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 
 	// 写入状态
 	// 使用存入的金额计算通道利息
-	return closePaymentChannelWriteinChainState(state, act.ChannelId, paychan, nil, nil, false)
+	// SAT 从通道提出
+	leftSAT := paychan.LeftSatoshi.GetRealSatoshi()
+	rightSAT := paychan.RightSatoshi.GetRealSatoshi()
+	return closePaymentChannelWriteinChainState(state, act.ChannelId, paychan,
+		nil, nil, leftSAT, rightSAT, false)
 }
 
 func (act *Action_3_ClosePaymentChannel) RecoverChainState(state interfaces.ChainStateOperation) error {
-	return closePaymentChannelRecoverChainState(state, act.ChannelId, nil, nil, false)
+	return closePaymentChannelRecoverChainState_deprecated(state, act.ChannelId, nil, nil, false)
 }
 
 func (elm *Action_3_ClosePaymentChannel) SetBelongTransaction(t interfaces.Transaction) {
@@ -404,12 +407,14 @@ func (act *Action_12_ClosePaymentChannelBySetupAmount) WriteinChainState(state i
 		return fmt.Errorf("Payment Channel <%s> address not match.", act.RightAddress.ToReadable())
 	}
 	// 写入状态
+	leftSAT := paychan.LeftSatoshi.GetRealSatoshi()
+	rightSAT := paychan.RightSatoshi.GetRealSatoshi()
 	return closePaymentChannelWriteinChainState(state, act.ChannelId,
-		paychan, &act.LeftAmount, &act.RightAmount, false)
+		paychan, &act.LeftAmount, &act.RightAmount, leftSAT, rightSAT, false)
 }
 
 func (act *Action_12_ClosePaymentChannelBySetupAmount) RecoverChainState(state interfaces.ChainStateOperation) error {
-	return closePaymentChannelRecoverChainState(state, act.ChannelId, &act.LeftAmount, &act.RightAmount, false)
+	return closePaymentChannelRecoverChainState_deprecated(state, act.ChannelId, &act.LeftAmount, &act.RightAmount, false)
 }
 
 func (elm *Action_12_ClosePaymentChannelBySetupAmount) SetBelongTransaction(t interfaces.Transaction) {
@@ -425,8 +430,9 @@ func (act *Action_12_ClosePaymentChannelBySetupAmount) IsBurning90PersentTxFees(
 
 // 关闭、结算 支付通道（资金分配改变）仅仅提供 left 的余额分配，自动计算 right 的分配
 type Action_21_ClosePaymentChannelBySetupOnlyLeftAmount struct {
-	ChannelId  fields.ChannelId // 通道id
-	LeftAmount fields.Amount    // 左侧最终分配金额
+	ChannelId   fields.ChannelId        // 通道id
+	LeftAmount  fields.Amount           // 左侧最终分配HAC
+	LeftSatoshi fields.SatoshiVariation // 左侧最终分配SAT
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -479,9 +485,9 @@ func (elm *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) RequestSignAddres
 
 func (act *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) WriteinChainState(state interfaces.ChainStateOperation) error {
 
-	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
-	}
+	//if !sys.TestDebugLocalDevelopmentMark {
+	//	return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+	//}
 
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
@@ -519,8 +525,17 @@ func (act *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) WriteinChainState
 		return e2
 	}
 	// 写入状态
+	leftOldSAT := paychan.LeftSatoshi.GetRealSatoshi()
+	rightOldSAT := paychan.RightSatoshi.GetRealSatoshi()
+	totalOldSAT := leftOldSAT + rightOldSAT
+	leftNewSAT := act.LeftSatoshi.GetRealSatoshi()
+	if leftNewSAT > totalOldSAT {
+		// 单侧分配金额不能超过总金额
+		return fmt.Errorf("Left satoshi %d cannot more than total %d.", leftNewSAT, totalOldSAT)
+	}
+	rightNewSAT := totalOldSAT - leftNewSAT
 	return closePaymentChannelWriteinChainState(state, act.ChannelId,
-		paychan, &act.LeftAmount, closedRightAmount, false)
+		paychan, &act.LeftAmount, closedRightAmount, leftNewSAT, rightNewSAT, false)
 }
 
 func (act *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) RecoverChainState(state interfaces.ChainStateOperation) error {
@@ -534,7 +549,7 @@ func (act *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) RecoverChainState
 	var totalAmount, _ = paychan.LeftAmount.Add(&paychan.RightAmount)
 	// 计算右侧金额
 	var closedRightAmount, _ = totalAmount.Sub(&act.LeftAmount)
-	return closePaymentChannelRecoverChainState(state, act.ChannelId, &act.LeftAmount, closedRightAmount, false)
+	return closePaymentChannelRecoverChainState_deprecated(state, act.ChannelId, &act.LeftAmount, closedRightAmount, false)
 }
 
 func (elm *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) SetBelongTransaction(t interfaces.Transaction) {
@@ -550,7 +565,7 @@ func (act *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) IsBurning90Persen
 
 // 关闭通道状态写入
 // isFinalClosed : 是否为仲裁终局结束，不可重用
-func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, channelId []byte, paychan *stores.Channel, newLeftAmt *fields.Amount, newRightAmt *fields.Amount, isFinalClosed bool) error {
+func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, channelId []byte, paychan *stores.Channel, newLeftAmt *fields.Amount, newRightAmt *fields.Amount, leftNewSAT fields.Satoshi, rightNewSAT fields.Satoshi, isFinalClosed bool) error {
 	var e error
 	// 判断通道已经关闭
 	if paychan == nil {
@@ -581,7 +596,7 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 	}
 	if tt1.NotEqual(tt2) {
 		// 不相等
-		return fmt.Errorf("Payment channel distribution amount must equal with lock in.")
+		return fmt.Errorf("HAC distribution amount must equal with lock in.")
 	}
 	// 计算获得当前的区块高度
 	//var curheight uint64 = 1
@@ -592,6 +607,7 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 		return e11
 	}
 	// 增加余额（将锁定的金额和利息从通道中提取出来）
+	// HAC
 	e = DoAddBalanceFromChainState(state, paychan.LeftAddress, *leftAmount)
 	if e != nil {
 		return e
@@ -599,6 +615,28 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 	e = DoAddBalanceFromChainState(state, paychan.RightAddress, *rightAmount)
 	if e != nil {
 		return e
+	}
+	// SAT 从通道提出
+	leftOldSAT := paychan.LeftSatoshi.GetRealSatoshi()
+	rightOldSAT := paychan.RightSatoshi.GetRealSatoshi()
+	totalOldSAT := leftOldSAT + rightOldSAT
+	totalNewSAT := leftNewSAT + rightNewSAT
+	// 检查总量是否匹配
+	if totalOldSAT != totalNewSAT {
+		return fmt.Errorf("SAT distribution error: need total %d SAT but got %d (left: %d, right: %d).",
+			totalOldSAT, totalNewSAT, leftNewSAT, rightNewSAT)
+	}
+	if leftNewSAT > 0 {
+		e = DoAddSatoshiFromChainState(state, paychan.LeftAddress, leftNewSAT)
+		if e != nil {
+			return e
+		}
+	}
+	if leftNewSAT > 0 {
+		e = DoAddSatoshiFromChainState(state, paychan.RightAddress, rightNewSAT)
+		if e != nil {
+			return e
+		}
 	}
 	// 暂时保留通道用于数据回退
 	// 计算左侧最终分配
@@ -619,8 +657,11 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 	}
 	// 减少解锁的HAC
 	lockamt := paychan.LeftAmount.ToMei() + paychan.RightAmount.ToMei()
-	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfLocatedInChannel, lockamt)
-	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1)
+	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfLocatedHACInChannel, lockamt) // 减少锁定的HAC统计
+	if totalNewSAT > 0 {
+		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfLocatedSATInChannel, float64(totalNewSAT)) // 减少锁定的SAT统计
+	}
+	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1) // 减少通道数量统计
 	// 增加通道利息统计
 	if haveinterest {
 		releaseamt := leftAmount.ToMei() + rightAmount.ToMei()
@@ -643,7 +684,7 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 }
 
 // 关闭通道状态回退
-func closePaymentChannelRecoverChainState(state interfaces.ChainStateOperation, channelId []byte, newLeftAmt *fields.Amount, newRightAmt *fields.Amount, backToChallenging bool) error {
+func closePaymentChannelRecoverChainState_deprecated(state interfaces.ChainStateOperation, channelId []byte, newLeftAmt *fields.Amount, newRightAmt *fields.Amount, backToChallenging bool) error {
 
 	panic("RecoverChainState be deprecated")
 
@@ -696,7 +737,7 @@ func closePaymentChannelRecoverChainState(state interfaces.ChainStateOperation, 
 	}
 	// 回退解锁的HAC
 	lockamt := paychan.LeftAmount.ToMei() + paychan.RightAmount.ToMei()
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedInChannel, lockamt)
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedHACInChannel, lockamt)
 	// 回退通道利息统计
 	if haveinterest {
 		releaseamt := leftAmount.ToMei() + rightAmount.ToMei()

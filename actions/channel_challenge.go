@@ -97,13 +97,16 @@ func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteinChainState(s
 	// 挑战者状态
 	clghei := state.GetPendingBlockHeight()
 	var clgamt = fields.Amount{}
+	var clgsat = fields.Satoshi(0)
 	if addrIsLeft {
 		clgamt = paychan.LeftAmount
+		clgsat = paychan.LeftSatoshi.GetRealSatoshi()
 	} else {
 		clgamt = paychan.RightAmount
+		clgsat = paychan.RightSatoshi.GetRealSatoshi()
 	}
 	// 更新至挑战期，没有账单编号
-	paychan.SetChallenging(clghei, addrIsLeft, &clgamt, 0)
+	paychan.SetChallenging(clghei, addrIsLeft, &clgamt, clgsat, 0)
 	// 写入状态
 	e = state.ChannelUpdate(act.ChannelId, paychan)
 	if e != nil {
@@ -393,7 +396,7 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 ///////////////////////////////////////////////
 
 // 单方面结束
-// 1. 通过 通道链支付 单方面关闭通道，进入挑战期
+// 1. 通过 通道&链上原子交换 单方面关闭通道，进入挑战期
 // 2. 提供通道链支付对账单，回应挑战，夺取对方全部金额
 type Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnchainAtomicExchange struct {
 	// 主张者地址
@@ -585,8 +588,10 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interf
 	}
 	// 仲裁金额
 	var assertTargetAmount = objlamt // 左侧
+	var assertTargetSAT = obj.GetLeftSatoshi()
 	if assertAddressIsRight {
 		assertTargetAmount = objramt // 右侧
+		assertTargetSAT = obj.GetRightSatoshi()
 	}
 
 	// 判断通道状态，是进入挑战期，还是最终夺取
@@ -596,7 +601,7 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interf
 		blkhei := state.GetPendingBlockHeight()
 		// 改变状态
 		paychan.SetChallenging(blkhei, assertAddressIsLeft,
-			&assertTargetAmount, uint64(billAutoNumber))
+			&assertTargetAmount, assertTargetSAT, uint64(billAutoNumber))
 		// 写入状态
 		return state.ChannelUpdate(channelId, paychan)
 
@@ -611,14 +616,19 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interf
 		// 夺取全部资金，关闭通道
 		var lamt = fields.NewEmptyAmount()
 		var ramt = fields.NewEmptyAmount()
+		var lsat = fields.Satoshi(0)
+		var rsat = fields.Satoshi(0)
+		ttsat := paychan.LeftSatoshi.GetRealSatoshi() + paychan.RightSatoshi.GetRealSatoshi()
 		if assertAddressIsLeft {
-			lamt = paychanTotalAmt // 左侧账户夺取全部资金
+			lamt = paychanTotalAmt // 左侧账户夺取全部资金，包括HAC和SAT
+			lsat = ttsat
 		} else {
-			ramt = paychanTotalAmt // 右侧账户夺取全部资金
+			ramt = paychanTotalAmt // 右侧账户夺取全部资金，包括HAC和SAT
+			rsat = ttsat
 		}
 		// 关闭通道，夺取全部资金和利息
 		isFinalClosed := true // 最终仲裁永久关闭
-		return closePaymentChannelWriteinChainState(state, channelId, paychan, lamt, ramt, isFinalClosed)
+		return closePaymentChannelWriteinChainState(state, channelId, paychan, lamt, ramt, lsat, rsat, isFinalClosed)
 
 	} else {
 		return fmt.Errorf("Payment Channel <%s> status error.", hex.EncodeToString(channelId))
@@ -647,7 +657,7 @@ func checkChannelGotoChallegingOrFinalDistributionRecoverChainState(state interf
 		// 状态回到挑战期
 		isBackToChalleging := true
 		// 回退账户余额
-		return closePaymentChannelRecoverChainState(state, channelId, lamt, ramt, isBackToChalleging)
+		return closePaymentChannelRecoverChainState_deprecated(state, channelId, lamt, ramt, isBackToChalleging)
 
 	} else if paychan.IsChallenging() {
 
@@ -738,15 +748,28 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteinChainState(s
 	// 按主张分配资金，结束通道
 	var lamt = fields.NewEmptyAmount()
 	var ramt = fields.NewEmptyAmount()
+	var ttamt, e = paychan.LeftAmount.Add(&paychan.RightAmount)
+	if e != nil {
+		return e
+	}
+	var lsat = fields.Satoshi(0)
+	var rsat = fields.Satoshi(0)
+	ttsat := paychan.LeftSatoshi.GetRealSatoshi() + paychan.RightSatoshi.GetRealSatoshi()
 	if paychan.AssertAddressIsLeftOrRight.Check() {
 		lamt = &paychan.AssertAmount // 左侧为主张者
+		ramt, _ = ttamt.Sub(lamt)
+		lsat = paychan.AssertSatoshi.GetRealSatoshi()
+		rsat = ttsat - lsat // 右侧自动分得剩余资金
 	} else {
 		ramt = &paychan.AssertAmount // 右侧为主张者
+		lamt, _ = ttamt.Sub(ramt)
+		rsat = paychan.AssertSatoshi.GetRealSatoshi()
+		lsat = ttsat - rsat // 左侧自动分得剩余资金
 	}
 
 	// 关闭
 	isFinnalClosed := true
-	return closePaymentChannelWriteinChainState(state, act.ChannelId, paychan, lamt, ramt, isFinnalClosed)
+	return closePaymentChannelWriteinChainState(state, act.ChannelId, paychan, lamt, ramt, lsat, rsat, isFinnalClosed)
 }
 
 func (act *Action_27_ClosePaymentChannelByClaimDistribution) RecoverChainState(state interfaces.ChainStateOperation) error {
@@ -768,7 +791,7 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) RecoverChainState(s
 
 	// 关闭
 	isFinnalClosed := true
-	return closePaymentChannelRecoverChainState(state, act.ChannelId, lamt, ramt, isFinnalClosed)
+	return closePaymentChannelRecoverChainState_deprecated(state, act.ChannelId, lamt, ramt, isFinnalClosed)
 }
 
 func (elm *Action_27_ClosePaymentChannelByClaimDistribution) SetBelongTransaction(t interfaces.Transaction) {

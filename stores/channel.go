@@ -32,11 +32,12 @@ type Channel struct {
 	Status              fields.VarUint1         // 已经关闭并结算等状态
 
 	// Status = 1 挑战期保存数据
-	IsHaveChallengeLog         fields.Bool        // 记录挑战期数据日志
-	ChallengeLaunchHeight      fields.BlockHeight // 挑战开始的区块高度
-	AssertBillAutoNumber       fields.VarUint8    // 账单流水编号
-	AssertAddressIsLeftOrRight fields.Bool        // 主张者是左侧地址还是右侧 true-左  false-右
-	AssertAmount               fields.Amount      // 主张者主张自己应该分配的金额
+	IsHaveChallengeLog         fields.Bool             // 记录挑战期数据日志
+	ChallengeLaunchHeight      fields.BlockHeight      // 挑战开始的区块高度
+	AssertBillAutoNumber       fields.VarUint8         // 账单流水编号
+	AssertAddressIsLeftOrRight fields.Bool             // 主张者是左侧地址还是右侧 true-左  false-右
+	AssertAmount               fields.Amount           // 主张者主张自己应该分配的金额
+	AssertSatoshi              fields.SatoshiVariation // 主张者主张自己应该分配的SAT
 
 	// Status = 2 or Status = 3 已经关闭资金分配
 	LeftFinalDistributionAmount fields.Amount // 左侧最终分配金额
@@ -90,13 +91,15 @@ func (this *Channel) SetFinalArbitrationClosed(leftEndAmt *fields.Amount) {
 func (this *Channel) SetOpening() {
 	this.Status = ChannelStatusOpening
 }
-func (this *Channel) SetChallenging(blkhei uint64, isLeftAddr bool, assertAmount *fields.Amount, billno uint64) {
+func (this *Channel) SetChallenging(blkhei uint64, isLeftAddr bool, assertAmount *fields.Amount, assertSAT fields.Satoshi, billno uint64) {
 	this.Status = ChannelStatusChallenging
 	this.IsHaveChallengeLog.Set(true)
 	this.ChallengeLaunchHeight = fields.BlockHeight(blkhei)
 	this.AssertBillAutoNumber = fields.VarUint8(billno)
 	this.AssertAddressIsLeftOrRight.Set(isLeftAddr)
 	this.AssertAmount = *assertAmount
+	this.AssertSatoshi = assertSAT.GetSatoshiVariation()
+
 }
 func (this *Channel) CleanChallengingLog() {
 	this.IsHaveChallengeLog.Set(false)
@@ -105,6 +108,7 @@ func (this *Channel) CleanChallengingLog() {
 	this.AssertAddressIsLeftOrRight.Set(false)
 	emt := fields.NewEmptyAmount()
 	this.AssertAmount = *emt
+	this.AssertSatoshi = fields.NewEmptySatoshiVariation()
 }
 
 func (this *Channel) Size() uint32 {
@@ -122,7 +126,8 @@ func (this *Channel) Size() uint32 {
 		size += this.ChallengeLaunchHeight.Size() +
 			this.AssertBillAutoNumber.Size() +
 			this.AssertAddressIsLeftOrRight.Size() +
-			this.AssertAmount.Size()
+			this.AssertAmount.Size() +
+			this.AssertSatoshi.Size()
 	}
 	if this.IsClosed() {
 		size += this.LeftFinalDistributionAmount.Size()
@@ -186,6 +191,10 @@ func (this *Channel) Parse(buf []byte, seek uint32) (uint32, error) {
 			return 0, e
 		}
 		seek, e = this.AssertAmount.Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
+		seek, e = this.AssertSatoshi.Parse(buf, seek)
 		if e != nil {
 			return 0, e
 		}
@@ -270,6 +279,11 @@ func (this *Channel) Serialize() ([]byte, error) {
 		}
 		buffer.Write(bt)
 		bt, e = this.AssertAmount.Serialize()
+		if e != nil {
+			return nil, e
+		}
+		buffer.Write(bt)
+		bt, e = this.AssertSatoshi.Serialize()
 		if e != nil {
 			return nil, e
 		}

@@ -8,6 +8,16 @@ import (
 // 比特币一亿分之一
 type Satoshi = VarUint8
 
+func (elm Satoshi) GetSatoshiVariation() SatoshiVariation {
+	if elm == 0 {
+		return NewEmptySatoshiVariation()
+	}
+	return SatoshiVariation{
+		NotEmpty: CreateBool(true),
+		ValueSAT: elm,
+	}
+}
+
 type SatoshiVariation struct {
 	NotEmpty Bool
 	ValueSAT Satoshi

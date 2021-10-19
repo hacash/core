@@ -10,7 +10,7 @@ import (
 
 const (
 	typeSizeMax   int = 32
-	typeSizeValid int = 18 // 当前可用的
+	typeSizeValid int = 19 // 当前可用的
 	// 钻石
 	TotalSupplyStoreTypeOfDiamond uint8 = 0 // 已挖掘出的钻石数量
 	// BTC
@@ -20,24 +20,25 @@ const (
 	TotalSupplyStoreTypeOfChannelInterest                uint8 = 3 // 通道利息HAC累计
 	TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed uint8 = 4 // 比特币转移增发成功解锁的HAC累计
 	// 数据统计
-	TotalSupplyStoreTypeOfLocatedInChannel uint8 = 5 // 当前有效锁定在通道内的HAC数量
-	TotalSupplyStoreTypeOfChannelOfOpening uint8 = 6 // 当前处于开启状态的通道数量
+	TotalSupplyStoreTypeOfLocatedHACInChannel uint8 = 5 // 当前有效锁定在通道内的HAC数量
+	TotalSupplyStoreTypeOfLocatedSATInChannel uint8 = 6 // 当前有效锁定在通道内的HAC数量
+	TotalSupplyStoreTypeOfChannelOfOpening    uint8 = 7 // 当前处于开启状态的通道数量
 	// 销毁手续费
-	TotalSupplyStoreTypeOfBurningFee uint8 = 7 // 手续费燃烧销毁HAC累计
+	TotalSupplyStoreTypeOfBurningFee uint8 = 8 // 手续费燃烧销毁HAC累计
 	// 钻石借贷
-	TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount      uint8 = 8  // 钻石系统借贷抵押数量实时统计
-	TotalSupplyStoreTypeOfSystemLendingDiamondCumulationLoanHacAmount   uint8 = 9  // 钻石系统抵押累计借出HAC流水数量
-	TotalSupplyStoreTypeOfSystemLendingDiamondCumulationRansomHacAmount uint8 = 10 // 钻石系统抵押累计赎回（销毁）HAC流水数量
+	TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount      uint8 = 9  // 钻石系统借贷抵押数量实时统计
+	TotalSupplyStoreTypeOfSystemLendingDiamondCumulationLoanHacAmount   uint8 = 10 // 钻石系统抵押累计借出HAC流水数量
+	TotalSupplyStoreTypeOfSystemLendingDiamondCumulationRansomHacAmount uint8 = 11 // 钻石系统抵押累计赎回（销毁）HAC流水数量
 	// 比特币借贷（每一份为 0.01 BTC）
-	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount      uint8 = 11 // 比特币系统借贷抵押份数实时统计
-	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionBurningInterestHacAmount  uint8 = 12 // 比特币系统借贷预销毁利息统计
-	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCumulationLoanHacAmount   uint8 = 13 // 比特币系统借贷累计借出HAC流水数量
-	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCumulationRansomHacAmount uint8 = 14 // 比特币系统借贷累计赎回HAC流水数量
+	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount      uint8 = 12 // 比特币系统借贷抵押份数实时统计
+	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionBurningInterestHacAmount  uint8 = 13 // 比特币系统借贷预销毁利息统计
+	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCumulationLoanHacAmount   uint8 = 14 // 比特币系统借贷累计借出HAC流水数量
+	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCumulationRansomHacAmount uint8 = 15 // 比特币系统借贷累计赎回HAC流水数量
 	// 用户间借贷
-	TotalSupplyStoreTypeOfUsersLendingCumulationDiamond                  uint8 = 15 // 用户间借贷钻石数量流水累计
-	TotalSupplyStoreTypeOfUsersLendingCumulationBitcoin                  uint8 = 16 // 用户间借贷比特币数量流水累计（单位：枚）
-	TotalSupplyStoreTypeOfUsersLendingCumulationHacAmount                uint8 = 17 // 用户间借贷HAC借出额流水累计（借出累计而非归还累计）
-	TotalSupplyStoreTypeOfUsersLendingBurningOnePercentInterestHacAmount uint8 = 18 // 用户间借贷系统销毁的1%利息统计
+	TotalSupplyStoreTypeOfUsersLendingCumulationDiamond                  uint8 = 16 // 用户间借贷钻石数量流水累计
+	TotalSupplyStoreTypeOfUsersLendingCumulationBitcoin                  uint8 = 17 // 用户间借贷比特币数量流水累计（单位：枚）
+	TotalSupplyStoreTypeOfUsersLendingCumulationHacAmount                uint8 = 18 // 用户间借贷HAC借出额流水累计（借出累计而非归还累计）
+	TotalSupplyStoreTypeOfUsersLendingBurningOnePercentInterestHacAmount uint8 = 19 // 用户间借贷系统销毁的1%利息统计
 	// TotalSupplyStoreTypeOfUsersLendingLendersInterestHacAmountCumulation uint8 = ... // 用户间借贷贷出方赚取的利息流水累计
 
 )
