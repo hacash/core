@@ -96,6 +96,7 @@ func (elm *Action_2_OpenPaymentChannel) RequestSignAddresses() []fields.Address 
 }
 
 func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.ChainStateOperation) error {
+	var e error
 	// 查询通道是否存在
 	sto := state.Channel(act.ChannelId)
 	// 左右地址相同且协商一致关闭的通道ID可以被重用
@@ -158,14 +159,23 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	storeItem.ReuseVersion = reuseVersion // 重用版本号
 	storeItem.SetOpening()                // 打开状态
 	// 扣除余额
-	DoSubBalanceFromChainState(state, act.LeftAddress, act.LeftAmount)
-	DoSubBalanceFromChainState(state, act.RightAddress, act.RightAmount)
+	e = DoSubBalanceFromChainState(state, act.LeftAddress, act.LeftAmount)
+	if e != nil {
+		return e
+	}
+	e = DoSubBalanceFromChainState(state, act.RightAddress, act.RightAmount)
+	if e != nil {
+		return e
+	}
 	// 储存通道
-	state.ChannelCreate(act.ChannelId, storeItem)
+	e = state.ChannelCreate(act.ChannelId, storeItem)
+	if e != nil {
+		return e
+	}
 	// total supply 统计
-	totalsupply, e2 := state.ReadTotalSupply()
-	if e2 != nil {
-		return e2
+	totalsupply, e := state.ReadTotalSupply()
+	if e != nil {
+		return e
 	}
 	// 累加锁入的HAC
 	addamt := act.LeftAmount.ToMei() + act.RightAmount.ToMei()

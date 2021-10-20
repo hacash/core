@@ -76,7 +76,8 @@ func (act *Action_8_SimpleSatoshiTransfer) WriteinChainState(state interfaces.Ch
 		return fmt.Errorf("Amount <%d> error.", act.Amount)
 	}
 	// 转移
-	return DoSimpleSatoshiTransferFromChainState(state, act.belong_trs.GetAddress(), act.ToAddress, act.Amount)
+	fromAddress := act.belong_trs.GetAddress()
+	return DoSimpleSatoshiTransferFromChainState(state, fromAddress, act.ToAddress, act.Amount)
 }
 
 func (act *Action_8_SimpleSatoshiTransfer) RecoverChainState(state interfaces.ChainStateOperation) error {
@@ -161,9 +162,9 @@ func (elm *Action_11_FromToSatoshiTransfer) Size() uint32 {
 }
 
 func (elm *Action_11_FromToSatoshiTransfer) RequestSignAddresses() []fields.Address {
-	reqs := make([]fields.Address, 1) // 需from签名
-	reqs[0] = elm.FromAddress
-	return reqs
+	return []fields.Address{
+		elm.FromAddress, // 需from签名
+	}
 }
 
 func (act *Action_11_FromToSatoshiTransfer) WriteinChainState(state interfaces.ChainStateOperation) error {
@@ -195,5 +196,99 @@ func (act *Action_11_FromToSatoshiTransfer) SetBelongTransaction(trs interfaces.
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用
 func (act *Action_11_FromToSatoshiTransfer) IsBurning90PersentTxFees() bool {
+	return false
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+type Action_28_FromSatoshiTransfer struct {
+	FromAddress fields.Address
+	Amount      fields.Satoshi
+
+	// data ptr
+	belong_trs interfaces.Transaction
+}
+
+func NewAction_28_FromSatoshiTransfer(fromaddr fields.Address, amt fields.Satoshi) *Action_28_FromSatoshiTransfer {
+	return &Action_28_FromSatoshiTransfer{
+		FromAddress: fromaddr,
+		Amount:      amt,
+	}
+}
+
+func (elm *Action_28_FromSatoshiTransfer) Kind() uint16 {
+	return 28
+}
+
+// json api
+func (elm *Action_28_FromSatoshiTransfer) Describe() map[string]interface{} {
+	var data = map[string]interface{}{}
+	return data
+}
+
+func (elm *Action_28_FromSatoshiTransfer) Serialize() ([]byte, error) {
+	var kindByte = make([]byte, 2)
+	binary.BigEndian.PutUint16(kindByte, elm.Kind())
+	var addr1Bytes, _ = elm.FromAddress.Serialize()
+	var amtBytes, _ = elm.Amount.Serialize()
+	var buffer bytes.Buffer
+	buffer.Write(kindByte)
+	buffer.Write(addr1Bytes)
+	buffer.Write(amtBytes)
+	return buffer.Bytes(), nil
+}
+
+func (elm *Action_28_FromSatoshiTransfer) Parse(buf []byte, seek uint32) (uint32, error) {
+	seek, e := elm.FromAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.Amount.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	return seek, nil
+}
+
+func (elm *Action_28_FromSatoshiTransfer) Size() uint32 {
+	return 2 + elm.FromAddress.Size() + elm.Amount.Size()
+}
+
+func (elm *Action_28_FromSatoshiTransfer) RequestSignAddresses() []fields.Address {
+	return []fields.Address{
+		elm.FromAddress, // 需from签名
+	}
+}
+
+func (act *Action_28_FromSatoshiTransfer) WriteinChainState(state interfaces.ChainStateOperation) error {
+	if act.belong_trs == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+
+	if act.Amount <= 0 {
+		// 转账不能为 0 或负
+		return fmt.Errorf("Amount <%d> error.", act.Amount)
+	}
+
+	// 转移
+	toAddress := act.belong_trs.GetAddress()
+	return DoSimpleSatoshiTransferFromChainState(state, act.FromAddress, toAddress, act.Amount)
+}
+
+func (act *Action_28_FromSatoshiTransfer) RecoverChainState(state interfaces.ChainStateOperation) error {
+	if act.belong_trs == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+	// 回退
+	return DoSimpleSatoshiTransferFromChainState(state, act.belong_trs.GetAddress(), act.FromAddress, act.Amount)
+}
+
+// 设置所属 belong_trs
+func (act *Action_28_FromSatoshiTransfer) SetBelongTransaction(trs interfaces.Transaction) {
+	act.belong_trs = trs
+}
+
+// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+func (act *Action_28_FromSatoshiTransfer) IsBurning90PersentTxFees() bool {
 	return false
 }

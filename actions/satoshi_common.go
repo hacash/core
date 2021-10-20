@@ -11,7 +11,7 @@ import (
 // btc 转账 （amt 单位 聪）
 func DoSimpleSatoshiTransferFromChainState(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, sat fields.Satoshi) error {
 	if sat == 0 {
-		return nil // 数量为0，直接成功
+		return fmt.Errorf("Satoshi transfer amount is empty") // 不允许转账数量为0
 	}
 	bls1 := state.Balance(addr1)
 	if bls1 == nil {

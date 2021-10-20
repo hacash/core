@@ -83,6 +83,7 @@ type ChainStateOperation interface {
 	UserLendingDelete(fields.UserLendingId) error
 
 	ChaswapCreate(fields.HashHalfChecker, *stores.Chaswap) error
+	ChaswapUpdate(fields.HashHalfChecker, *stores.Chaswap) error
 	ChaswapDelete(fields.HashHalfChecker) error
 
 	// movebtc

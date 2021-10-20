@@ -65,6 +65,8 @@ func NewActionByKind(kind uint16) (interfaces.Action, error) {
 		return new(Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnchainAtomicExchange), nil
 	case 27:
 		return new(Action_27_ClosePaymentChannelByClaimDistribution), nil
+	case 28:
+		return new(Action_28_FromSatoshiTransfer), nil
 
 	}
 	////////////////////    END      ////////////////////

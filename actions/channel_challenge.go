@@ -207,7 +207,7 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 快速模式无法用于挑战或仲裁，只有普通模式可以
+	// cid
 	channelId := act.Reconciliation.GetChannelId()
 
 	// 查询通道
@@ -326,36 +326,13 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 快速通道模式不能用来发起挑战和仲裁，只有普通模式才可以
 	// 查询通道
 	paychan := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel <%s> not find.", hex.EncodeToString(act.ChannelChainTransferTargetProveBody.ChannelId))
 	}
 
-	// 检查签名是否完整和正确
-	e = act.ChannelChainTransferData.CheckMustAddressAndSigns()
-	if e != nil {
-		return e
-	}
-
 	// 检查通道哈希是否正确
-	/*
-			prefixstuff := bytes.NewBuffer(nil)
-		prstfbts, e := act.ChannelChainTransferData.SerializeForPrefixSignStuff()
-		if e != nil {
-			return e
-		}
-		prefixstuff.Write(prstfbts)
-		bodystuff, e := act.ChannelChainTransferTargetProveBody.Serialize()
-		if e != nil {
-			return e
-		}
-		prefixstuff.Write(bodystuff)
-		// 计算哈希值
-		objhx := fields.CalculateHash(prefixstuff.Bytes())
-		hxhalf := objhx.GetHalfChecker()
-	*/
 	hxhalf := act.ChannelChainTransferTargetProveBody.GetSignStuffHashHalfChecker()
 	// 检查哈希值是否包含在列表内
 	var isHashCheckOk = false
@@ -366,8 +343,29 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 		}
 	}
 	if !isHashCheckOk {
-		fmt.Errorf("ChannelChainTransferTargetProveBody hash <%s> not find.", hxhalf.ToHex())
+		return fmt.Errorf("ChannelChainTransferTargetProveBody hash <%s> not find.", hxhalf.ToHex())
 	}
+
+	// 检查双方通道地址是否包含在签名列表内
+	lsgok := false
+	rsgok := false
+	for _, v := range act.ChannelChainTransferData.MustSignAddresses {
+		if v.Equal(paychan.LeftAddress) {
+			lsgok = true
+		} else if v.Equal(paychan.RightAddress) {
+			rsgok = true
+		}
+	}
+	if !lsgok || !rsgok {
+		return fmt.Errorf("Channel signature address is missing.")
+	}
+
+	// 检查所有签名是否完整和正确
+	e = act.ChannelChainTransferData.CheckMustAddressAndSigns()
+	if e != nil {
+		return e
+	}
+
 	// 检查 进入挑战期，还是最终夺取
 	return checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state, act.AssertAddress, paychan, &act.ChannelChainTransferTargetProveBody)
 }
@@ -507,7 +505,7 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 
 	// 标记票据已使用
 	swapex.IsBeUsed.Set(true)
-	e = state.ChaswapCreate(act.ProveBodyHashChecker, swapex)
+	e = state.ChaswapUpdate(act.ProveBodyHashChecker, swapex)
 	if e != nil {
 		return e
 	}
@@ -638,6 +636,8 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interf
 // 挑战期或最终仲裁回退
 func checkChannelGotoChallegingOrFinalDistributionRecoverChainState(state interfaces.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj channel.OnChainChannelPaymentArbitrationReconciliationBasis) error {
 
+	panic("RecoverChainState() func is deleted.")
+
 	channelId := obj.GetChannelId()
 
 	// 判断通道状态，是进入挑战期，还是最终夺取
@@ -767,7 +767,7 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteinChainState(s
 		lsat = ttsat - rsat // 左侧自动分得剩余资金
 	}
 
-	// 关闭
+	// 永久关闭
 	isFinnalClosed := true
 	return closePaymentChannelWriteinChainState(state, act.ChannelId, paychan, lamt, ramt, lsat, rsat, isFinnalClosed)
 }
