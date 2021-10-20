@@ -605,6 +605,11 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interf
 
 	} else if paychan.IsChallenging() {
 
+		// 只能夺取对方，不能既自己提出仲裁，然后又自己回应挑战
+		if paychan.AssertAddressIsLeftOrRight.Check() == assertAddressIsLeft {
+			return fmt.Errorf("The arbitration request and the response cannot be the same address")
+		}
+
 		// 判断仲裁，是否夺取对方资金
 		if billAutoNumber <= uint64(paychan.AssertBillAutoNumber) {
 			// 账单流水号不满足（必须大于等待挑战的流水号）
@@ -740,7 +745,7 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteinChainState(s
 	}
 	// 检查挑战期限
 	clghei := state.GetPendingBlockHeight()
-	expireHei := uint64(paychan.ChallengeLaunchHeight) + uint64(paychan.LockBlock)
+	expireHei := uint64(paychan.ChallengeLaunchHeight) + uint64(paychan.ArbitrationLockBlock)
 	if clghei <= expireHei {
 		// 挑战期还没过
 		return fmt.Errorf("Payment Channel Challenging expire is %d.", expireHei)

@@ -9,6 +9,7 @@ import (
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/stores"
+	"github.com/hacash/core/sys"
 )
 
 /**
@@ -150,14 +151,18 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	// 创建 channel
 	var storeItem = stores.CreateEmptyChannel()
 	storeItem.BelongHeight = fields.BlockHeight(curheight)
-	storeItem.LockBlock = fields.VarUint2(uint16(5000)) // 单方面提出的锁定期约为 17 天
-	storeItem.InterestAttribution = fields.VarUint1(0)  // 利息分配默认两方按close金额共取
+	storeItem.ArbitrationLockBlock = fields.VarUint2(uint16(5000)) // 单方面提出的锁定期约为 17 天
+	storeItem.InterestAttribution = fields.VarUint1(0)             // 利息分配默认两方按close金额共取
 	storeItem.LeftAddress = act.LeftAddress
 	storeItem.LeftAmount = act.LeftAmount
 	storeItem.RightAddress = act.RightAddress
 	storeItem.RightAmount = act.RightAmount
 	storeItem.ReuseVersion = reuseVersion // 重用版本号
 	storeItem.SetOpening()                // 打开状态
+	// 测试环境
+	if sys.TestDebugLocalDevelopmentMark {
+		storeItem.ArbitrationLockBlock = fields.VarUint2(uint16(20))
+	}
 	// 扣除余额
 	e = DoSubBalanceFromChainState(state, act.LeftAddress, act.LeftAmount)
 	if e != nil {
@@ -642,7 +647,7 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 			return e
 		}
 	}
-	if leftNewSAT > 0 {
+	if rightNewSAT > 0 {
 		e = DoAddSatoshiFromChainState(state, paychan.RightAddress, rightNewSAT)
 		if e != nil {
 			return e
@@ -651,9 +656,9 @@ func closePaymentChannelWriteinChainState(state interfaces.ChainStateOperation, 
 	// 暂时保留通道用于数据回退
 	// 计算左侧最终分配
 	if isFinalClosed {
-		paychan.SetFinalArbitrationClosed(newLeftAmt) // 仲裁永久关闭
+		paychan.SetFinalArbitrationClosed(newLeftAmt, leftNewSAT) // 仲裁永久关闭
 	} else {
-		paychan.SetAgreementClosed(newLeftAmt) // 协商关闭
+		paychan.SetAgreementClosed(newLeftAmt, leftNewSAT) // 协商关闭
 	}
 	e = state.ChannelUpdate(channelId, paychan)
 	if e != nil {

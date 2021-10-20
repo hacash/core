@@ -13,7 +13,7 @@ func Test1(t *testing.T) {
 	amt1, _ := fields.NewAmountFromFinString("ㄜ1:248")
 	amt2, _ := fields.NewAmountFromFinString("ㄜ1:248")
 
-	amt3, amt4, _ := coinbase.DoAppendCompoundInterestProportionOfHeightV2(amt1, amt2, 42, 1)
+	amt3, amt4, _ := coinbase.DoAppendCompoundInterestProportionOfHeightV2(amt1, amt2, 42, 1, 0)
 	fmt.Println("DoAppendCompoundInterestProportionOfHeight  : ", amt3.ToFinString(), amt4.ToFinString())
 
 	amt5, amt6 := coinbase.DoAppendCompoundInterest1Of10000By2500Height(amt1, amt2, 42)

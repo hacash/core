@@ -358,6 +358,31 @@ func (elm *OnChainArbitrationBasisReconciliation) Parse(buf []byte, seek uint32)
 	return seek, nil
 }
 
+// 填充签名
+func (elm *OnChainArbitrationBasisReconciliation) FillSigns(lacc, racc *account.Account) error {
+
+	txhx := elm.SignStuffHash()
+
+	s1, e := lacc.Private.Sign(txhx)
+	if e != nil {
+		return e
+	}
+	s2, e := racc.Private.Sign(txhx)
+	if e != nil {
+		return e
+	}
+	elm.LeftSign = fields.Sign{
+		PublicKey: lacc.PublicKey,
+		Signature: s1.Serialize64(),
+	}
+	elm.RightSign = fields.Sign{
+		PublicKey: racc.PublicKey,
+		Signature: s2.Serialize64(),
+	}
+
+	return nil
+}
+
 // 检查签名
 func (elm *OnChainArbitrationBasisReconciliation) CheckAddressAndSign(laddr, raddr fields.Address) error {
 	// 验证哈希

@@ -19,6 +19,8 @@
 *.log
 *fuse_*
 
+local_*.go
+
 .git/
 .idea/
 .DS_Store

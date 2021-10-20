@@ -13,51 +13,52 @@ const (
 	ChannelStatusOpening                fields.VarUint1 = 0 // 正常开启
 	ChannelStatusChallenging            fields.VarUint1 = 1 // 挑战期
 	ChannelStatusAgreementClosed        fields.VarUint1 = 2 // 协商关闭，可再次开启重用
-	ChannelStatusFinalArbitrationClosed fields.VarUint1 = 3 // 最终仲裁关闭，不可重用
+	ChannelStatusFinalArbitrationClosed fields.VarUint1 = 3 // 最终仲裁关闭，永不可重用
 
 )
 
 //
 type Channel struct {
-	BelongHeight        fields.BlockHeight // 通道开启时的区块高度
-	LockBlock           fields.VarUint2    // 单方面结束通道要锁定的区块数量
-	InterestAttribution fields.VarUint1    // 年化 1% 的利息归属： 0.按结束分配 1.全给left 2.全给right
-	LeftAddress         fields.Address
-	LeftAmount          fields.Amount           // HAC
-	LeftSatoshi         fields.SatoshiVariation // SAT
-	RightAddress        fields.Address
-	RightAmount         fields.Amount           // 抵押数额2
-	RightSatoshi        fields.SatoshiVariation // SAT
-	ReuseVersion        fields.VarUint4         // 重用版本号 从 1 开始
-	Status              fields.VarUint1         // 已经关闭并结算等状态
+	BelongHeight         fields.BlockHeight // 通道开启时的区块高度
+	ArbitrationLockBlock fields.VarUint2    // 单方面结束通道要锁定的区块数量
+	InterestAttribution  fields.VarUint1    // 年化 1% 的利息归属： 0.按结束分配 1.全给left 2.全给right
+	LeftAddress          fields.Address
+	LeftAmount           fields.Amount           // HAC
+	LeftSatoshi          fields.SatoshiVariation // SAT
+	RightAddress         fields.Address
+	RightAmount          fields.Amount           // 抵押数额2
+	RightSatoshi         fields.SatoshiVariation // SAT
+	ReuseVersion         fields.VarUint4         // 重用版本号 从 1 开始
+	Status               fields.VarUint1         // 已经关闭并结算等状态
 
 	// Status = 1 挑战期保存数据
 	IsHaveChallengeLog         fields.Bool             // 记录挑战期数据日志
 	ChallengeLaunchHeight      fields.BlockHeight      // 挑战开始的区块高度
-	AssertBillAutoNumber       fields.VarUint8         // 账单流水编号
+	AssertBillAutoNumber       fields.VarUint8         // 主张者提供的账单流水编号
 	AssertAddressIsLeftOrRight fields.Bool             // 主张者是左侧地址还是右侧 true-左  false-右
 	AssertAmount               fields.Amount           // 主张者主张自己应该分配的金额
 	AssertSatoshi              fields.SatoshiVariation // 主张者主张自己应该分配的SAT
 
 	// Status = 2 or Status = 3 已经关闭资金分配
-	LeftFinalDistributionAmount fields.Amount // 左侧最终分配金额
+	LeftFinalDistributionAmount  fields.Amount           // 左侧最终分配金额
+	LeftFinalDistributionSatoshi fields.SatoshiVariation // 左侧最终分配金额
 
 	// cache data
 }
 
 func CreateEmptyChannel() *Channel {
 	return &Channel{
-		BelongHeight:        0,
-		LockBlock:           0,
-		InterestAttribution: 0,
-		LeftAddress:         nil,
-		LeftAmount:          fields.NewEmptyAmountValue(),
-		LeftSatoshi:         fields.NewEmptySatoshiVariation(),
-		RightAddress:        nil,
-		RightAmount:         fields.NewEmptyAmountValue(),
-		RightSatoshi:        fields.NewEmptySatoshiVariation(),
-		ReuseVersion:        1,
-		Status:              0,
+		BelongHeight:         0,
+		ArbitrationLockBlock: 0,
+		InterestAttribution:  0,
+		LeftAddress:          nil,
+		LeftAmount:           fields.NewEmptyAmountValue(),
+		LeftSatoshi:          fields.NewEmptySatoshiVariation(),
+		RightAddress:         nil,
+		RightAmount:          fields.NewEmptyAmountValue(),
+		RightSatoshi:         fields.NewEmptySatoshiVariation(),
+		ReuseVersion:         1,
+		Status:               0,
 	}
 }
 
@@ -80,13 +81,15 @@ func (this *Channel) IsClosed() bool {
 }
 
 // 状态操作
-func (this *Channel) SetAgreementClosed(leftEndAmt *fields.Amount) {
+func (this *Channel) SetAgreementClosed(leftEndAmt *fields.Amount, satoshi fields.Satoshi) {
 	this.Status = ChannelStatusAgreementClosed
 	this.LeftFinalDistributionAmount = *leftEndAmt
+	this.LeftFinalDistributionSatoshi = satoshi.GetSatoshiVariation()
 }
-func (this *Channel) SetFinalArbitrationClosed(leftEndAmt *fields.Amount) {
+func (this *Channel) SetFinalArbitrationClosed(leftEndAmt *fields.Amount, satoshi fields.Satoshi) {
 	this.Status = ChannelStatusFinalArbitrationClosed
 	this.LeftFinalDistributionAmount = *leftEndAmt
+	this.LeftFinalDistributionSatoshi = satoshi.GetSatoshiVariation()
 }
 func (this *Channel) SetOpening() {
 	this.Status = ChannelStatusOpening
@@ -113,7 +116,7 @@ func (this *Channel) CleanChallengingLog() {
 
 func (this *Channel) Size() uint32 {
 	size := this.BelongHeight.Size() +
-		this.LockBlock.Size() +
+		this.ArbitrationLockBlock.Size() +
 		this.LeftAddress.Size() +
 		this.LeftAmount.Size() +
 		this.LeftSatoshi.Size() +
@@ -130,7 +133,8 @@ func (this *Channel) Size() uint32 {
 			this.AssertSatoshi.Size()
 	}
 	if this.IsClosed() {
-		size += this.LeftFinalDistributionAmount.Size()
+		size += this.LeftFinalDistributionAmount.Size() +
+			this.LeftFinalDistributionSatoshi.Size()
 	}
 	return size
 }
@@ -141,7 +145,7 @@ func (this *Channel) Parse(buf []byte, seek uint32) (uint32, error) {
 	if e != nil {
 		return 0, e
 	}
-	seek, e = this.LockBlock.Parse(buf, seek)
+	seek, e = this.ArbitrationLockBlock.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -177,6 +181,10 @@ func (this *Channel) Parse(buf []byte, seek uint32) (uint32, error) {
 	if e != nil {
 		return 0, e
 	}
+	seek, e = this.IsHaveChallengeLog.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
 	if this.IsHaveChallengeLog.Check() {
 		seek, e = this.ChallengeLaunchHeight.Parse(buf, seek)
 		if e != nil {
@@ -204,6 +212,10 @@ func (this *Channel) Parse(buf []byte, seek uint32) (uint32, error) {
 		if e != nil {
 			return 0, e
 		}
+		seek, e = this.LeftFinalDistributionSatoshi.Parse(buf, seek)
+		if e != nil {
+			return 0, e
+		}
 	}
 	return seek, nil
 }
@@ -217,7 +229,7 @@ func (this *Channel) Serialize() ([]byte, error) {
 		return nil, e
 	}
 	buffer.Write(bt)
-	bt, e = this.LockBlock.Serialize()
+	bt, e = this.ArbitrationLockBlock.Serialize()
 	if e != nil {
 		return nil, e
 	}
@@ -262,6 +274,11 @@ func (this *Channel) Serialize() ([]byte, error) {
 		return nil, e
 	}
 	buffer.Write(bt)
+	bt, e = this.IsHaveChallengeLog.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	buffer.Write(bt)
 	if this.IsHaveChallengeLog.Check() {
 		bt, e = this.ChallengeLaunchHeight.Serialize()
 		if e != nil {
@@ -291,6 +308,11 @@ func (this *Channel) Serialize() ([]byte, error) {
 	}
 	if this.IsClosed() {
 		bt, e = this.LeftFinalDistributionAmount.Serialize()
+		if e != nil {
+			return nil, e
+		}
+		buffer.Write(bt)
+		bt, e = this.LeftFinalDistributionSatoshi.Serialize()
 		if e != nil {
 			return nil, e
 		}

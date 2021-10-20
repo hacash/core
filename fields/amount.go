@@ -120,12 +120,17 @@ func NewAmount(unit uint8, num []byte) *Amount {
 	}
 }
 
-func NewAmountSmall(num uint8, unit uint8) *Amount {
-	return &Amount{
+func NewAmountSmallValue(num uint8, unit uint8) Amount {
+	return Amount{
 		Unit:    unit,
 		Dist:    1,
 		Numeral: []byte{num},
 	}
+}
+
+func NewAmountSmall(num uint8, unit uint8) *Amount {
+	v := NewAmountSmallValue(num, unit)
+	return &v
 }
 
 func (bill Amount) Serialize() ([]byte, error) {
