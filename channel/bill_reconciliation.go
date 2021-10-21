@@ -222,6 +222,27 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) VerifySignature() e
 	return elm.CheckAddressAndSign()
 }
 
+// 填充一方签名
+func (elm *OffChainFormPaymentChannelRealtimeReconciliation) FillTargetSignature(acc *account.Account) (*fields.Sign, bool, error) {
+	hx := elm.SignStuffHash()
+	addrIsLeft := elm.LeftAddress.Equal(acc.Address)
+	// 计算签名
+	signdata, e := acc.Private.Sign(hx)
+	if e != nil {
+		return nil, addrIsLeft, e // 签名错误
+	}
+	signobj := fields.Sign{
+		PublicKey: acc.PublicKey,
+		Signature: signdata.Serialize64(),
+	}
+	if addrIsLeft {
+		elm.LeftSign = signobj
+	} else {
+		elm.RightSign = signobj
+	}
+	return &signobj, addrIsLeft, nil
+}
+
 /********************************************************/
 
 /**

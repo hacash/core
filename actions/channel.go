@@ -105,6 +105,11 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	var isIdCanUse = (sto == nil) ||
 		(sto.IsAgreementClosed() && sto.LeftAddress.Equal(act.LeftAddress) && sto.RightAddress.Equal(act.RightAddress))
 	if isIdCanUse == false {
+		if sto.IsFinalDistributionClosed() {
+			return fmt.Errorf("Payment Channel Id <%s> finally arbitration closed.", hex.EncodeToString(act.ChannelId))
+		} else if sto.IsOpening() {
+			return fmt.Errorf("Payment Channel Id <%s> is opening.", hex.EncodeToString(act.ChannelId))
+		}
 		return fmt.Errorf("Payment Channel Id <%s> already exist.", hex.EncodeToString(act.ChannelId))
 	}
 	if sto != nil {
