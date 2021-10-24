@@ -23,12 +23,14 @@ const DiamondCreateCustomMessageAboveNumber uint32 = 20000
 // 第 30001 个钻石开始，销毁 90% 的竞价费用
 const DiamondCreateBurning90PercentTxFeesAboveNumber uint32 = 30000
 
-// 第 31248 枚以上（不含）钻石开始，计算平均竞价费用，之前的设定为8枚
-// 在此时刚好一共销毁 10000.9506 枚HAC
-const DiamondStatisticsAverageBiddingBurningPriceAboveNumber uint32 = 32000
+// 采用 30001 ~ 40000 枚钻石平均竞价费用，之前的设定为 10 枚
+const DiamondStatisticsAverageBiddingBurningPriceAboveNumber uint32 = 40000
 
-// 第 40001 个钻石，开始用 sha3_hash(diamondreshash, blockhash) 决定钻石形状和配色
+// 第 40001 个钻石，开始用 sha3_hash(diamondreshash + blockhash) 决定钻石形状和配色
 const DiamondResourceHashAndContainBlockHashDecideVisualGeneAboveNumber uint32 = 40000
+
+// 第 41001 个钻石，开始用 sha3_hash(diamondreshash + blockhash + bidfee) 包括竞价费参与决定钻石形状配色
+const DiamondResourceAppendBiddingFeeDecideVisualGeneAboveNumber uint32 = 41000
 
 // 挖出钻石
 type Action_4_DiamondCreate struct {
@@ -240,7 +242,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	// 设置矿工状态
 	// 标记本区块已经包含钻石
 	// 存储对象，计算视觉基因
-	visualGene, e15 := calculateVisualGeneByDiamondStuffHash(uint32(act.Number), diamondResHash, diamondStr, diamondVisualUseContainBlockHash)
+	visualGene, e15 := calculateVisualGeneByDiamondStuffHash(act.belong_trs, uint32(act.Number), diamondResHash, diamondStr, diamondVisualUseContainBlockHash)
 	if e15 != nil {
 		return e15
 	}
@@ -271,7 +273,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 
 	// 计算平均竞价HAC枚数
 	if uint32(act.Number) <= DiamondStatisticsAverageBiddingBurningPriceAboveNumber {
-		diamondstore.AverageBidBurnPrice = 8 // 固定设为 8 枚
+		diamondstore.AverageBidBurnPrice = 10 // 固定设为 10 枚
 	} else {
 		bsnum := uint32(act.Number) - DiamondCreateBurning90PercentTxFeesAboveNumber
 		burnhac := totalsupply.Get(stores.TotalSupplyStoreTypeOfBurningFee)
@@ -372,7 +374,7 @@ func (act *Action_4_DiamondCreate) IsBurning90PersentTxFees() bool {
 ///////////////////////////////////////////////////////////////
 
 // 计算钻石的可视化基因
-func calculateVisualGeneByDiamondStuffHash(number uint32, stuffhx []byte, diamondstr string, peddingblkhash []byte) (fields.Bytes10, error) {
+func calculateVisualGeneByDiamondStuffHash(belong_trs interfaces.Transaction, number uint32, stuffhx []byte, diamondstr string, peddingblkhash []byte) (fields.Bytes10, error) {
 	if len(stuffhx) != 32 || len(peddingblkhash) != 32 {
 		return nil, fmt.Errorf("stuffhx and peddingblkhash length must 32")
 	}
@@ -385,6 +387,13 @@ func calculateVisualGeneByDiamondStuffHash(number uint32, stuffhx []byte, diamon
 		// 第 40001 个钻石，开始用 sha3_hash(diamondreshash, blockhash) 决定钻石形状和配色
 		vgenestuff := bytes.NewBuffer(stuffhx)
 		vgenestuff.Write(peddingblkhash)
+		if number > DiamondResourceAppendBiddingFeeDecideVisualGeneAboveNumber {
+			bidfeebts, e := belong_trs.GetFee().Serialize() // 竞价手续费
+			if e != nil {
+				return nil, e // 返回错误
+			}
+			vgenestuff.Write(bidfeebts) // 竞价费参与决定钻石形状和配色
+		}
 		vgenehash = fields.CalculateHash(vgenestuff.Bytes()) // 开盲盒
 		// 跟区块哈希一样是随机的，需要等待钻石确认的那一刻才能知晓形状和配色
 		// fmt.Println(hex.EncodeToString(vgenestuff.Bytes()))
