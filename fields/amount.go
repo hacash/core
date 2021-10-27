@@ -274,7 +274,7 @@ func (bill Amount) ToMei() float64 {
 }
 
 // 从字符串建立数额
-func NewAmountFromStringUnsafe(numstr string) (*Amount, error) {
+func NewAmountFromString(numstr string) (*Amount, error) {
 	if strings.Contains(numstr, ":") {
 		return NewAmountFromFinString(numstr)
 	} else {

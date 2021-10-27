@@ -332,11 +332,13 @@ func (act *Action_3_ClosePaymentChannel) IsBurning90PersentTxFees() bool {
 
 // 关闭、结算 支付通道（资金分配改变）
 type Action_12_ClosePaymentChannelBySetupAmount struct {
-	ChannelId    fields.ChannelId // 通道id
-	LeftAddress  fields.Address   // 左侧账户
-	LeftAmount   fields.Amount    // 左侧最终分配金额
-	RightAddress fields.Address   // 右侧账户
-	RightAmount  fields.Amount    // 右侧最终分配金额
+	ChannelId    fields.ChannelId        // 通道id
+	LeftAddress  fields.Address          // 左侧账户
+	LeftAmount   fields.Amount           // 左侧最终分配金额
+	LeftSatoshi  fields.SatoshiVariation // 左侧分配SAT
+	RightAddress fields.Address          // 右侧账户
+	RightAmount  fields.Amount           // 右侧最终分配金额
+	RightSatoshi fields.SatoshiVariation // 右侧分配SAT
 
 	// data ptr
 	belong_trs interfaces.Transaction
@@ -350,8 +352,10 @@ func (elm *Action_12_ClosePaymentChannelBySetupAmount) Size() uint32 {
 	return 2 + elm.ChannelId.Size() +
 		elm.LeftAddress.Size() +
 		elm.LeftAmount.Size() +
+		elm.LeftSatoshi.Size() +
 		elm.RightAddress.Size() +
-		elm.RightAmount.Size()
+		elm.RightAmount.Size() +
+		elm.RightSatoshi.Size()
 }
 
 // json api
@@ -366,8 +370,10 @@ func (elm *Action_12_ClosePaymentChannelBySetupAmount) Serialize() ([]byte, erro
 	var bt1, _ = elm.ChannelId.Serialize()
 	var bt2, _ = elm.LeftAddress.Serialize()
 	var bt3, _ = elm.LeftAmount.Serialize()
-	var bt4, _ = elm.RightAddress.Serialize()
-	var bt5, _ = elm.RightAmount.Serialize()
+	var bt4, _ = elm.LeftSatoshi.Serialize()
+	var bt5, _ = elm.RightAddress.Serialize()
+	var bt6, _ = elm.RightAmount.Serialize()
+	var bt7, _ = elm.RightSatoshi.Serialize()
 	var buffer bytes.Buffer
 	buffer.Write(kindByte)
 	buffer.Write(bt1)
@@ -375,6 +381,8 @@ func (elm *Action_12_ClosePaymentChannelBySetupAmount) Serialize() ([]byte, erro
 	buffer.Write(bt3)
 	buffer.Write(bt4)
 	buffer.Write(bt5)
+	buffer.Write(bt6)
+	buffer.Write(bt7)
 	return buffer.Bytes(), nil
 }
 
@@ -392,11 +400,19 @@ func (elm *Action_12_ClosePaymentChannelBySetupAmount) Parse(buf []byte, seek ui
 	if e != nil {
 		return 0, e
 	}
+	seek, e = elm.LeftSatoshi.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
 	seek, e = elm.RightAddress.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
 	seek, e = elm.RightAmount.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.RightSatoshi.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -415,6 +431,11 @@ func (act *Action_12_ClosePaymentChannelBySetupAmount) WriteinChainState(state i
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
+
+	if !sys.TestDebugLocalDevelopmentMark {
+		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+	}
+
 	// 查询通道
 	paychan := state.Channel(act.ChannelId)
 	if paychan == nil {
@@ -427,8 +448,8 @@ func (act *Action_12_ClosePaymentChannelBySetupAmount) WriteinChainState(state i
 		return fmt.Errorf("Payment Channel <%s> address not match.", act.RightAddress.ToReadable())
 	}
 	// 写入状态
-	leftSAT := paychan.LeftSatoshi.GetRealSatoshi()
-	rightSAT := paychan.RightSatoshi.GetRealSatoshi()
+	leftSAT := act.LeftSatoshi.GetRealSatoshi()
+	rightSAT := act.RightSatoshi.GetRealSatoshi()
 	return closePaymentChannelWriteinChainState(state, act.ChannelId,
 		paychan, &act.LeftAmount, &act.RightAmount, leftSAT, rightSAT, false)
 }
