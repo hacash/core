@@ -72,10 +72,6 @@ func (elm *Action_22_UnilateralClosePaymentChannelByNothing) RequestSignAddresse
 func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteinChainState(state interfaces.ChainStateOperation) error {
 	var e error
 
-	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
-	}
-
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -199,10 +195,6 @@ func (elm *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 
 func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeReconciliation) WriteinChainState(state interfaces.ChainStateOperation) error {
 
-	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
-	}
-
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -317,10 +309,6 @@ func (elm *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelChainTransferBody) WriteinChainState(state interfaces.ChainStateOperation) error {
 
 	var e error
-
-	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
-	}
 
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
@@ -726,10 +714,6 @@ func (elm *Action_27_ClosePaymentChannelByClaimDistribution) RequestSignAddresse
 }
 
 func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteinChainState(state interfaces.ChainStateOperation) error {
-
-	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
-	}
 
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
