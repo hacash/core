@@ -162,7 +162,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 	}
 
 	// 计算钻石哈希
-	diamondResHash, diamondStr := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address, act.GetRealCustomMessage())
+	sha3hash, diamondResHash, diamondStr := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address, act.GetRealCustomMessage())
 	// 是否做全面的检查
 	if mustDoAllCheck {
 		// 交易只能包含唯一一个action
@@ -205,7 +205,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 			return fmt.Errorf("Diamond need <%s> but got <%s>", act.Diamond, diamondstrval)
 		}
 		// 检查钻石难度值
-		difok := x16rs.CheckDiamondDifficulty(uint32(act.Number), diamondResHash)
+		difok := x16rs.CheckDiamondDifficulty(uint32(act.Number), sha3hash, diamondResHash)
 		if !difok {
 			return fmt.Errorf("Diamond difficulty not meet the requirements.")
 		}
