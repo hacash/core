@@ -1,7 +1,7 @@
 package interfaces
 
 type P2PManager interface {
-	Start()
+	Start() error
 	SetMsgHandler(P2PMsgDataHandler)
 	AddKnowledge(KnowledgeKind string, KnowledgeKey string) bool   // 返回 false 为已经知晓
 	CheckKnowledge(KnowledgeKind string, KnowledgeKey string) bool // 返回 true 为已经知晓
