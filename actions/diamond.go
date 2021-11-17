@@ -157,9 +157,9 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		mustDoAllCheck = false // 开发者模式 不检查
 	}
 	//fmt.Println(state.IsDatabaseVersionRebuildMode(), "-------------------------")
-	if state.IsDatabaseVersionRebuildMode() {
-		mustDoAllCheck = false // 数据库升级模式 不检查
-	}
+	//if state.IsDatabaseVersionRebuildMode() {
+	//	mustDoAllCheck = false // 数据库升级模式 不检查
+	//}
 
 	// 计算钻石哈希
 	sha3hash, diamondResHash, diamondStr := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address, act.GetRealCustomMessage())
@@ -182,12 +182,19 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		if err != nil {
 			return err
 		}
+		if lastdiamond == nil && act.Number > 1 {
+			// 非首个钻石但读不出上一个钻石的信息
+			return fmt.Errorf("Cannot ReadLastestDiamond() to get last diamond of act.Number > 1.")
+		}
 		if lastdiamond != nil {
 			//fmt.Println(lastdiamond.Diamond)
 			//fmt.Println(lastdiamond.Number)
 			//fmt.Println(lastdiamond.ContainBlockHash.ToHex())
 			//fmt.Println(lastdiamond.PrevContainBlockHash.ToHex())
 			prevdiamondnum, prevdiamondhash := uint32(lastdiamond.Number), lastdiamond.ContainBlockHash
+			if prevdiamondhash == nil {
+				return fmt.Errorf("lastdiamond.ContainBlockHash is nil.")
+			}
 			// 检查钻石是否是从上一个区块得来
 			if act.PrevHash.Equal(prevdiamondhash) != true {
 				return fmt.Errorf("Diamond prev hash must be <%s> but got <%s>.", hex.EncodeToString(prevdiamondhash), hex.EncodeToString(act.PrevHash))
