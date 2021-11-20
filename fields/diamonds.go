@@ -75,12 +75,14 @@ func (elm *DiamondListMaxLen200) ParseHACDlistBySplitCommaFromString(hacdlistspl
 	// 去除空格和换行符
 	hacdlistsplitcomma = strings.Replace(hacdlistsplitcomma, " ", "", -1)
 	hacdlistsplitcomma = strings.Replace(hacdlistsplitcomma, "\n", "", -1)
+	hacdlistsplitcomma = strings.Trim(hacdlistsplitcomma, ",")
 	// 分割
 	diamonds := strings.Split(hacdlistsplitcomma, ",")
 	dianum := len(diamonds)
 	if dianum > 200 {
 		return fmt.Errorf("diamonds quantity cannot over 200")
 	}
+	dianamesmap := make(map[string]bool) // 去重
 	diamondsbytes := make([]DiamondName, dianum)
 	for i, v := range diamonds {
 		dok := x16rs.IsDiamondValueString(v)
@@ -88,6 +90,10 @@ func (elm *DiamondListMaxLen200) ParseHACDlistBySplitCommaFromString(hacdlistspl
 			return fmt.Errorf("<%s> not a valid diamond name", v)
 		}
 		diamondsbytes[i] = []byte(v)
+		if dianamesmap[v] {
+			return fmt.Errorf("<%s> appear in the list repeatedly", v)
+		}
+		dianamesmap[v] = true
 	}
 	elm.Count = VarUint1(dianum)
 	elm.Diamonds = diamondsbytes
