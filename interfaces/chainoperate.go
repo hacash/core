@@ -10,6 +10,7 @@ import (
 type ChainStateOperation interface {
 	// 数据库升级模式
 	IsDatabaseVersionRebuildMode() bool
+	RecoverDatabaseVersionRebuildMode()
 
 	// status
 	IsInMemTxPool() bool // 否在交易池

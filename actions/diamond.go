@@ -157,9 +157,9 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 		mustDoAllCheck = false // 开发者模式 不检查
 	}
 	//fmt.Println(state.IsDatabaseVersionRebuildMode(), "-------------------------")
-	//if state.IsDatabaseVersionRebuildMode() {
-	//	mustDoAllCheck = false // 数据库升级模式 不检查
-	//}
+	if state.IsDatabaseVersionRebuildMode() {
+		mustDoAllCheck = false // 数据库升级模式 不检查
+	}
 
 	// 计算钻石哈希
 	sha3hash, diamondResHash, diamondStr := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address, act.GetRealCustomMessage())
