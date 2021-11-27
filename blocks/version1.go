@@ -415,13 +415,31 @@ func (block *Block_v1) VerifyNeedSigns() (bool, error) {
 
 // 修改 / 恢复 状态数据库
 func (block *Block_v1) WriteinChainState(blockstate interfaces.ChainStateOperation) error {
+	blkhei := block.GetHeight()
 	txlen := len(block.Transactions)
 	totalfeeuserpay := fields.NewEmptyAmount()
 	totalfeeminergot := fields.NewEmptyAmount()
 	// 第一条交易为coinbase交易，客户交易从第二条开始
 	for i := 1; i < txlen; i++ {
 		tx := block.Transactions[i]
-		e := tx.WriteinChainState(blockstate)
+		txhx := tx.Hash()
+		// 检查交易是否已经上链
+		ishav, e := blockstate.CheckTxHash(txhx)
+		if e != nil {
+			return e // 验证失败
+		}
+		// 问题修复： 63448 区块将同一笔交易包含了两次
+		if ishav && blkhei != 63448 {
+			// 交易已经上链
+			return fmt.Errorf("Tx <%s> is exist, block %d.", txhx.ToHex())
+		}
+		// 执行上链
+		e = blockstate.ContainTxHash(txhx)
+		if e != nil {
+			return e
+		}
+		// 执行交易
+		e = tx.WriteinChainState(blockstate)
 		if e != nil {
 			return e // 验证失败
 		}

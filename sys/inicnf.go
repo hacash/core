@@ -19,7 +19,7 @@ var TestDebugLocalDevelopmentMark bool = false
 const BlockChainStateDatabaseLowestCompatibleVersion = 7
 
 // 当前使用的区块链数据库版本号
-const BlockChainStateDatabaseCurrentUseVersion = 7
+const BlockChainStateDatabaseCurrentUseVersion = 8
 
 type Inicnf struct {
 	inicnf.File

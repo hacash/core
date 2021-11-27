@@ -38,6 +38,11 @@ type ChainStateOperation interface {
 	BlockStore() BlockStore
 	SetBlockStore(BlockStore) error
 
+	// tx hash
+	ContainTxHash(fields.Hash) error       // 写入包含交易哈希
+	RemoveTxHash(fields.Hash) error        // 移除交易
+	CheckTxHash(fields.Hash) (bool, error) // 检查交易是否已经上链
+
 	// state
 
 	// query
