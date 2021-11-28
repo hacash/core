@@ -218,7 +218,10 @@ func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteinChainState(s
 
 	// 查询是否为重复提交
 	swaphx := act.ExchangeEvidence.ChannelTranferProveBodyHashChecker
-	chaswap := state.Chaswap(swaphx)
+	chaswap, e := state.Chaswap(swaphx)
+	if e != nil {
+		return e
+	}
 	if chaswap != nil {
 		// 已经存在，不可重复提交
 		// 否则将会导致多次重复转账

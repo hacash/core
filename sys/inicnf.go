@@ -9,23 +9,35 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
 
 // 全局开发测试标记
 var TestDebugLocalDevelopmentMark bool = false
 
-// 最低可被当前兼容的区块链数据库（仅blockdata）版本号
-const BlockChainStateDatabaseLowestCompatibleVersion = 7
-
-// 当前使用的区块链数据库版本号
-const BlockChainStateDatabaseCurrentUseVersion = 8
-
 type Inicnf struct {
 	inicnf.File
 
 	// cnf cache
-	mustDataDir string
+	mustDataDirVersion string
+	mustDataDir        string
+
+	// 最低可被当前兼容的区块链数据库（仅blockdata）版本号
+	blockChainStateDatabaseLowestCompatibleVersion int
+	// 当前使用的区块链数据库版本号
+	blockChainStateDatabaseCurrentUseVersion int
+
+	mux sync.Mutex
+}
+
+// 必须调用
+func (i *Inicnf) SetDatabaseVersion(curversion, compatible int) {
+	i.blockChainStateDatabaseCurrentUseVersion = curversion
+	i.blockChainStateDatabaseLowestCompatibleVersion = compatible
+}
+func (i *Inicnf) GetDatabaseVersion() (int, int) {
+	return i.blockChainStateDatabaseCurrentUseVersion, i.blockChainStateDatabaseLowestCompatibleVersion
 }
 
 // val list
@@ -37,15 +49,6 @@ func (i *Inicnf) StringValueList(section string, name string) []string {
 		return []string{}
 	}
 	return strings.Split(valstr, ",")
-}
-
-func (i *Inicnf) SetMustDataDir(dir string) {
-	if i.mustDataDir == "" {
-		//fmt.Println("[Inicnf] Set must data dir: \"", dir, "\"")
-		i.mustDataDir = dir
-		return
-	}
-	panic("Cannot SetMustDataDir on running.")
 }
 
 func AbsDir(dir string) string {
@@ -60,19 +63,39 @@ func AbsDir(dir string) string {
 	return dir
 }
 
+// data dir version
+func (i *Inicnf) MustDataDirWithVersion() string {
+	i.mux.Lock()
+	defer i.mux.Unlock()
+	if i.mustDataDirVersion != "" {
+		return i.mustDataDirVersion
+	}
+	dir := i.mustDataDirUnsafe()
+	dir = path.Join(dir, fmt.Sprintf("v%d", i.blockChainStateDatabaseCurrentUseVersion))
+	i.mustDataDirVersion = dir
+	return dir
+}
+
 // data dir
 func (i *Inicnf) MustDataDir() string {
-	if i.mustDataDir != "" {
+	i.mux.Lock()
+	defer i.mux.Unlock()
+
+	if len(i.mustDataDir) > 0 {
 		return i.mustDataDir
 	}
+	dir := i.mustDataDirUnsafe()
+	i.mustDataDir = dir
+	return dir
+}
+
+// data dir
+func (i *Inicnf) mustDataDirUnsafe() string {
 	dir := i.Section("").Key("data_dir").MustString("~/.hacash_mainnet")
 	if strings.HasPrefix(dir, "~/") {
 		dir = os.Getenv("HOME") + string([]byte(dir)[1:])
 	}
 	dir = AbsDir(dir)
-	dir = path.Join(dir, fmt.Sprintf("v%d", BlockChainStateDatabaseCurrentUseVersion))
-	i.mustDataDir = dir
-	//fmt.Println("[Inicnf] Block chain state data dir: \"" + dir + "\"")
 	return dir
 }
 

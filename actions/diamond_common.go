@@ -16,7 +16,10 @@ func DoSimpleDiamondTransferFromChainState(state interfaces.ChainStateOperation,
 	if dia == 0 {
 		return nil // 数量为0，直接成功
 	}
-	bls1 := state.Balance(addr1)
+	bls1, e := state.Balance(addr1)
+	if e != nil {
+		return e
+	}
 	if bls1 == nil {
 		return fmt.Errorf("Diamond not find.")
 	}
@@ -25,7 +28,10 @@ func DoSimpleDiamondTransferFromChainState(state interfaces.ChainStateOperation,
 	if uint64(dia1) < uint64(dia) {
 		return fmt.Errorf("Address %s diamond %d not enough, need more %d.", addr1.ToReadable(), dia1, dia)
 	}
-	bls2 := state.Balance(addr2)
+	bls2, e := state.Balance(addr2)
+	if e != nil {
+		return e
+	}
 	if bls2 == nil {
 		bls2 = stores.NewEmptyBalance() // create satoshi store
 	}
@@ -49,7 +55,10 @@ func DoAddDiamondFromChainState(state interfaces.ChainStateOperation, addr field
 	if dia == 0 {
 		return nil // 数量为0，直接成功
 	}
-	blssto := state.Balance(addr)
+	blssto, e := state.Balance(addr)
+	if e != nil {
+		return e
+	}
 	if blssto == nil {
 		blssto = stores.NewEmptyBalance() // first create account
 	}
@@ -69,7 +78,10 @@ func DoSubDiamondFromChainState(state interfaces.ChainStateOperation, addr field
 	if dia == 0 {
 		return nil // 数量为0，直接成功
 	}
-	blssto := state.Balance(addr)
+	blssto, e := state.Balance(addr)
+	if e != nil {
+		return e
+	}
 	if blssto == nil {
 		return fmt.Errorf("address %s diamond need %d not enough.", addr.ToReadable(), dia)
 	}

@@ -76,7 +76,10 @@ func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteinChainState(s
 		panic("Action belong to transaction not be nil !")
 	}
 	// 查询通道
-	paychan := state.Channel(act.ChannelId)
+	paychan, e := state.Channel(act.ChannelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
@@ -114,7 +117,10 @@ func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteinChainState(s
 func (act *Action_22_UnilateralClosePaymentChannelByNothing) RecoverChainState(state interfaces.ChainStateOperation) error {
 
 	// 查询通道
-	paychan := state.Channel(act.ChannelId)
+	paychan, e := state.Channel(act.ChannelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
@@ -203,7 +209,10 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 	channelId := act.Reconciliation.GetChannelId()
 
 	// 查询通道
-	paychan := state.Channel(channelId)
+	paychan, e := state.Channel(channelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel <%s> not find.", hex.EncodeToString(channelId))
 	}
@@ -217,7 +226,10 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 	channelId := act.Reconciliation.GetChannelId()
 
 	// 查询通道
-	paychan := state.Channel(channelId)
+	paychan, e := state.Channel(channelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(channelId))
 	}
@@ -315,7 +327,10 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 	}
 
 	// 查询通道
-	paychan := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
+	paychan, e := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel <%s> not find.", hex.EncodeToString(act.ChannelChainTransferTargetProveBody.ChannelId))
 	}
@@ -361,7 +376,10 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelChainTransferBody) RecoverChainState(state interfaces.ChainStateOperation) error {
 
 	// 查询通道
-	paychan := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
+	paychan, e := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelChainTransferTargetProveBody.ChannelId))
 	}
@@ -465,13 +483,19 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 	// 快速通道模式不能用来发起挑战和仲裁，只有普通模式才可以
 
 	// 查询通道
-	paychan := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
+	paychan, e := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel <%s> not find.", hex.EncodeToString(act.ChannelChainTransferTargetProveBody.ChannelId))
 	}
 
 	// 查询互换交易
-	swapex := state.Chaswap(act.ProveBodyHashChecker)
+	swapex, e := state.Chaswap(act.ProveBodyHashChecker)
+	if e != nil {
+		return e
+	}
 	if swapex == nil {
 		return fmt.Errorf("Chaswap tranfer <%s> not find.", act.ProveBodyHashChecker.ToHex())
 	}
@@ -505,13 +529,19 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnchainAtomicExchange) RecoverChainState(state interfaces.ChainStateOperation) error {
 
 	// 查询通道
-	paychan := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
+	paychan, e := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelChainTransferTargetProveBody.ChannelId))
 	}
 
 	// 回退使用状态
-	swapex := state.Chaswap(act.ProveBodyHashChecker)
+	swapex, e := state.Chaswap(act.ProveBodyHashChecker)
+	if e != nil {
+		return e
+	}
 	swapex.IsBeUsed.Set(false)
 	state.ChaswapCreate(act.ProveBodyHashChecker, swapex)
 
@@ -719,7 +749,10 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteinChainState(s
 		panic("Action belong to transaction not be nil !")
 	}
 	// 查询通道
-	paychan := state.Channel(act.ChannelId)
+	paychan, e := state.Channel(act.ChannelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
@@ -737,7 +770,7 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteinChainState(s
 	// 按主张分配资金，结束通道
 	var lamt = fields.NewEmptyAmount()
 	var ramt = fields.NewEmptyAmount()
-	var ttamt, e = paychan.LeftAmount.Add(&paychan.RightAmount)
+	ttamt, e := paychan.LeftAmount.Add(&paychan.RightAmount)
 	if e != nil {
 		return e
 	}
@@ -764,7 +797,10 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteinChainState(s
 func (act *Action_27_ClosePaymentChannelByClaimDistribution) RecoverChainState(state interfaces.ChainStateOperation) error {
 
 	// 查询通道
-	paychan := state.Channel(act.ChannelId)
+	paychan, e := state.Channel(act.ChannelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}

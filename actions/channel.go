@@ -99,7 +99,10 @@ func (elm *Action_2_OpenPaymentChannel) RequestSignAddresses() []fields.Address 
 func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.ChainStateOperation) error {
 	var e error
 	// 查询通道是否存在
-	sto := state.Channel(act.ChannelId)
+	sto, e := state.Channel(act.ChannelId)
+	if e != nil {
+		return e
+	}
 	// 左右地址相同且协商一致关闭的通道ID可以被重用
 	var reuseVersion fields.VarUint4 = 1
 	var isIdCanUse = (sto == nil) ||
@@ -136,7 +139,10 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 		return fmt.Errorf("Action_2_OpenPaymentChannel Payment Channel create error: left or right Amount is not positive.")
 	}
 	// 检查余额是否充足
-	bls1 := state.Balance(act.LeftAddress)
+	bls1, e := state.Balance(act.LeftAddress)
+	if e != nil {
+		return e
+	}
 	if bls1 == nil {
 		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance cannot empty.", act.LeftAddress.ToReadable())
 	}
@@ -144,7 +150,10 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfaces.Chain
 	if amt1.LessThan(&act.LeftAmount) {
 		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.LeftAddress.ToReadable(), act.LeftAmount.ToFinString(), amt1.ToFinString())
 	}
-	bls2 := state.Balance(act.RightAddress)
+	bls2, e := state.Balance(act.RightAddress)
+	if e != nil {
+		return e
+	}
 	if bls2 == nil {
 		return fmt.Errorf("Address %s Balance is not enough.", act.RightAddress.ToReadable())
 	}
@@ -204,7 +213,10 @@ func (act *Action_2_OpenPaymentChannel) RecoverChainState(state interfaces.Chain
 
 	panic("RecoverChainState be deprecated")
 
-	sto := state.Channel(act.ChannelId)
+	sto, e := state.Channel(act.ChannelId)
+	if e != nil {
+		return e
+	}
 	if sto.ReuseVersion > 1 {
 		sto.ReuseVersion = sto.ReuseVersion - 1 // 重用版本号减少
 	} else {
@@ -289,7 +301,10 @@ func (act *Action_3_ClosePaymentChannel) WriteinChainState(state interfaces.Chai
 		panic("Action belong to transaction not be nil !")
 	}
 	// 查询通道
-	paychan := state.Channel(act.ChannelId)
+	paychan, e := state.Channel(act.ChannelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
@@ -437,7 +452,10 @@ func (act *Action_12_ClosePaymentChannelBySetupAmount) WriteinChainState(state i
 	}
 
 	// 查询通道
-	paychan := state.Channel(act.ChannelId)
+	paychan, e := state.Channel(act.ChannelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
@@ -534,7 +552,10 @@ func (act *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) WriteinChainState
 		panic("Action belong to transaction not be nil !")
 	}
 	// 查询通道
-	paychan := state.Channel(act.ChannelId)
+	paychan, e := state.Channel(act.ChannelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
@@ -582,7 +603,10 @@ func (act *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) WriteinChainState
 func (act *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) RecoverChainState(state interfaces.ChainStateOperation) error {
 
 	// 查询通道
-	paychan := state.Channel(act.ChannelId)
+	paychan, e := state.Channel(act.ChannelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
@@ -731,7 +755,10 @@ func closePaymentChannelRecoverChainState_deprecated(state interfaces.ChainState
 
 	var e error = nil
 	// 查询通道
-	paychan := state.Channel(channelId)
+	paychan, e := state.Channel(channelId)
+	if e != nil {
+		return e
+	}
 	if paychan == nil {
 		// 通道必须被保存，才能被回退
 		panic(fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(channelId)))

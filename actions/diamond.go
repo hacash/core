@@ -217,7 +217,10 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfaces.ChainState
 			return fmt.Errorf("Diamond difficulty not meet the requirements.")
 		}
 		// 查询钻石是否已经存在
-		hasaddr := state.Diamond(act.Diamond)
+		hasaddr, e := state.Diamond(act.Diamond)
+		if e != nil {
+			return e
+		}
 		if hasaddr != nil {
 			return fmt.Errorf("Diamond <%s> already exist.", string(act.Diamond))
 		}
@@ -567,7 +570,10 @@ func (act *Action_5_DiamondTransfer) WriteinChainState(state interfaces.ChainSta
 		return fmt.Errorf("Cannot transfer to self.")
 	}
 	// 查询钻石是否已经存在
-	diaitem := state.Diamond(act.Diamond)
+	diaitem, e := state.Diamond(act.Diamond)
+	if e != nil {
+		return e
+	}
 	if diaitem == nil {
 		return fmt.Errorf("Diamond <%s> not exist.", string(act.Diamond))
 	}
@@ -600,7 +606,10 @@ func (act *Action_5_DiamondTransfer) RecoverChainState(state interfaces.ChainSta
 	}
 	trsMainAddress := act.trs.GetAddress()
 	// get diamond
-	diaitem := state.Diamond(act.Diamond)
+	diaitem, e := state.Diamond(act.Diamond)
+	if e != nil {
+		return e
+	}
 	if diaitem == nil {
 		return fmt.Errorf("Diamond <%s> not exist.", string(act.Diamond))
 	}
@@ -722,7 +731,10 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 
 		// fmt.Println("--- " + string(diamond))
 		// 查询钻石是否已经存在
-		diaitem := state.Diamond(diamond)
+		diaitem, e := state.Diamond(diamond)
+		if e != nil {
+			return e
+		}
 		if diaitem == nil {
 			//panic("Quantity Diamond <%s> not exist. " + string(diamond))
 			return fmt.Errorf("Quantity Diamond <%s> not exist.", string(diamond))
@@ -759,7 +771,10 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) RecoverChainState(state inter
 	for i := 0; i < len(act.DiamondList.Diamonds); i++ {
 		diamond := act.DiamondList.Diamonds[i]
 		// get diamond
-		diaitem := state.Diamond(diamond)
+		diaitem, e := state.Diamond(diamond)
+		if e != nil {
+			return e
+		}
 		if diaitem == nil {
 			return fmt.Errorf("Diamond <%s> not exist.", string(diamond))
 		}

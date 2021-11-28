@@ -13,7 +13,10 @@ func DoSimpleSatoshiTransferFromChainState(state interfaces.ChainStateOperation,
 	if sat == 0 {
 		return fmt.Errorf("Satoshi transfer amount is empty") // 不允许转账数量为0
 	}
-	bls1 := state.Balance(addr1)
+	bls1, e := state.Balance(addr1)
+	if e != nil {
+		return e
+	}
 	if bls1 == nil {
 		return fmt.Errorf("Satoshi need %d but empty.", sat)
 	}
@@ -26,7 +29,10 @@ func DoSimpleSatoshiTransferFromChainState(state interfaces.ChainStateOperation,
 	if bytes.Compare(addr1, addr2) == 0 {
 		return nil // 可以自己转给自己，不改变状态，先检查余额充足，白费手续费
 	}
-	bls2 := state.Balance(addr2)
+	bls2, e := state.Balance(addr2)
+	if e != nil {
+		return e
+	}
 	if bls2 == nil {
 		bls2 = stores.NewEmptyBalance() // create satoshi store
 	}
@@ -50,7 +56,10 @@ func DoAddSatoshiFromChainState(state interfaces.ChainStateOperation, addr field
 	if sat == 0 {
 		return nil // 数量为0，直接成功
 	}
-	blssto := state.Balance(addr)
+	blssto, e := state.Balance(addr)
+	if e != nil {
+		return e
+	}
 	if blssto == nil {
 		blssto = stores.NewEmptyBalance() // first create account
 	}
@@ -70,7 +79,10 @@ func DoSubSatoshiFromChainState(state interfaces.ChainStateOperation, addr field
 	if sat == 0 {
 		return nil // 数量为0，直接成功
 	}
-	blssto := state.Balance(addr)
+	blssto, e := state.Balance(addr)
+	if e != nil {
+		return e
+	}
 	if blssto == nil {
 		return fmt.Errorf("address %s satoshi need %d but empty.", addr.ToReadable(), sat)
 	}

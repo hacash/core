@@ -20,8 +20,14 @@ func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 
 		if isTrsToMySelf {
 			return nil // 可以自己转给自己，不改变状态，白费手续费
 		}
-		bls1 := state.Balance(addr1)
-		bls2 := state.Balance(addr2)
+		bls1, e := state.Balance(addr1)
+		if e != nil {
+			return e
+		}
+		bls2, e := state.Balance(addr2)
+		if e != nil {
+			return e
+		}
 		if bls2 == nil {
 			bls2 = stores.NewEmptyBalance() // create balance store
 		}
@@ -43,7 +49,10 @@ func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 
 		return nil // 可以自己转给自己，不改变状态，白费手续费
 	}
 	// 判断余额是否充足
-	bls1 := state.Balance(addr1)
+	bls1, e := state.Balance(addr1)
+	if e != nil {
+		return e
+	}
 	if bls1 == nil {
 		// test
 		//fmt.Println( addr1.ToReadable(), "Balance ", amt.ToFinString(), " not find." )
@@ -62,7 +71,10 @@ func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 
 		return nil // 可以自己转给自己，不改变状态，白费手续费
 	}
 	// 查询收款方余额
-	bls2 := state.Balance(addr2)
+	bls2, e := state.Balance(addr2)
+	if e != nil {
+		return e
+	}
 	if bls2 == nil {
 		bls2 = stores.NewEmptyBalance() // create balance store
 	}
@@ -114,7 +126,10 @@ func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 
 
 // 单纯增加余额
 func DoAddBalanceFromChainState(state interfaces.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
-	blssto := state.Balance(addr)
+	blssto, e := state.Balance(addr)
+	if e != nil {
+		return e
+	}
 	if blssto == nil {
 		blssto = stores.NewEmptyBalance() // first create account
 	}
@@ -143,7 +158,10 @@ func DoAddBalanceFromChainState(state interfaces.ChainStateOperation, addr field
 
 // 单纯扣除余额
 func DoSubBalanceFromChainState(state interfaces.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
-	blssto := state.Balance(addr)
+	blssto, e := state.Balance(addr)
+	if e != nil {
+		return e
+	}
 	if blssto == nil {
 		return fmt.Errorf("address %s amount need %s not enough.", addr.ToReadable(), amt.ToFinString())
 	}

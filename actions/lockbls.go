@@ -122,7 +122,10 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfaces.ChainState
 		return fmt.Errorf("LockblsId format error.")
 	}
 	// 检查是否key已经存在
-	haslock := state.Lockbls(act.LockblsId)
+	haslock, e := state.Lockbls(act.LockblsId)
+	if e != nil {
+		return e
+	}
 	if haslock != nil {
 		return fmt.Errorf("Lockbls id<%s> already.", hex.EncodeToString(act.LockblsId))
 	}
@@ -138,7 +141,10 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfaces.ChainState
 		return fmt.Errorf("TotalStockAmount or LinearReleaseAmount error.")
 	}
 	// 检查余额
-	mainblsamt := state.Balance(act.PaymentAddress)
+	mainblsamt, e := state.Balance(act.PaymentAddress)
+	if e != nil {
+		return e
+	}
 	if mainblsamt == nil {
 		return fmt.Errorf("Balance cannot empty.")
 	}
@@ -266,7 +272,10 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfaces.ChainSta
 
 	// 因为只能提取到指定地址，所以任何人都能提取，不需要锁仓地址的签名
 	// 查询
-	lockbls := state.Lockbls(act.LockblsId)
+	lockbls, e := state.Lockbls(act.LockblsId)
+	if e != nil {
+		return e
+	}
 	if lockbls == nil {
 		return fmt.Errorf("Lockbls id<%s> not find.", hex.EncodeToString(act.LockblsId))
 	}
@@ -353,7 +362,10 @@ func (act *Action_10_LockblsRelease) RecoverChainState(state interfaces.ChainSta
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	lockbls := state.Lockbls(act.LockblsId)
+	lockbls, e := state.Lockbls(act.LockblsId)
+	if e != nil {
+		return e
+	}
 	if lockbls == nil {
 		return fmt.Errorf("Lockbls id<%s> not find.", hex.EncodeToString(act.LockblsId))
 	}

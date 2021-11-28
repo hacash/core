@@ -216,7 +216,10 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 	}
 
 	// 查询id是否存在
-	usrlendObj := state.UserLending(act.LendingID)
+	usrlendObj, e := state.UserLending(act.LendingID)
+	if e != nil {
+		return e
+	}
 	if usrlendObj != nil {
 		return fmt.Errorf("User Lending <%s> already exist.", hex.EncodeToString(act.LendingID))
 	}
@@ -250,7 +253,10 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfaces.Chai
 	for i := 0; i < len(act.MortgageDiamondList.Diamonds); i++ {
 		diamond := act.MortgageDiamondList.Diamonds[i]
 		// 查询钻石是否存在
-		diaitem := state.Diamond(diamond)
+		diaitem, e := state.Diamond(diamond)
+		if e != nil {
+			return e
+		}
 		if diaitem == nil {
 			return fmt.Errorf("Diamond <%s> not find.", string(diamond))
 		}
@@ -381,7 +387,10 @@ func (act *Action_19_UsersLendingCreate) RecoverChainState(state interfaces.Chai
 	dianum := int(act.MortgageDiamondList.Count)
 
 	// 查询id是否存在
-	usrlendObj := state.UserLending(act.LendingID)
+	usrlendObj, e := state.UserLending(act.LendingID)
+	if e != nil {
+		return e
+	}
 	if usrlendObj == nil {
 		return fmt.Errorf("User Lending <%s> not exist.", hex.EncodeToString(act.LendingID))
 	}
@@ -390,7 +399,10 @@ func (act *Action_19_UsersLendingCreate) RecoverChainState(state interfaces.Chai
 	for i := 0; i < len(act.MortgageDiamondList.Diamonds); i++ {
 		diamond := act.MortgageDiamondList.Diamonds[i]
 		// 查询钻石是否存在
-		diaitem := state.Diamond(diamond)
+		diaitem, e := state.Diamond(diamond)
+		if e != nil {
+			return e
+		}
 		// 标记抵押钻石
 		diaitem.Status = stores.DiamondStatusNormal // 回退状态
 		state.DiamondSet(diamond, diaitem)
@@ -563,7 +575,10 @@ func (act *Action_20_UsersLendingRansom) WriteinChainState(state interfaces.Chai
 	}
 
 	// 查询id是否存在
-	usrlendObj := state.UserLending(act.LendingID)
+	usrlendObj, e := state.UserLending(act.LendingID)
+	if e != nil {
+		return e
+	}
 	if usrlendObj == nil {
 		return fmt.Errorf("User Lending <%s> not exist.", act.LendingID.ToHex())
 	}
@@ -632,7 +647,10 @@ func (act *Action_20_UsersLendingRansom) WriteinChainState(state interfaces.Chai
 	for i := 0; i < len(usrlendObj.MortgageDiamondList.Diamonds); i++ {
 		diamond := usrlendObj.MortgageDiamondList.Diamonds[i]
 		// 查询钻石是否存在
-		diaitem := state.Diamond(diamond)
+		diaitem, e := state.Diamond(diamond)
+		if e != nil {
+			return e
+		}
 		if diaitem == nil {
 			return fmt.Errorf("diamond <%s> not find.", string(diamond))
 		}
@@ -696,7 +714,10 @@ func (act *Action_20_UsersLendingRansom) RecoverChainState(state interfaces.Chai
 	feeAddr := act.belong_trs.GetAddress()
 
 	// 查询id是否存在
-	usrlendObj := state.UserLending(act.LendingID)
+	usrlendObj, e := state.UserLending(act.LendingID)
+	if e != nil {
+		return e
+	}
 	if usrlendObj == nil {
 		return fmt.Errorf("User Lending <%s> not exist.", hex.EncodeToString(act.LendingID))
 	}
@@ -719,7 +740,10 @@ func (act *Action_20_UsersLendingRansom) RecoverChainState(state interfaces.Chai
 	for i := 0; i < len(usrlendObj.MortgageDiamondList.Diamonds); i++ {
 		diamond := usrlendObj.MortgageDiamondList.Diamonds[i]
 		// 查询钻石是否存在
-		diaitem := state.Diamond(diamond)
+		diaitem, e := state.Diamond(diamond)
+		if e != nil {
+			return e
+		}
 		// 标记钻石
 		diaitem.Status = stores.DiamondStatusLendingOtherUser // 回退钻石状态
 		diaitem.Address = usrlendObj.MortgagorAddress         // 钻石 归属 回退至抵押人

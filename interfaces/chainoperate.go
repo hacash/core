@@ -47,15 +47,15 @@ type ChainStateOperation interface {
 
 	// query
 
-	Balance(fields.Address) *stores.Balance
+	Balance(fields.Address) (*stores.Balance, error)
 	//Satoshi(fields.Address) *stores.Satoshi
-	Lockbls(fields.LockblsId) *stores.Lockbls
-	Channel(fields.ChannelId) *stores.Channel
-	Diamond(fields.DiamondName) *stores.Diamond
-	DiamondSystemLending(fields.DiamondSyslendId) *stores.DiamondSystemLending
-	BitcoinSystemLending(fields.BitcoinSyslendId) *stores.BitcoinSystemLending
-	UserLending(fields.UserLendingId) *stores.UserLending
-	Chaswap(fields.HashHalfChecker) *stores.Chaswap
+	Lockbls(fields.LockblsId) (*stores.Lockbls, error)
+	Channel(fields.ChannelId) (*stores.Channel, error)
+	Diamond(fields.DiamondName) (*stores.Diamond, error)
+	DiamondSystemLending(fields.DiamondSyslendId) (*stores.DiamondSystemLending, error)
+	BitcoinSystemLending(fields.BitcoinSyslendId) (*stores.BitcoinSystemLending, error)
+	UserLending(fields.UserLendingId) (*stores.UserLending, error)
+	Chaswap(fields.HashHalfChecker) (*stores.Chaswap, error)
 
 	// operate
 
