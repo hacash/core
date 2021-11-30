@@ -12,11 +12,10 @@ type BlockChain interface {
 	InsertBlock(interfacev2.Block, string) error
 
 	StateImmutable() ChainStateImmutable // 已确认区块状态
-	State() interfacev2.ChainState       // 不成熟未确认的状态
 
 	StateRead() interfaces.ChainStateOperationRead // 只读状态
 
-	ValidateTransaction(interfacev2.Transaction, func(interfacev2.ChainState)) error
+	ValidateTransactionForTxPool(interfacev2.Transaction) error
 	ValidateDiamondCreateAction(interfacev2.Action) error
 	CreateNextBlockByValidateTxs([]interfacev2.Transaction) (interfacev2.Block, []interfacev2.Transaction, uint32, error)
 

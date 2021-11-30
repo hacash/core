@@ -19,4 +19,5 @@ type BlockHeadMetaRead interface {
 	GetCustomerTransactionCount() uint32
 
 	SerializeExcludeTransactions() ([]byte, error)
+	ParseExcludeTransactions([]byte, uint32) (uint32, error)
 }

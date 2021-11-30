@@ -14,14 +14,15 @@ type LatestStatus interface {
 	GetImmatureBlockHashList() []fields.Hash
 	SetImmatureBlockHashList([]fields.Hash)
 	GetLatestBlockHash() fields.Hash
-	GetImmutableBlockHeadMeta() Block
-	SetImmutableBlockHeadMeta(Block)
+	SetLatestBlockHash(hx fields.Hash)
+	GetImmutableBlockHeadMeta() interfaces.BlockHeadMetaRead
+	SetImmutableBlockHeadMeta(interfaces.BlockHeadMetaRead)
 }
 
 type PendingStatus interface {
 	interfaces.Field
 
-	GetPendingBlockHead() Block
+	GetPendingBlockHead() interfaces.BlockHeadMetaRead
 	GetPendingBlockHeight() uint64
 	GetPendingBlockHash() fields.Hash
 	GetWaitingSubmitDiamond() *stores.DiamondSmelt

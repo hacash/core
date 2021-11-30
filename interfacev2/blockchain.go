@@ -9,7 +9,7 @@ type BlockChain interface {
 	Start() error
 
 	InsertBlock(Block, string) error
-	State() ChainState
+
 	StateRead() interfaces.ChainStateOperationRead
 
 	ValidateTransactionForTxPool(Transaction) error

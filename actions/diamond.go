@@ -300,7 +300,7 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfacev3.ChainStat
 	}
 
 	// 更新区块状态
-	lateststatus.SetLastestDiamond(diamondstore)
+	//lateststatus.SetLastestDiamond(diamondstore)
 	pending.SetWaitingSubmitDiamond(diamondstore)
 
 	// 保存钻石
@@ -321,10 +321,10 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfacev3.ChainStat
 	}
 
 	// update
-	e = state.LatestStatusSet(lateststatus)
-	if e != nil {
-		return e
-	}
+	//e = state.LatestStatusSet(lateststatus)
+	//if e != nil {
+	//	return e
+	//}
 	e = state.SetPending(pending)
 	if e != nil {
 		return e
@@ -462,7 +462,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 		Diamond:              act.Diamond,
 		Number:               act.Number,
 		ContainBlockHeight:   fields.BlockHeight(blkhei),
-		ContainBlockHash:     nil, // current block not exist !!!
+		ContainBlockHash:     blkhash,
 		PrevContainBlockHash: act.PrevHash,
 		MinerAddress:         act.Address,
 		Nonce:                act.Nonce,

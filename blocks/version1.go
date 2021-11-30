@@ -40,7 +40,17 @@ type Block_v1 struct {
 	insertLock sync.RWMutex
 }
 
-func NewEmptyBlock_v1(prevBlockHead interfaces.BlockHeadMetaRead) *Block_v1 {
+func NewEmptyBlockVersion1(prevBlockHead interfaces.BlockHeadMetaRead) *Block_v1 {
+	empty := NewEmptyBlockV1()
+	if prevBlockHead != nil {
+		empty.PrevHash = prevBlockHead.Hash()
+		empty.Height = fields.BlockHeight(prevBlockHead.GetHeight() + 1)
+		empty.Difficulty = fields.VarUint4(prevBlockHead.GetDifficulty())
+	}
+	return empty
+}
+
+func NewEmptyBlockV1() *Block_v1 {
 	curt := time.Now().Unix()
 	empty := &Block_v1{
 		Height:           0,
@@ -54,17 +64,12 @@ func NewEmptyBlock_v1(prevBlockHead interfaces.BlockHeadMetaRead) *Block_v1 {
 		originMark:       "",
 		insertLock:       sync.RWMutex{},
 	}
-	if prevBlockHead != nil {
-		empty.PrevHash = prevBlockHead.Hash()
-		empty.Height = fields.BlockHeight(prevBlockHead.GetHeight() + 1)
-		empty.Difficulty = fields.VarUint4(prevBlockHead.GetDifficulty())
-	}
 	return empty
 }
 
 // copy
 func (block *Block_v1) CopyHeadMetaForMining() interfacev2.Block {
-	newblock := NewEmptyBlock_v1(nil)
+	newblock := NewEmptyBlockVersion1(nil)
 	newblock.Height = block.Height
 	newblock.Timestamp = block.Timestamp
 	newblock.PrevHash = append([]byte{}, block.PrevHash...)

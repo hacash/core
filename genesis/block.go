@@ -27,7 +27,7 @@ func GetGenesisBlock() *blocks.Block_v1 {
 	if genesisBlock != nil {
 		return genesisBlock
 	}
-	genesis := blocks.NewEmptyBlock_v1(nil)
+	genesis := blocks.NewEmptyBlockVersion1(nil)
 	//loc, _ := time.LoadLocation("Asia/Chongqing")
 	secondsEastOfUTC := int((8 * time.Hour).Seconds())
 	loc_chongqing := time.FixedZone("Asia/Chongqing", secondsEastOfUTC)
