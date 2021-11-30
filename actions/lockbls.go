@@ -6,7 +6,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/interfacev2"
+	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 	"math/big"
 )
@@ -21,7 +22,8 @@ type Action_9_LockblsCreate struct {
 	LinearReleaseAmount fields.Amount      // 每次释放额度
 
 	// data ptr
-	belong_trs interfaces.Transaction
+	belong_trs    interfacev2.Transaction
+	belong_trs_v3 interfacev3.Transaction
 }
 
 func NewAction_9_LockblsCreate() *Action_9_LockblsCreate {
@@ -110,7 +112,76 @@ func (act *Action_9_LockblsCreate) RequestSignAddresses() []fields.Address {
 	}
 }
 
-func (act *Action_9_LockblsCreate) WriteinChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_9_LockblsCreate) WriteInChainState(state interfacev3.ChainStateOperation) error {
+	if act.belong_trs_v3 == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+
+	// 检查id值合法性
+	if len(act.LockblsId) != stores.LockblsIdLength || act.LockblsId[0] == 0 || act.LockblsId[stores.LockblsIdLength-1] == 0 {
+		// 用户创建的 锁仓ID， 第一位和最后一位不能为零
+		// 第一位为零的ID是比特币单向转移的锁仓id
+		return fmt.Errorf("LockblsId format error.")
+	}
+	// 检查是否key已经存在
+	haslock, e := state.Lockbls(act.LockblsId)
+	if e != nil {
+		return e
+	}
+	if haslock != nil {
+		return fmt.Errorf("Lockbls id<%s> already.", hex.EncodeToString(act.LockblsId))
+	}
+	// 检查 步进 block number
+	if act.LinearBlockNumber < 288 {
+		return fmt.Errorf("LinearBlockNumber cannot less 288.")
+	}
+	if act.LinearBlockNumber > 1600*10000 {
+		return fmt.Errorf("LinearBlockNumber cannot over 16000000.")
+	}
+	// 检查数额
+	if !act.TotalStockAmount.IsPositive() || !act.LinearReleaseAmount.IsPositive() {
+		return fmt.Errorf("TotalStockAmount or LinearReleaseAmount error.")
+	}
+	// 检查余额
+	mainblsamt, e := state.Balance(act.PaymentAddress)
+	if e != nil {
+		return e
+	}
+	if mainblsamt == nil {
+		return fmt.Errorf("Balance cannot empty.")
+	}
+	if mainblsamt.Hacash.LessThan(&act.TotalStockAmount) {
+		return fmt.Errorf("Balance not enough.")
+	}
+	// 步进不能大于存入额
+	if act.TotalStockAmount.LessThan(&act.LinearReleaseAmount) {
+		return fmt.Errorf("LinearReleaseAmount cannot more than TotalStockAmount.")
+	}
+
+	// 存储
+	lockbls := stores.NewEmptyLockbls(act.MasterAddress)
+	lockbls.EffectBlockHeight = act.EffectBlockHeight
+	lockbls.LinearBlockNumber = act.LinearBlockNumber
+	lockbls.TotalLockAmount = act.TotalStockAmount
+	lockbls.BalanceAmount = act.TotalStockAmount
+	lockbls.LinearReleaseAmount = act.LinearReleaseAmount
+	// 扣除 payment
+	e1 := DoSubBalanceFromChainStateV3(state, act.PaymentAddress, act.TotalStockAmount)
+	if e1 != nil {
+		return e1
+	}
+
+	// 保存锁仓
+	e2 := state.LockblsCreate(act.LockblsId, lockbls)
+	if e2 != nil {
+		return e2
+	}
+
+	// ok
+	return nil
+}
+
+func (act *Action_9_LockblsCreate) WriteinChainState(state interfacev2.ChainStateOperation) error {
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -179,7 +250,7 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfaces.ChainState
 	return nil
 }
 
-func (act *Action_9_LockblsCreate) RecoverChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_9_LockblsCreate) RecoverChainState(state interfacev2.ChainStateOperation) error {
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -199,8 +270,12 @@ func (act *Action_9_LockblsCreate) RecoverChainState(state interfaces.ChainState
 }
 
 // 设置所属 belong_trs
-func (act *Action_9_LockblsCreate) SetBelongTransaction(trs interfaces.Transaction) {
+func (act *Action_9_LockblsCreate) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
+}
+
+func (act *Action_9_LockblsCreate) SetBelongTrs(trs interfacev3.Transaction) {
+	act.belong_trs_v3 = trs
 }
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用
@@ -215,7 +290,8 @@ type Action_10_LockblsRelease struct {
 	ReleaseAmount fields.Amount    // 本次提取额度
 
 	// data ptr
-	belong_trs interfaces.Transaction
+	belong_trs    interfacev2.Transaction
+	belong_trs_v3 interfacev3.Transaction
 }
 
 func NewAction_10_LockblsRelease() *Action_10_LockblsRelease {
@@ -265,7 +341,101 @@ func (elm *Action_10_LockblsRelease) RequestSignAddresses() []fields.Address {
 	return []fields.Address{}
 }
 
-func (act *Action_10_LockblsRelease) WriteinChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_10_LockblsRelease) WriteInChainState(state interfacev3.ChainStateOperation) error {
+	if act.belong_trs_v3 == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+
+	// 因为只能提取到指定地址，所以任何人都能提取，不需要锁仓地址的签名
+	// 查询
+	lockbls, e := state.Lockbls(act.LockblsId)
+	if e != nil {
+		return e
+	}
+	if lockbls == nil {
+		return fmt.Errorf("Lockbls id<%s> not find.", hex.EncodeToString(act.LockblsId))
+	}
+	// 提取出来
+	pending := state.GetPending()
+	currentBlockHeight := pending.GetPendingBlockHeight()
+	if currentBlockHeight < uint64(lockbls.EffectBlockHeight) {
+		return fmt.Errorf("EffectBlockHeight be set %d", lockbls.EffectBlockHeight)
+	}
+	// 计算提取额度
+	// rlsnum == 可提取次数
+	rlsnum := (currentBlockHeight - uint64(lockbls.EffectBlockHeight)) / uint64(lockbls.LinearBlockNumber)
+	if rlsnum == 0 {
+		return fmt.Errorf("first release Block Height is %d, ", uint64(lockbls.EffectBlockHeight)+uint64(lockbls.LinearBlockNumber))
+	}
+	totalrlsamt := lockbls.TotalLockAmount
+	steprlsamt := lockbls.LinearReleaseAmount
+	// 有效可提余额
+	lockblsamt := lockbls.BalanceAmount
+	// 对比
+	if lockblsamt.LessThan(&act.ReleaseAmount) {
+		return fmt.Errorf("BalanceAmount not enough.") // 余额不足
+	}
+	maxrlsamtbig := new(big.Int).Mul(steprlsamt.GetValue(), new(big.Int).SetUint64(rlsnum))
+	currentMaxReleaseAmount, e3 := fields.NewAmountByBigInt(maxrlsamtbig)
+	if e3 != nil {
+		return e3
+	}
+	// 可提余额要减除掉已经提走的
+	alreadyExtractedAmount, e9 := totalrlsamt.Sub(&lockblsamt) // 已经提走的余额
+	if e9 != nil {
+		return e9
+	}
+	// 有效可提余额
+	currentMaxReleaseAmount, e9 = currentMaxReleaseAmount.Sub(alreadyExtractedAmount)
+	if e9 != nil {
+		return e9
+	}
+	// 可提余额判断
+	if currentMaxReleaseAmount.LessThan(&act.ReleaseAmount) {
+		return fmt.Errorf("Current Max Release Amount not enough.") // 目前可提余额不足
+	}
+
+	// 更新锁仓余额
+	newBalanceAmount, e4 := lockblsamt.Sub(&act.ReleaseAmount)
+	if e4 != nil {
+		return e4
+	}
+	lockbls.BalanceAmount = *newBalanceAmount
+	if newBalanceAmount.IsEmpty() {
+		// 锁仓已经全部提取，删除
+		// 为了回退暂不删除，而是为区块回退而暂时保存
+		e := state.LockblsUpdate(act.LockblsId, lockbls)
+		if e != nil {
+			return e
+		}
+	} else {
+		// 扣除 储存
+		e := state.LockblsUpdate(act.LockblsId, lockbls)
+		if e != nil {
+			return e
+		}
+	}
+	// total supply 统计
+	isbtcmoveunlock := act.LockblsId[0] == 0 // 第一位为 0 则是比特币转移的锁定
+	if isbtcmoveunlock {
+		totalsupply, e2 := state.ReadTotalSupply()
+		if e2 != nil {
+			return e2
+		}
+		// 累加解锁的HAC
+		addamt := act.ReleaseAmount.ToMei()
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed, addamt)
+		// update total supply
+		e3 := state.UpdateSetTotalSupply(totalsupply)
+		if e3 != nil {
+			return e3
+		}
+	}
+	// 加上余额
+	return DoAddBalanceFromChainStateV3(state, lockbls.MasterAddress, act.ReleaseAmount)
+}
+
+func (act *Action_10_LockblsRelease) WriteinChainState(state interfacev2.ChainStateOperation) error {
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -358,7 +528,7 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfaces.ChainSta
 	return DoAddBalanceFromChainState(state, lockbls.MasterAddress, act.ReleaseAmount)
 }
 
-func (act *Action_10_LockblsRelease) RecoverChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_10_LockblsRelease) RecoverChainState(state interfacev2.ChainStateOperation) error {
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -400,8 +570,11 @@ func (act *Action_10_LockblsRelease) RecoverChainState(state interfaces.ChainSta
 }
 
 // 设置所属 belong_trs
-func (act *Action_10_LockblsRelease) SetBelongTransaction(trs interfaces.Transaction) {
+func (act *Action_10_LockblsRelease) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
+}
+func (act *Action_10_LockblsRelease) SetBelongTrs(trs interfacev3.Transaction) {
+	act.belong_trs_v3 = trs
 }
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用

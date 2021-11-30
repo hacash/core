@@ -11,20 +11,18 @@ type BlockStore interface {
 	Close()
 
 	// save
-	SaveBlockUniteTransactions(Block) error
+	SaveBlock(Block) error
 
-	// block
-	ReadBlockHeadBytesByHeight(uint64) ([]byte, error)
-	ReadBlockHeadBytesByHash(fields.Hash) ([]byte, error)
-	ReadBlockBytesByHeight(uint64, uint32) ([]byte, []byte, error)
-	ReadBlockBytesByHash(fields.Hash, uint32) ([]byte, error)
+	// read
+	ReadBlockBytesByHash(fields.Hash) ([]byte, error)
+	ReadBlockBytesByHeight(uint64) (fields.Hash, []byte, error)
 	ReadBlockHashByHeight(uint64) (fields.Hash, error)
 
 	// 设置区块高度指向的区块哈希
 	UpdateSetBlockHashReferToHeight(uint64, fields.Hash) error
 
 	// tx
-	ReadTransactionBytesByHash(fields.Hash) (uint64, []byte, error)
+	//ReadTransactionBytesByHash(fields.Hash) (uint64, []byte, error)
 
 	// diamond
 	SaveDiamond(*stores.DiamondSmelt) error
@@ -32,11 +30,14 @@ type BlockStore interface {
 	ReadDiamondByNumber(uint32) (*stores.DiamondSmelt, error)
 
 	// 设置钻石数字指向的钻石名称
-	UpdateSetDiamondNameReferToNumber(uint64, fields.Hash) error
+	UpdateSetDiamondNameReferToNumber(uint32, fields.DiamondName) error
 
 	// btc move log
+	RunDownLoadBTCMoveLog()
 	GetBTCMoveLogTotalPage() (int, error)                        // 数据页数，每页100条数据
 	GetBTCMoveLogPageData(int) ([]*stores.SatoshiGenesis, error) // 获取数据页
 	SaveBTCMoveLogPageData(int, []*stores.SatoshiGenesis) error  // 保存数据页
+
+	LoadValidatedSatoshiGenesis(int64) (*stores.SatoshiGenesis, bool) // 获取已验证的BTC转移日志 & 是否需要验证
 
 }

@@ -3,13 +3,14 @@ package transactions
 import (
 	"bytes"
 	"fmt"
+	"github.com/hacash/core/interfacev3"
 	"math/big"
 	"time"
 
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/actions"
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/interfacev2"
 )
 
 type Transaction_2_Simple struct {
@@ -18,7 +19,7 @@ type Transaction_2_Simple struct {
 	Fee         fields.Amount
 
 	ActionCount fields.VarUint2
-	Actions     []interfaces.Action
+	Actions     []interfacev2.Action
 
 	SignCount fields.VarUint2
 	Signs     []fields.Sign
@@ -55,7 +56,18 @@ func (trs *Transaction_2_Simple) ClearHash() {
 	trs.hashnofee = nil
 }
 
-func (trs *Transaction_2_Simple) Copy() interfaces.Transaction {
+func (trs *Transaction_2_Simple) Clone() interfacev3.Transaction {
+	// copy
+	bodys, _ := trs.Serialize()
+	newtrsbts := make([]byte, len(bodys))
+	copy(newtrsbts, bodys)
+	// create
+	var newtrs = new(Transaction_2_Simple)
+	newtrs.Parse(newtrsbts, 1) // over type
+	return newtrs
+}
+
+func (trs *Transaction_2_Simple) Copy() interfacev2.Transaction {
 	// copy
 	bodys, _ := trs.Serialize()
 	newtrsbts := make([]byte, len(bodys))
@@ -237,16 +249,30 @@ func (trs *Transaction_2_Simple) HashFresh() fields.Hash {
 	return trs.hashnofee
 }
 
-func (trs *Transaction_2_Simple) AppendAction(action interfaces.Action) error {
+func (trs *Transaction_2_Simple) AppendAction(action interfacev2.Action) error {
 	if trs.ActionCount >= 65530 {
 		return fmt.Errorf("Actions too much")
 	}
 	if trs.Actions == nil {
 		trs.ActionCount = 0 // 初始化
-		trs.Actions = make([]interfaces.Action, 0)
+		trs.Actions = make([]interfacev2.Action, 0)
 	}
 	trs.ActionCount += 1
 	trs.Actions = append(trs.Actions, action)
+	trs.ClearHash() // 重置哈希缓存
+	return nil
+}
+
+func (trs *Transaction_2_Simple) AddAction(action interfacev3.Action) error {
+	if trs.ActionCount >= 65530 {
+		return fmt.Errorf("Actions too much")
+	}
+	if trs.Actions == nil {
+		trs.ActionCount = 0 // 初始化
+		trs.Actions = make([]interfacev2.Action, 0)
+	}
+	trs.ActionCount += 1
+	trs.Actions = append(trs.Actions, action.(interfacev2.Action))
 	trs.ClearHash() // 重置哈希缓存
 	return nil
 }
@@ -474,7 +500,28 @@ func (trs *Transaction_2_Simple) RequestAddressBalance() ([][]byte, []big.Int, e
 }
 
 // 修改 / 恢复 状态数据库
-func (trs *Transaction_2_Simple) WriteinChainState(state interfaces.ChainStateOperation) error {
+func (trs *Transaction_2_Simple) WriteInChainState(state interfacev3.ChainStateOperation) error {
+	// 检查 fee size
+	pending := state.GetPending()
+	if pending.GetPendingBlockHeight() > 200000 {
+		if trs.Fee.Size() > 2+4 {
+			return fmt.Errorf("BlockHeight more than 20w trs.Fee.Size() must less than 6 bytes.")
+		}
+	}
+	// actions
+	for i := 0; i < len(trs.Actions); i++ {
+		trs.Actions[i].(interfacev3.Action).SetBelongTrs(trs)
+		e := trs.Actions[i].(interfacev3.Action).WriteInChainState(state)
+		if e != nil {
+			return e
+		}
+	}
+	// 扣除手续费
+	return actions.DoSubBalanceFromChainStateV3(state, trs.MainAddress, trs.Fee)
+}
+
+// 修改 / 恢复 状态数据库
+func (trs *Transaction_2_Simple) WriteinChainState(state interfacev2.ChainStateOperation) error {
 	// 检查 fee size
 	if state.GetPendingBlockHeight() > 200000 {
 		if trs.Fee.Size() > 2+4 {
@@ -483,8 +530,8 @@ func (trs *Transaction_2_Simple) WriteinChainState(state interfaces.ChainStateOp
 	}
 	// actions
 	for i := 0; i < len(trs.Actions); i++ {
-		trs.Actions[i].SetBelongTransaction(trs)
-		e := trs.Actions[i].WriteinChainState(state)
+		trs.Actions[i].(interfacev2.Action).SetBelongTransaction(trs)
+		e := trs.Actions[i].(interfacev2.Action).WriteinChainState(state)
 		if e != nil {
 			return e
 		}
@@ -493,14 +540,14 @@ func (trs *Transaction_2_Simple) WriteinChainState(state interfaces.ChainStateOp
 	return actions.DoSubBalanceFromChainState(state, trs.MainAddress, trs.Fee)
 }
 
-func (trs *Transaction_2_Simple) RecoverChainState(state interfaces.ChainStateOperation) error {
+func (trs *Transaction_2_Simple) RecoverChainState(state interfacev2.ChainStateOperation) error {
 
 	panic("RecoverChainState be deprecated")
 
 	// actions
 	for i := len(trs.Actions) - 1; i >= 0; i-- {
-		trs.Actions[i].SetBelongTransaction(trs)
-		e := trs.Actions[i].RecoverChainState(state)
+		trs.Actions[i].(interfacev2.Action).SetBelongTransaction(trs)
+		e := trs.Actions[i].(interfacev2.Action).RecoverChainState(state)
 		if e != nil {
 			return e
 		}
@@ -550,8 +597,16 @@ func (trs *Transaction_2_Simple) SetFee(fee *fields.Amount) {
 	trs.ClearHash() // 重置哈希缓存
 }
 
-func (trs *Transaction_2_Simple) GetActions() []interfaces.Action {
+func (trs *Transaction_2_Simple) GetActions() []interfacev2.Action {
 	return trs.Actions
+}
+
+func (trs *Transaction_2_Simple) GetActionList() []interfacev3.Action {
+	var list = make([]interfacev3.Action, len(trs.Actions))
+	for i, v := range trs.Actions {
+		list[i] = v.(interfacev3.Action)
+	}
+	return list
 }
 
 func (trs *Transaction_2_Simple) GetTimestamp() uint64 { // 时间戳

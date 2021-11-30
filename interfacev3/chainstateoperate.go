@@ -1,69 +1,41 @@
-package interfaces
+package interfacev3
 
 import (
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/stores"
 )
 
 // chain state 操作
 
 type ChainStateOperation interface {
+	interfaces.ChainStateOperationRead
+
 	// 数据库升级模式
-	IsDatabaseVersionRebuildMode() bool
 	RecoverDatabaseVersionRebuildMode()
 
 	// status
-	IsInMemTxPool() bool // 否在交易池
 	SetInMemTxPool(bool)
 
-	// status
-	GetPendingBlockHeight() uint64
-	SetPendingBlockHeight(uint64)
-	GetPendingBlockHash() fields.Hash
-	SetPendingBlockHash(fields.Hash)
+	GetPending() PendingStatus
+	SetPending(PendingStatus) error
 
-	GetPendingSubmitStoreDiamond() (*stores.DiamondSmelt, error)
-	SetPendingSubmitStoreDiamond(*stores.DiamondSmelt) error
-
-	// status
-	SetLastestBlockHeadAndMeta(Block) error
-	ReadLastestBlockHeadAndMeta() (Block, error)
-	SetLastestDiamond(*stores.DiamondSmelt) error
-	ReadLastestDiamond() (*stores.DiamondSmelt, error)
+	LatestStatusRead() (LatestStatus, error)
+	LatestStatusSet(LatestStatus) error
 
 	UpdateSetTotalSupply(totalobj *stores.TotalSupply) error
-	ReadTotalSupply() (*stores.TotalSupply, error)
 
 	// store
 	BlockStore() BlockStore
-	SetBlockStore(BlockStore) error
 
 	// tx hash
-	ContainTxHash(fields.Hash) error       // 写入包含交易哈希
-	RemoveTxHash(fields.Hash) error        // 移除交易
-	CheckTxHash(fields.Hash) (bool, error) // 检查交易是否已经上链
-
-	// state
-
-	// query
-
-	Balance(fields.Address) (*stores.Balance, error)
-	//Satoshi(fields.Address) *stores.Satoshi
-	Lockbls(fields.LockblsId) (*stores.Lockbls, error)
-	Channel(fields.ChannelId) (*stores.Channel, error)
-	Diamond(fields.DiamondName) (*stores.Diamond, error)
-	DiamondSystemLending(fields.DiamondSyslendId) (*stores.DiamondSystemLending, error)
-	BitcoinSystemLending(fields.BitcoinSyslendId) (*stores.BitcoinSystemLending, error)
-	UserLending(fields.UserLendingId) (*stores.UserLending, error)
-	Chaswap(fields.HashHalfChecker) (*stores.Chaswap, error)
+	ContainTxHash(fields.Hash, fields.BlockHeight) error // 写入包含交易哈希
+	RemoveTxHash(fields.Hash) error                      // 移除交易
 
 	// operate
 
 	BalanceSet(fields.Address, *stores.Balance) error
 	BalanceDel(fields.Address) error
-
-	//SatoshiSet(fields.Address, *stores.Satoshi) error
-	//SatoshiDel(fields.Address) error
 
 	LockblsCreate(fields.LockblsId, *stores.Lockbls) error // 创建线性锁仓
 	LockblsUpdate(fields.LockblsId, *stores.Lockbls) error // 更新：释放（取出部分任意可取额度）
@@ -94,7 +66,8 @@ type ChainStateOperation interface {
 
 	// movebtc
 	SaveMoveBTCBelongTxHash(trsno uint32, txhash []byte) error
-	ReadMoveBTCTxHashByNumber(trsno uint32) ([]byte, error)
-	LoadValidatedSatoshiGenesis(int64) (*stores.SatoshiGenesis, bool) // 获取已验证的BTC转移日志 & 是否需要验证
+	//ReadMoveBTCTxHashByNumber(trsno uint32) ([]byte, error)
+	ReadMoveBTCTxHashByTrsNo(trsno uint32) ([]byte, error)
+	//LoadValidatedSatoshiGenesis(int64) (*stores.SatoshiGenesis, bool) // 获取已验证的BTC转移日志 & 是否需要验证
 
 }

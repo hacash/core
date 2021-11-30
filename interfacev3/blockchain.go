@@ -1,22 +1,26 @@
 package interfacev3
 
 import (
+	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/interfacev2"
 	"github.com/hacash/core/stores"
 )
 
 type BlockChain interface {
 	Start() error
 
-	InsertBlock(Block, string) error
+	InsertBlock(interfacev2.Block, string) error
 
 	StateImmutable() ChainStateImmutable // 已确认区块状态
-	State() ChainState                   // 不成熟未确认的状态
+	State() interfacev2.ChainState       // 不成熟未确认的状态
 
-	ValidateTransaction(Transaction, func(ChainState)) error
-	ValidateDiamondCreateAction(Action) error
-	CreateNextBlockByValidateTxs([]Transaction) (Block, []Transaction, uint32, error)
+	StateRead() interfaces.ChainStateOperationRead // 只读状态
 
-	SubscribeValidatedBlockOnInsert(chan Block)
+	ValidateTransaction(interfacev2.Transaction, func(interfacev2.ChainState)) error
+	ValidateDiamondCreateAction(interfacev2.Action) error
+	CreateNextBlockByValidateTxs([]interfacev2.Transaction) (interfacev2.Block, []interfacev2.Transaction, uint32, error)
+
+	SubscribeValidatedBlockOnInsert(chan interfacev2.Block)
 	SubscribeDiamondOnCreate(chan *stores.DiamondSmelt)
 
 	ReadPrev288BlockTimestamp(blockHeight uint64) (uint64, error)

@@ -1,4 +1,4 @@
-package interfaces
+package interfacev2
 
 type StoreItem interface {
 

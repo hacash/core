@@ -5,11 +5,11 @@ import (
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/actions"
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/interfacev2"
 )
 
 // 取出钻石创建的action
-func CheckoutAction_4_DiamondCreateFromTx(tx interfaces.Transaction) *actions.Action_4_DiamondCreate {
+func CheckoutAction_4_DiamondCreateFromTx(tx interfacev2.Transaction) *actions.Action_4_DiamondCreate {
 
 	// do add is diamond ?
 	for _, act := range tx.GetActions() {
@@ -54,7 +54,7 @@ func CreateOneTxOfBTCTransfer(payacc *account.Account, toaddr fields.Address, am
 	newTrs, _ := NewEmptyTransaction_2_Simple(feeacc.Address) // 使用手续费地址为主地址
 	newTrs.Timestamp = fields.BlockTxTimestamp(timestamp)     // 使用时间戳
 	newTrs.Fee = *fee                                         // set fee
-	var tranact interfaces.Action = nil
+	var tranact interfacev2.Action = nil
 	if bytes.Compare(payacc.Address, feeacc.Address) == 0 {
 		tranact = &actions.Action_8_SimpleSatoshiTransfer{
 			ToAddress: toaddr,

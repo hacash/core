@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/interfacev2"
+	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 	"github.com/hacash/core/sys"
 )
@@ -163,7 +164,8 @@ type Action_25_PaymantChannelAndOnchainAtomicExchange struct {
 	ExchangeEvidence ChannelAmountAndOnChainAmountTransferEachOtherByAtomicExchange
 
 	// data ptr
-	belong_trs interfaces.Transaction
+	belong_trs    interfacev2.Transaction
+	belong_trs_v3 interfacev3.Transaction
 }
 
 func (elm *Action_25_PaymantChannelAndOnchainAtomicExchange) Kind() uint16 {
@@ -204,7 +206,60 @@ func (elm *Action_25_PaymantChannelAndOnchainAtomicExchange) RequestSignAddresse
 	return []fields.Address{}
 }
 
-func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteinChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteInChainState(state interfacev3.ChainStateOperation) error {
+
+	var e error
+
+	if !sys.TestDebugLocalDevelopmentMark {
+		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+	}
+
+	if act.belong_trs_v3 == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+
+	// 查询是否为重复提交
+	swaphx := act.ExchangeEvidence.ChannelTranferProveBodyHashChecker
+	chaswap, e := state.Chaswap(swaphx)
+	if e != nil {
+		return e
+	}
+	if chaswap != nil {
+		// 已经存在，不可重复提交
+		// 否则将会导致多次重复转账
+		return fmt.Errorf("ChannelTranferProveBodyHashChecker <%s> is existence.",
+			swaphx.ToHex())
+	}
+
+	if len(act.ExchangeEvidence.OnchainTransferFromAndMustSignAddresses) < 2 {
+		return fmt.Errorf("Address lenght error.")
+	}
+
+	// 提交时不验证通道相关内容，仅仅操作链上转账
+	e = act.ExchangeEvidence.CheckMustAddressAndSigns()
+	if e != nil {
+		return e
+	}
+
+	// 创建，保存凭证
+	objsto := stores.Chaswap{
+		IsBeUsed:                                fields.CreateBool(false), // 未使用过
+		AddressCount:                            act.ExchangeEvidence.AddressCount,
+		OnchainTransferFromAndMustSignAddresses: act.ExchangeEvidence.OnchainTransferFromAndMustSignAddresses,
+	}
+	e = state.ChaswapCreate(swaphx, &objsto)
+	if e != nil {
+		return e
+	}
+
+	// 转账
+	fromAddr := act.ExchangeEvidence.OnchainTransferFromAndMustSignAddresses[0]
+	toAddr := act.ExchangeEvidence.OnChainTranferToAddress
+	trsAmt := act.ExchangeEvidence.OnChainTranferAmount
+	return DoSimpleTransferFromChainStateV3(state, fromAddr, toAddr, trsAmt)
+}
+
+func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteinChainState(state interfacev2.ChainStateOperation) error {
 
 	var e error
 
@@ -257,7 +312,7 @@ func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteinChainState(s
 	return DoSimpleTransferFromChainState(state, fromAddr, toAddr, trsAmt)
 }
 
-func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) RecoverChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) RecoverChainState(state interfacev2.ChainStateOperation) error {
 
 	// 取消保存
 	swaphx := act.ExchangeEvidence.ChannelTranferProveBodyHashChecker
@@ -270,8 +325,12 @@ func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) RecoverChainState(s
 	return DoSimpleTransferFromChainState(state, toAddr, fromAddr, trsAmt)
 }
 
-func (elm *Action_25_PaymantChannelAndOnchainAtomicExchange) SetBelongTransaction(t interfaces.Transaction) {
+func (elm *Action_25_PaymantChannelAndOnchainAtomicExchange) SetBelongTransaction(t interfacev2.Transaction) {
 	elm.belong_trs = t
+}
+
+func (elm *Action_25_PaymantChannelAndOnchainAtomicExchange) SetBelongTrs(t interfacev3.Transaction) {
+	elm.belong_trs_v3 = t
 }
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用

@@ -3,12 +3,12 @@ package actions
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/interfacev2"
 )
 
 /* *********************************************************** */
 
-func NewActionByKind(kind uint16) (interfaces.Action, error) {
+func NewActionByKind(kind uint16) (interfacev2.Action, error) {
 	////////////////////   ACTIONS   ////////////////////
 	switch kind {
 	case 1:
@@ -70,10 +70,10 @@ func NewActionByKind(kind uint16) (interfaces.Action, error) {
 
 	}
 	////////////////////    END      ////////////////////
-	return nil, fmt.Errorf("Cannot find Action kind of " + string(kind))
+	return nil, fmt.Errorf("Cannot find Action kind of %d.", +kind)
 }
 
-func ParseAction(buf []byte, seek uint32) (interfaces.Action, uint32, error) {
+func ParseAction(buf []byte, seek uint32) (interfacev2.Action, uint32, error) {
 	if seek+2 >= uint32(len(buf)) {
 		return nil, 0, fmt.Errorf("[ParseAction] seek out of buf len.")
 	}

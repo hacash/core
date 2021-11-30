@@ -2,12 +2,12 @@ package transactions
 
 import (
 	"fmt"
-	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/interfacev2"
 )
 
 ////////////////////////////////////////////////////////////////////////
 
-func NewTransactionByType(ty uint8) (interfaces.Transaction, error) {
+func NewTransactionByType(ty uint8) (interfacev2.Transaction, error) {
 	switch ty {
 	////////////////////  TRANSATION  ////////////////////
 	case 0:
@@ -21,7 +21,7 @@ func NewTransactionByType(ty uint8) (interfaces.Transaction, error) {
 	return nil, fmt.Errorf("Cannot find Transaction type of " + string(ty))
 }
 
-func ParseTransaction(buf []byte, seek uint32) (interfaces.Transaction, uint32, error) {
+func ParseTransaction(buf []byte, seek uint32) (interfacev2.Transaction, uint32, error) {
 	if seek >= uint32(len(buf)) {
 		return nil, 0, fmt.Errorf("buf length over range")
 	}

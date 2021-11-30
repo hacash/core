@@ -1,4 +1,4 @@
-package interfaces
+package interfacev2
 
 import (
 	"github.com/hacash/core/fields"
@@ -18,8 +18,10 @@ type BlockStore interface {
 	// block
 	ReadBlockHeadBytesByHeight(uint64) ([]byte, error)
 	ReadBlockHeadBytesByHash(fields.Hash) ([]byte, error)
-	ReadBlockBytesByHeight(uint64, uint32) ([]byte, []byte, error)
-	ReadBlockBytesByHash(fields.Hash, uint32) ([]byte, error)
+	ReadBlockBytesLengthByHeight(uint64, uint32) (fields.Hash, []byte, error)
+	ReadBlockBytesByHeight(uint64) (fields.Hash, []byte, error)
+	ReadBlockBytesLengthByHash(fields.Hash, uint32) ([]byte, error)
+	ReadBlockBytesByHash(fields.Hash) ([]byte, error)
 	ReadBlockHashByHeight(uint64) (fields.Hash, error)
 
 	// tx

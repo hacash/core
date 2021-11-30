@@ -7,7 +7,8 @@ import (
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/actions"
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/interfacev2"
+	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 	"math/big"
 )
@@ -81,7 +82,18 @@ func (trs *Transaction_0_Coinbase) ClearHash() {
 
 }
 
-func (trs *Transaction_0_Coinbase) Copy() interfaces.Transaction {
+func (trs *Transaction_0_Coinbase) Clone() interfacev3.Transaction {
+	// copy
+	bodys, _ := trs.Serialize()
+	newtrsbts := make([]byte, len(bodys))
+	copy(newtrsbts, bodys)
+	// create
+	var newtrs = new(Transaction_0_Coinbase)
+	newtrs.Parse(newtrsbts, 1) // over type
+	return newtrs
+}
+
+func (trs *Transaction_0_Coinbase) Copy() interfacev2.Transaction {
 	// copy
 	bodys, _ := trs.Serialize()
 	newtrsbts := make([]byte, len(bodys))
@@ -302,8 +314,38 @@ func (trs *Transaction_0_Coinbase) VerifyAllNeedSigns() (bool, error) {
 	return true, nil
 }
 
+func (trs *Transaction_0_Coinbase) WriteInChainState(state interfacev3.ChainStateOperation) error {
+
+	// total supply 统计
+	// reward
+	totalsupply, e2 := state.ReadTotalSupply()
+	if e2 != nil {
+		return e2
+	}
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBlockReward, trs.Reward.ToMei())
+	// feeBurning
+	if trs.TotalFeeMinerReceived.NotEqual(&trs.TotalFeeUserPayed) {
+		// 有销毁
+		burnamt, e := trs.TotalFeeUserPayed.Sub(&trs.TotalFeeMinerReceived)
+		if e != nil {
+			return e
+		}
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningFee, burnamt.ToMei())
+	}
+	// update total supply
+	e3 := state.UpdateSetTotalSupply(totalsupply)
+	if e3 != nil {
+		return e3
+	}
+	// fmt.Printf("trs.TotalFee = %s\n", trs.TotalFee.ToFinString())
+	rwd_and_txfee, _ := trs.Reward.Add(&trs.TotalFeeMinerReceived)
+	// addr, _ := base58check.Encode(trs.Address)
+	// fmt.Printf("coinbase.ChangeChainState,  %s  +=  %s\n", addr, rwd.ToFinString())
+	return actions.DoAddBalanceFromChainStateV3(state, trs.Address, *rwd_and_txfee)
+}
+
 // 修改 / 恢复 状态数据库
-func (trs *Transaction_0_Coinbase) WriteinChainState(state interfaces.ChainStateOperation) error {
+func (trs *Transaction_0_Coinbase) WriteinChainState(state interfacev2.ChainStateOperation) error {
 
 	// total supply 统计
 	// reward
@@ -333,7 +375,7 @@ func (trs *Transaction_0_Coinbase) WriteinChainState(state interfaces.ChainState
 	return actions.DoAddBalanceFromChainState(state, trs.Address, *rwd_and_txfee)
 }
 
-func (trs *Transaction_0_Coinbase) RecoverChainState(state interfaces.ChainStateOperation) error {
+func (trs *Transaction_0_Coinbase) RecoverChainState(state interfacev2.ChainStateOperation) error {
 
 	panic("RecoverChainState be deprecated")
 
@@ -388,7 +430,10 @@ func (trs *Transaction_0_Coinbase) SetFee(fee *fields.Amount) {
 	panic("cannot SetFee for Transaction_0_Coinbase")
 }
 
-func (trs *Transaction_0_Coinbase) GetActions() []interfaces.Action {
+func (trs *Transaction_0_Coinbase) GetActions() []interfacev2.Action {
+	return nil
+}
+func (trs *Transaction_0_Coinbase) GetActionList() []interfacev3.Action {
 	return nil
 }
 

@@ -1,6 +1,8 @@
-package interfaces
+package interfacev2
 
-import "github.com/hacash/core/fields"
+import (
+	"github.com/hacash/core/fields"
+)
 
 type Action interface {
 

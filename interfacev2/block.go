@@ -1,4 +1,4 @@
-package interfaces
+package interfacev2
 
 import (
 	"github.com/hacash/core/fields"

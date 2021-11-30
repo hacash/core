@@ -2,20 +2,21 @@ package interfacev3
 
 import (
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 )
 
 type Block interface {
 
 	// base super
-	Field
+	interfaces.Field
 
 	// origin
 	OriginMark() string // "", "sync", "discover", "mining"
 	SetOriginMark(string)
 
 	// copy
-	CopyHeadMetaForMining() Block
-	CopyForMining() Block
+	//CopyHeadMetaForMining() Block
+	//CopyForMining() Block
 
 	// delete cache data
 	Fresh()
@@ -34,23 +35,21 @@ type Block interface {
 	SerializeMeta() ([]byte, error)
 	ParseMeta([]byte, uint32) (uint32, error)
 
-	SerializeTransactions(SerializeTransactionsIterator) ([]byte, error)
 	ParseTransactions([]byte, uint32) (uint32, error)
 
 	SerializeExcludeTransactions() ([]byte, error)
 	ParseExcludeTransactions([]byte, uint32) (uint32, error)
 
 	// change chain state
-	WriteinChainState(ChainStateOperation) error
-	RecoverChainState(ChainStateOperation) error
+	WriteInChainState(ChainStateOperation) error
 
 	// hash
 	Hash() fields.Hash
 	HashFresh() fields.Hash
 
 	// change struct data
-	AddTransaction(Transaction)
-	SetTransactions([]Transaction)
+	AddTrs(Transaction)
+	SetTrsList([]Transaction)
 	SetMrklRoot(fields.Hash)
 	SetNonce(uint32)
 	SetNonceByte(nonce []byte)
@@ -60,7 +59,7 @@ type Block interface {
 
 	// get some datas
 
-	GetTransactions() []Transaction
+	GetTrsList() []Transaction
 	GetHeight() uint64
 	GetDifficulty() uint32
 	GetWitnessStage() uint16
@@ -73,9 +72,4 @@ type Block interface {
 
 	// customer trs count
 	GetCustomerTransactionCount() uint32
-}
-
-type SerializeTransactionsIterator interface {
-	Init(uint32)
-	FinishOneTrs(uint32, Transaction, []byte)
 }

@@ -1,4 +1,4 @@
-package interfaces
+package interfacev2
 
 type PowServer interface {
 	Excavate(input Block, resCh chan Block) // find block nonce or change coinbase message

@@ -1,6 +1,7 @@
-package interfaces
+package interfacev2
 
 import (
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/stores"
 )
 
@@ -9,8 +10,9 @@ type BlockChain interface {
 
 	InsertBlock(Block, string) error
 	State() ChainState
+	StateRead() interfaces.ChainStateOperationRead
 
-	ValidateTransaction(Transaction, func(ChainState)) error
+	ValidateTransactionForTxPool(Transaction) error
 	ValidateDiamondCreateAction(Action) error
 	CreateNextBlockByValidateTxs([]Transaction) (Block, []Transaction, uint32, error)
 

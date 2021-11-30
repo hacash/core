@@ -1,10 +1,10 @@
-package interfacev3
+package interfacev2
 
 import (
 	"github.com/hacash/core/fields"
 )
 
-type MemTxPool interface {
+type TxPool interface {
 	SetBlockChain(BlockChain)
 
 	// 检查交易是否已经存在

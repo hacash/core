@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"github.com/hacash/core/coinbase"
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/interfacev2"
+	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 	"github.com/hacash/core/sys"
 )
@@ -46,7 +47,8 @@ type Action_15_DiamondsSystemLendingCreate struct {
 	BorrowPeriod        fields.VarUint1             // 借款周期，一个周期代表 0.5%利息和10000个区块约35天，最低1最高20，则年利率为 5%
 
 	// data ptr
-	belong_trs interfaces.Transaction
+	belong_trs    interfacev2.Transaction
+	belong_trs_v3 interfacev3.Transaction
 }
 
 func (elm *Action_15_DiamondsSystemLendingCreate) Kind() uint16 {
@@ -121,7 +123,149 @@ func (*Action_15_DiamondsSystemLendingCreate) RequestSignAddresses() []fields.Ad
 	return []fields.Address{} // not sign
 }
 
-func (act *Action_15_DiamondsSystemLendingCreate) WriteinChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_15_DiamondsSystemLendingCreate) WriteInChainState(state interfacev3.ChainStateOperation) error {
+
+	if !sys.TestDebugLocalDevelopmentMark {
+		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+	}
+
+	if act.belong_trs_v3 == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+
+	feeAddr := act.belong_trs_v3.GetAddress()
+
+	// 检查id格式
+	if len(act.LendingID) != stores.DiamondSyslendIdLength ||
+		act.LendingID[0] == 0 ||
+		act.LendingID[stores.DiamondSyslendIdLength-1] == 0 {
+		return fmt.Errorf("Diamond Lending Id format error.")
+	}
+
+	// 查询id是否存在
+	dmdlendObj, e := state.DiamondSystemLending(act.LendingID)
+	if e != nil {
+		return e
+	}
+	if dmdlendObj != nil {
+		return fmt.Errorf("Diamond Lending <%s> already exist.", hex.EncodeToString(act.LendingID))
+	}
+
+	// 数量检查
+	dianum := int(act.MortgageDiamondList.Count)
+	if dianum == 0 || dianum != len(act.MortgageDiamondList.Diamonds) {
+		return fmt.Errorf("Diamonds quantity error")
+	}
+	if dianum > 200 {
+		return fmt.Errorf("Diamonds quantity cannot over 200")
+	}
+
+	// 检查周期数
+	if act.BorrowPeriod < 1 || act.BorrowPeriod > 20 {
+		return fmt.Errorf("BorrowPeriod must between 1 ~ 20")
+	}
+
+	// 可借出HAC
+	totalLoanHAC := int64(0)
+
+	// 批量抵押钻石
+	for i := 0; i < len(act.MortgageDiamondList.Diamonds); i++ {
+		diamond := act.MortgageDiamondList.Diamonds[i]
+
+		// 查询钻石是否存在
+		diaitem, e := state.Diamond(diamond)
+		if e != nil {
+			return e
+		}
+		if diaitem == nil {
+			return fmt.Errorf("Diamond <%s> not find.", string(diamond))
+		}
+		// 检查所属地址
+		if diaitem.Address.NotEqual(feeAddr) {
+			return fmt.Errorf("Diamond <%s> not belong to address '%s'", string(diamond), feeAddr.ToReadable())
+		}
+		// 检查钻石状态，是否可以抵押
+		if diaitem.Status != stores.DiamondStatusNormal {
+			return fmt.Errorf("Diamond <%s> has been mortgaged and cannot be transferred.", string(diamond))
+		}
+		// 标记抵押钻石
+		diaitem.Status = stores.DiamondStatusLendingSystem // 抵押给系统
+		e5 := state.DiamondSet(diamond, diaitem)
+		if e5 != nil {
+			return e5
+		}
+		diasmelt, e6 := state.BlockStore().ReadDiamond(diamond)
+		if e6 != nil {
+			return e5
+		}
+		if diasmelt == nil {
+			return fmt.Errorf("Diamond <%s> not exist.", string(diamond))
+		}
+		// 统计可借出HAC数量
+		totalLoanHAC += int64(diasmelt.AverageBidBurnPrice)
+	}
+
+	// 共借出 HAC 枚
+	totalAmt := fields.NewAmountByUnit248(totalLoanHAC)
+	// 验证数量
+	if totalAmt.NotEqual(&act.LoanTotalAmount) {
+		return fmt.Errorf("LoanTotalAmountMei must %s but got %s", totalAmt.ToFinString(), act.LoanTotalAmount.ToFinString())
+	}
+
+	// 减少钻石余额
+	e9 := DoSubDiamondFromChainStateV3(state, feeAddr, fields.DiamondNumber(dianum))
+	if e9 != nil {
+		return e9
+	}
+
+	// 抵押成功，发放HAC余额
+	e10 := DoAddBalanceFromChainStateV3(state, feeAddr, act.LoanTotalAmount)
+	if e10 != nil {
+		return e10
+	}
+
+	// 保存钻石抵押
+	pending := state.GetPending()
+	paddingHei := pending.GetPendingBlockHeight()
+	dlsto := &stores.DiamondSystemLending{
+		IsRansomed:          fields.CreateBool(false), // 标记未赎回
+		CreateBlockHeight:   fields.BlockHeight(paddingHei),
+		MainAddress:         feeAddr,
+		MortgageDiamondList: act.MortgageDiamondList,
+		LoanTotalAmountMei:  fields.VarUint4(totalLoanHAC),
+		BorrowPeriod:        act.BorrowPeriod,
+	}
+	e11 := state.DiamondLendingCreate(act.LendingID, dlsto)
+	if e11 != nil {
+		return e11
+	}
+
+	// 系统统计
+	totalsupply, e20 := state.ReadTotalSupply()
+	if e20 != nil {
+		return e20
+	}
+	// 增加实时钻石系统抵押数量统计
+	totalsupply.DoAdd(
+		stores.TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount,
+		float64(dianum),
+	)
+	// 钻石系统抵押数量统计 累计借出流水
+	totalsupply.DoAdd(
+		stores.TotalSupplyStoreTypeOfSystemLendingDiamondCumulationLoanHacAmount,
+		act.LoanTotalAmount.ToMei(),
+	)
+	// 更新统计
+	e21 := state.UpdateSetTotalSupply(totalsupply)
+	if e21 != nil {
+		return e21
+	}
+
+	// 完毕
+	return nil
+}
+
+func (act *Action_15_DiamondsSystemLendingCreate) WriteinChainState(state interfacev2.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
 		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
@@ -262,7 +406,7 @@ func (act *Action_15_DiamondsSystemLendingCreate) WriteinChainState(state interf
 	return nil
 }
 
-func (act *Action_15_DiamondsSystemLendingCreate) RecoverChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_15_DiamondsSystemLendingCreate) RecoverChainState(state interfacev2.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
 		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
@@ -329,8 +473,11 @@ func (act *Action_15_DiamondsSystemLendingCreate) RecoverChainState(state interf
 }
 
 // 设置所属 belong_trs
-func (act *Action_15_DiamondsSystemLendingCreate) SetBelongTransaction(trs interfaces.Transaction) {
+func (act *Action_15_DiamondsSystemLendingCreate) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
+}
+func (act *Action_15_DiamondsSystemLendingCreate) SetBelongTrs(trs interfacev3.Transaction) {
+	act.belong_trs_v3 = trs
 }
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用
@@ -367,7 +514,8 @@ type Action_16_DiamondsSystemLendingRansom struct {
 	LendingID    fields.DiamondSyslendId // 借贷合约ID
 	RansomAmount fields.Amount           // 赎回金额
 	// data ptr
-	belong_trs interfaces.Transaction
+	belong_trs    interfacev2.Transaction
+	belong_trs_v3 interfacev3.Transaction
 }
 
 func (elm *Action_16_DiamondsSystemLendingRansom) Kind() uint16 {
@@ -415,7 +563,140 @@ func (*Action_16_DiamondsSystemLendingRansom) RequestSignAddresses() []fields.Ad
 	return []fields.Address{} // not sign
 }
 
-func (act *Action_16_DiamondsSystemLendingRansom) WriteinChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_16_DiamondsSystemLendingRansom) WriteInChainState(state interfacev3.ChainStateOperation) error {
+
+	if act.belong_trs_v3 == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+
+	if !sys.TestDebugLocalDevelopmentMark {
+		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+	}
+
+	// 借贷周期 10000区块约 35天
+	dslbpbn := DiamondsSystemLendingBorrowPeriodBlockNumber
+
+	// 测试使用
+	if sys.TestDebugLocalDevelopmentMark {
+		dslbpbn = 10 // 测试时使用 50 个区块为一个周期
+	}
+
+	pending := state.GetPending()
+	paddingHeight := pending.GetPendingBlockHeight()
+	feeAddr := act.belong_trs_v3.GetAddress()
+
+	// 检查id格式
+	if len(act.LendingID) != stores.DiamondSyslendIdLength ||
+		act.LendingID[0] == 0 ||
+		act.LendingID[stores.DiamondSyslendIdLength-1] == 0 {
+		return fmt.Errorf("Diamond Lending Id format error.")
+	}
+
+	// 查询id是否存在
+	dmdlendObj, e := state.DiamondSystemLending(act.LendingID)
+	if e != nil {
+		return e
+	}
+	if dmdlendObj == nil {
+		return fmt.Errorf("Diamond Lending <%s> not exist.", hex.EncodeToString(act.LendingID))
+	}
+
+	// 检查是否赎回状态
+	if dmdlendObj.IsRansomed.Check() {
+		// 已经赎回。不可再次赎回
+		return fmt.Errorf("Diamond Lending <%s> has been redeemed.", hex.EncodeToString(act.LendingID))
+	}
+
+	// 计算赎回期限和所需赎回金额（判断是否可以公共赎回）
+	_, validRansomAmt, e4 := coinbase.CalculationDiamondSystemLendingRedeemAmount(
+		feeAddr, dmdlendObj.MainAddress,
+		int64(dmdlendObj.BorrowPeriod), int64(dmdlendObj.CreateBlockHeight),
+		int64(dmdlendObj.LoanTotalAmountMei),
+		int64(dslbpbn), int64(paddingHeight))
+	if e4 != nil {
+		return e4
+	}
+
+	// 检查赎回金额是否有效（赎回金额真的大于实时计算的可赎回金额）
+	if act.RansomAmount.LessThan(validRansomAmt) {
+		return fmt.Errorf("Valid ransom amount must not less than %s but got %s", validRansomAmt.ToFinString(), act.RansomAmount.ToFinString())
+	}
+
+	// 赎回操作，扣除HAC余额（以便首先检查余额是否充足）
+	e2 := DoSubBalanceFromChainStateV3(state, feeAddr, act.RansomAmount)
+	if e2 != nil {
+		return e2
+	}
+
+	// 操作赎回
+	dianum := dmdlendObj.MortgageDiamondList.Count
+
+	// 批量赎回钻石
+	for i := 0; i < len(dmdlendObj.MortgageDiamondList.Diamonds); i++ {
+		diamond := dmdlendObj.MortgageDiamondList.Diamonds[i]
+		// 查询钻石是否存在
+		diaitem, e := state.Diamond(diamond)
+		if e != nil {
+			return e
+		}
+		if diaitem == nil {
+			return fmt.Errorf("diamond <%s> not find.", string(diamond))
+		}
+		// 检查钻石状态
+		if diaitem.Status != stores.DiamondStatusLendingSystem {
+			return fmt.Errorf("diamond <%s> status is not [stores.DiamondStatusLendingSystem].", string(diamond))
+		}
+		// 标记赎回钻石
+		diaitem.Status = stores.DiamondStatusNormal // 赎回钻石状态
+		diaitem.Address = feeAddr                   // 钻石归属修改
+		e5 := state.DiamondSet(diamond, diaitem)    // 更新钻石
+		if e5 != nil {
+			return e5
+		}
+	}
+
+	// 增加钻石余额
+	e9 := DoAddDiamondFromChainStateV3(state, feeAddr, fields.DiamondNumber(dianum))
+	if e9 != nil {
+		return e9
+	}
+
+	// 修改抵押合约状态，标记已经赎回，避免重复赎回
+	e20 := dmdlendObj.SetRansomedStatus(paddingHeight, &act.RansomAmount, feeAddr)
+	if e20 != nil {
+		return e20
+	}
+	e10 := state.DiamondLendingUpdate(act.LendingID, dmdlendObj)
+	if e10 != nil {
+		return e10
+	}
+
+	// 系统统计
+	totalsupply, e20 := state.ReadTotalSupply()
+	if e20 != nil {
+		return e20
+	}
+	// 减少实时钻石系统抵押数量统计，实时减扣
+	totalsupply.DoSub(
+		stores.TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount,
+		float64(dianum),
+	)
+	// 钻石系统抵押数量统计 累计赎回流水
+	totalsupply.DoAdd(
+		stores.TotalSupplyStoreTypeOfSystemLendingDiamondCumulationRansomHacAmount,
+		act.RansomAmount.ToMei(),
+	)
+	// 更新统计
+	e21 := state.UpdateSetTotalSupply(totalsupply)
+	if e21 != nil {
+		return e21
+	}
+
+	// 完毕
+	return nil
+}
+
+func (act *Action_16_DiamondsSystemLendingRansom) WriteinChainState(state interfacev2.ChainStateOperation) error {
 
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
@@ -547,7 +828,7 @@ func (act *Action_16_DiamondsSystemLendingRansom) WriteinChainState(state interf
 	return nil
 }
 
-func (act *Action_16_DiamondsSystemLendingRansom) RecoverChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_16_DiamondsSystemLendingRansom) RecoverChainState(state interfacev2.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
 		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
@@ -629,8 +910,12 @@ func (act *Action_16_DiamondsSystemLendingRansom) RecoverChainState(state interf
 }
 
 // 设置所属 belong_trs
-func (act *Action_16_DiamondsSystemLendingRansom) SetBelongTransaction(trs interfaces.Transaction) {
+func (act *Action_16_DiamondsSystemLendingRansom) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
+}
+
+func (act *Action_16_DiamondsSystemLendingRansom) SetBelongTrs(trs interfacev3.Transaction) {
+	act.belong_trs_v3 = trs
 }
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用

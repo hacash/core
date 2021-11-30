@@ -1,11 +1,14 @@
 package interfacev3
 
-import "github.com/hacash/core/fields"
+import (
+	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
+)
 
 type Action interface {
 
 	// base super
-	Field
+	interfaces.Field
 
 	// the action type number
 	Kind() uint16
@@ -14,11 +17,10 @@ type Action interface {
 	RequestSignAddresses() []fields.Address
 
 	// change chain state
-	WriteinChainState(ChainStateOperation) error
-	RecoverChainState(ChainStateOperation) error
+	WriteInChainState(ChainStateOperation) error
 
 	// help func
-	SetBelongTransaction(Transaction)
+	SetBelongTrs(Transaction)
 	Describe() map[string]interface{} // json api
 
 	// burning fees

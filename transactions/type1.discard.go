@@ -3,6 +3,7 @@ package transactions
 import (
 	"bytes"
 	"fmt"
+	"github.com/hacash/core/interfacev3"
 	"math/big"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/hacash/core/actions"
 	"github.com/hacash/core/crypto/btcec"
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/interfacev2"
 )
 
 /////////////////////////////////////////////
@@ -23,7 +24,7 @@ type Transaction_1_DO_NOT_USE_WITH_BUG struct {
 	Fee       fields.Amount
 
 	ActionCount fields.VarUint2
-	Actions     []interfaces.Action
+	Actions     []interfacev2.Action
 
 	SignCount fields.VarUint2
 	Signs     []fields.Sign
@@ -51,7 +52,18 @@ func NewEmptyTransaction_1_Simple(master fields.Address) (*Transaction_1_DO_NOT_
 	}, nil
 }
 
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Copy() interfaces.Transaction {
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Copy() interfacev2.Transaction {
+	// copy
+	bodys, _ := trs.Serialize()
+	newtrsbts := make([]byte, len(bodys))
+	copy(newtrsbts, bodys)
+	// create
+	var newtrs = new(Transaction_1_DO_NOT_USE_WITH_BUG)
+	newtrs.Parse(newtrsbts, 1) // over type
+	return newtrs
+}
+
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Clone() interfacev3.Transaction {
 	// copy
 	bodys, _ := trs.Serialize()
 	newtrsbts := make([]byte, len(bodys))
@@ -240,7 +252,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) HashFresh() fields.Hash {
 	return trs.hashnofee
 }
 
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) AppendAction(action interfaces.Action) error {
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) AppendAction(action interfacev2.Action) error {
 	if trs.ActionCount >= 65535 {
 		return fmt.Errorf("Action too much")
 	}
@@ -447,7 +459,29 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RequestAddressBalance() ([][]byte,
 }
 
 // 修改 / 恢复 状态数据库
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteinChainState(state interfaces.ChainStateOperation) error {
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteInChainState(state interfacev3.ChainStateOperation) error {
+	/*********************************************************/
+	/******* 在区块37000 以上不能接受 trs_type==1 的交易 ********/
+	/******* 从而解决第一种交易类型的签名验证的BUG问题     ********/
+	/*********************************************************/
+	pending := state.GetPending()
+	if pending.GetPendingBlockHeight() > 37000 {
+		return fmt.Errorf("Transaction type<1> be discard DO_NOT_USE_WITH_BUG")
+	}
+	// actions
+	for i := 0; i < len(trs.Actions); i++ {
+		trs.Actions[i].(interfacev3.Action).SetBelongTrs(trs)
+		e := trs.Actions[i].(interfacev3.Action).WriteInChainState(state)
+		if e != nil {
+			return e
+		}
+	}
+	// 扣除手续费
+	return actions.DoSubBalanceFromChainStateV3(state, trs.Address, trs.Fee)
+}
+
+// 修改 / 恢复 状态数据库
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteinChainState(state interfacev2.ChainStateOperation) error {
 	/*********************************************************/
 	/******* 在区块37000 以上不能接受 trs_type==1 的交易 ********/
 	/******* 从而解决第一种交易类型的签名验证的BUG问题     ********/
@@ -457,8 +491,8 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteinChainState(state interfaces
 	}
 	// actions
 	for i := 0; i < len(trs.Actions); i++ {
-		trs.Actions[i].SetBelongTransaction(trs)
-		e := trs.Actions[i].WriteinChainState(state)
+		trs.Actions[i].(interfacev2.Action).SetBelongTransaction(trs)
+		e := trs.Actions[i].(interfacev2.Action).WriteinChainState(state)
 		if e != nil {
 			return e
 		}
@@ -467,14 +501,14 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteinChainState(state interfaces
 	return actions.DoSubBalanceFromChainState(state, trs.Address, trs.Fee)
 }
 
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RecoverChainState(state interfaces.ChainStateOperation) error {
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RecoverChainState(state interfacev2.ChainStateOperation) error {
 
 	panic("RecoverChainState be deprecated")
 
 	// actions
 	for i := len(trs.Actions) - 1; i >= 0; i-- {
-		trs.Actions[i].SetBelongTransaction(trs)
-		e := trs.Actions[i].RecoverChainState(state)
+		trs.Actions[i].(interfacev2.Action).SetBelongTransaction(trs)
+		e := trs.Actions[i].(interfacev2.Action).RecoverChainState(state)
 		if e != nil {
 			return e
 		}
@@ -509,8 +543,16 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) SetFee(fee *fields.Amount) {
 	trs.Fee = *fee
 }
 
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetActions() []interfaces.Action {
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetActions() []interfacev2.Action {
 	return trs.Actions
+}
+
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetActionList() []interfacev3.Action {
+	var list = make([]interfacev3.Action, len(trs.Actions))
+	for i, v := range trs.Actions {
+		list[i] = v.(interfacev3.Action)
+	}
+	return list
 }
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetTimestamp() uint64 { // 时间戳

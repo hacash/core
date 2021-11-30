@@ -5,7 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/interfacev2"
+	"github.com/hacash/core/interfacev3"
 )
 
 type Action_8_SimpleSatoshiTransfer struct {
@@ -13,7 +14,8 @@ type Action_8_SimpleSatoshiTransfer struct {
 	Amount    fields.Satoshi
 
 	// data ptr
-	belong_trs interfaces.Transaction
+	belong_trs    interfacev2.Transaction
+	belong_trs_v3 interfacev3.Transaction
 }
 
 func NewAction_8_SimpleSatoshiTransfer(addr fields.Address, amt fields.Satoshi) *Action_8_SimpleSatoshiTransfer {
@@ -66,7 +68,21 @@ func (elm *Action_8_SimpleSatoshiTransfer) RequestSignAddresses() []fields.Addre
 	return []fields.Address{}
 }
 
-func (act *Action_8_SimpleSatoshiTransfer) WriteinChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_8_SimpleSatoshiTransfer) WriteInChainState(state interfacev3.ChainStateOperation) error {
+	if act.belong_trs_v3 == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+
+	if act.Amount <= 0 {
+		// 转账不能为 0 或负
+		return fmt.Errorf("Amount <%d> error.", act.Amount)
+	}
+	// 转移
+	fromAddress := act.belong_trs_v3.GetAddress()
+	return DoSimpleSatoshiTransferFromChainStateV3(state, fromAddress, act.ToAddress, act.Amount)
+}
+
+func (act *Action_8_SimpleSatoshiTransfer) WriteinChainState(state interfacev2.ChainStateOperation) error {
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -80,7 +96,7 @@ func (act *Action_8_SimpleSatoshiTransfer) WriteinChainState(state interfaces.Ch
 	return DoSimpleSatoshiTransferFromChainState(state, fromAddress, act.ToAddress, act.Amount)
 }
 
-func (act *Action_8_SimpleSatoshiTransfer) RecoverChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_8_SimpleSatoshiTransfer) RecoverChainState(state interfacev2.ChainStateOperation) error {
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -89,8 +105,12 @@ func (act *Action_8_SimpleSatoshiTransfer) RecoverChainState(state interfaces.Ch
 }
 
 // 设置所属 belong_trs
-func (act *Action_8_SimpleSatoshiTransfer) SetBelongTransaction(trs interfaces.Transaction) {
+func (act *Action_8_SimpleSatoshiTransfer) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
+}
+
+func (act *Action_8_SimpleSatoshiTransfer) SetBelongTrs(trs interfacev3.Transaction) {
+	act.belong_trs_v3 = trs
 }
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用
@@ -106,7 +126,8 @@ type Action_11_FromToSatoshiTransfer struct {
 	Amount      fields.Satoshi
 
 	// data ptr
-	belong_trs interfaces.Transaction
+	belong_trs    interfacev2.Transaction
+	belong_trs_v3 interfacev3.Transaction
 }
 
 func NewAction_11_FromToSatoshiTransfer(fromaddr fields.Address, toaddr fields.Address, amt fields.Satoshi) *Action_11_FromToSatoshiTransfer {
@@ -167,7 +188,21 @@ func (elm *Action_11_FromToSatoshiTransfer) RequestSignAddresses() []fields.Addr
 	}
 }
 
-func (act *Action_11_FromToSatoshiTransfer) WriteinChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_11_FromToSatoshiTransfer) WriteInChainState(state interfacev3.ChainStateOperation) error {
+	if act.belong_trs_v3 == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+
+	if act.Amount <= 0 {
+		// 转账不能为 0 或负
+		return fmt.Errorf("Amount <%d> error.", act.Amount)
+	}
+
+	// 转移
+	return DoSimpleSatoshiTransferFromChainStateV3(state, act.FromAddress, act.ToAddress, act.Amount)
+}
+
+func (act *Action_11_FromToSatoshiTransfer) WriteinChainState(state interfacev2.ChainStateOperation) error {
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -181,7 +216,7 @@ func (act *Action_11_FromToSatoshiTransfer) WriteinChainState(state interfaces.C
 	return DoSimpleSatoshiTransferFromChainState(state, act.FromAddress, act.ToAddress, act.Amount)
 }
 
-func (act *Action_11_FromToSatoshiTransfer) RecoverChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_11_FromToSatoshiTransfer) RecoverChainState(state interfacev2.ChainStateOperation) error {
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -190,8 +225,11 @@ func (act *Action_11_FromToSatoshiTransfer) RecoverChainState(state interfaces.C
 }
 
 // 设置所属 belong_trs
-func (act *Action_11_FromToSatoshiTransfer) SetBelongTransaction(trs interfaces.Transaction) {
+func (act *Action_11_FromToSatoshiTransfer) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
+}
+func (act *Action_11_FromToSatoshiTransfer) SetBelongTrs(trs interfacev3.Transaction) {
+	act.belong_trs_v3 = trs
 }
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用
@@ -206,7 +244,8 @@ type Action_28_FromSatoshiTransfer struct {
 	Amount      fields.Satoshi
 
 	// data ptr
-	belong_trs interfaces.Transaction
+	belong_trs    interfacev2.Transaction
+	belong_trs_v3 interfacev3.Transaction
 }
 
 func NewAction_28_FromSatoshiTransfer(fromaddr fields.Address, amt fields.Satoshi) *Action_28_FromSatoshiTransfer {
@@ -260,7 +299,22 @@ func (elm *Action_28_FromSatoshiTransfer) RequestSignAddresses() []fields.Addres
 	}
 }
 
-func (act *Action_28_FromSatoshiTransfer) WriteinChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_28_FromSatoshiTransfer) WriteInChainState(state interfacev3.ChainStateOperation) error {
+	if act.belong_trs_v3 == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+
+	if act.Amount <= 0 {
+		// 转账不能为 0 或负
+		return fmt.Errorf("Amount <%d> error.", act.Amount)
+	}
+
+	// 转移
+	toAddress := act.belong_trs_v3.GetAddress()
+	return DoSimpleSatoshiTransferFromChainStateV3(state, act.FromAddress, toAddress, act.Amount)
+}
+
+func (act *Action_28_FromSatoshiTransfer) WriteinChainState(state interfacev2.ChainStateOperation) error {
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -275,7 +329,7 @@ func (act *Action_28_FromSatoshiTransfer) WriteinChainState(state interfaces.Cha
 	return DoSimpleSatoshiTransferFromChainState(state, act.FromAddress, toAddress, act.Amount)
 }
 
-func (act *Action_28_FromSatoshiTransfer) RecoverChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_28_FromSatoshiTransfer) RecoverChainState(state interfacev2.ChainStateOperation) error {
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -284,8 +338,12 @@ func (act *Action_28_FromSatoshiTransfer) RecoverChainState(state interfaces.Cha
 }
 
 // 设置所属 belong_trs
-func (act *Action_28_FromSatoshiTransfer) SetBelongTransaction(trs interfaces.Transaction) {
+func (act *Action_28_FromSatoshiTransfer) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
+}
+
+func (act *Action_28_FromSatoshiTransfer) SetBelongTrs(trs interfacev3.Transaction) {
+	act.belong_trs_v3 = trs
 }
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用

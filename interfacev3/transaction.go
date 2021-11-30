@@ -3,16 +3,15 @@ package interfacev3
 import (
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 )
 
 type Transaction interface {
 
 	// base super
-	Field
+	interfaces.Field
 
-	ClearHash() // 清除hash缓存
-
-	Copy() Transaction
+	Clone() Transaction
 
 	// the transaction type number
 	Type() uint8
@@ -36,8 +35,7 @@ type Transaction interface {
 	VerifyTargetSigns(reqaddr []fields.Address) (bool, error)
 
 	// change chain state
-	WriteinChainState(ChainStateOperation) error
-	RecoverChainState(ChainStateOperation) error
+	WriteInChainState(ChainStateOperation) error
 
 	// fee
 	FeePurity() uint64 // fee purity
@@ -50,7 +48,7 @@ type Transaction interface {
 	GetFeeOfMinerRealReceived() *fields.Amount
 	GetFee() *fields.Amount
 	SetFee(*fields.Amount)
-	GetActions() []Action
+	GetActionList() []Action
 	GetTimestamp() uint64
 	GetMessage() fields.TrimString16
 	SetMessage(fields.TrimString16)
