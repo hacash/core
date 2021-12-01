@@ -11,7 +11,7 @@ type ChainStateOperation interface {
 	ChainStateOperationRead
 
 	// 数据库升级模式
-	RecoverDatabaseVersionRebuildMode()
+	SetDatabaseVersionRebuildMode(bool)
 
 	// status
 	SetInTxPool(bool)

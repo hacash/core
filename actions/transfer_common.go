@@ -237,7 +237,9 @@ func DoSimpleTransferFromChainStateV3(state interfaces.ChainStateOperation, addr
 		// 高度 20万 之后，不允许出现自己转给自己的数额大于可用余额的情况！
 		return nil // 可以自己转给自己，不改变状态，白费手续费
 	}
-	// 判断余额是否充足
+
+	// 首先判断余额是否充足
+	// 再判断是否是自己转给自己
 	bls1, e := state.Balance(addr1)
 	if e != nil {
 		return e

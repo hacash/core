@@ -4,8 +4,9 @@ import (
 	"github.com/hacash/core/stores"
 )
 
-type ChainEngineKernel interface {
+type ChainEngine interface {
 	Start() error
+	Close() error
 
 	ChainStateIinitializeCall(func(ChainStateOperation))
 

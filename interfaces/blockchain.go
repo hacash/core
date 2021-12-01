@@ -3,8 +3,8 @@ package interfaces
 type BlockChain interface {
 	Start() error
 
-	GetChainEngineKernel() ChainEngineKernel
-	SetChainEngineKernel(ChainEngineKernel)
+	GetChainEngineKernel() ChainEngine
+	SetChainEngineKernel(ChainEngine)
 
 	ValidateTransactionForTxPool(Transaction) error
 	ValidateDiamondCreateAction(Action) error
