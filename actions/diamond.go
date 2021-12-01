@@ -6,8 +6,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 	"github.com/hacash/core/sys"
 	"github.com/hacash/x16rs"
@@ -45,7 +45,7 @@ type Action_4_DiamondCreate struct {
 
 	// 所属交易
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_4_DiamondCreate) Kind() uint16 {
@@ -139,7 +139,7 @@ func (elm *Action_4_DiamondCreate) RequestSignAddresses() []fields.Address {
 	return []fields.Address{} // no sign
 }
 
-func (act *Action_4_DiamondCreate) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainStateOperation) error {
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -148,8 +148,8 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfacev3.ChainStat
 
 	//区块高度
 	pending := state.GetPending()
-	blkhei := pending.GetPendingBlockHeight()
-	blkhash := pending.GetPendingBlockHash()
+	blkhei := state.GetPendingBlockHeight()
+	blkhash := state.GetPendingBlockHash()
 	diamondVisualUseContainBlockHash := blkhash
 	if diamondVisualUseContainBlockHash == nil || len(diamondVisualUseContainBlockHash) != 32 {
 		diamondVisualUseContainBlockHash = bytes.Repeat([]byte{0}, 32)
@@ -265,7 +265,7 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfacev3.ChainStat
 		Diamond:              act.Diamond,
 		Number:               act.Number,
 		ContainBlockHeight:   fields.BlockHeight(blkhei),
-		ContainBlockHash:     nil, // current block not exist !!!
+		ContainBlockHash:     state.GetPendingBlockHash(),
 		PrevContainBlockHash: act.PrevHash,
 		MinerAddress:         act.Address,
 		Nonce:                act.Nonce,
@@ -300,8 +300,13 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfacev3.ChainStat
 	}
 
 	// 更新区块状态
-	//lateststatus.SetLastestDiamond(diamondstore)
+	lateststatus.SetLastestDiamond(diamondstore)
 	pending.SetWaitingSubmitDiamond(diamondstore)
+	// 保存状态
+	e = state.LatestStatusSet(lateststatus)
+	if e != nil {
+		return e
+	}
 
 	// 保存钻石
 	e = blockstore.SaveDiamond(diamondstore)
@@ -573,7 +578,7 @@ func (elm *Action_4_DiamondCreate) SetBelongTransaction(t interfacev2.Transactio
 	elm.belong_trs = t
 }
 
-func (elm *Action_4_DiamondCreate) SetBelongTrs(t interfacev3.Transaction) {
+func (elm *Action_4_DiamondCreate) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 
@@ -713,7 +718,7 @@ func calculateVisualGeneByDiamondStuffHash(belong_trs interfacev2.Transaction, n
 }
 
 // 计算钻石的可视化基因
-func calculateVisualGeneByDiamondStuffHashV3(belong_trs interfacev3.Transaction, number uint32, stuffhx []byte, diamondstr string, peddingblkhash []byte) (fields.Bytes10, error) {
+func calculateVisualGeneByDiamondStuffHashV3(belong_trs interfaces.Transaction, number uint32, stuffhx []byte, diamondstr string, peddingblkhash []byte) (fields.Bytes10, error) {
 	if len(stuffhx) != 32 || len(peddingblkhash) != 32 {
 		return nil, fmt.Errorf("stuffhx and peddingblkhash length must 32")
 	}
@@ -846,7 +851,7 @@ type Action_5_DiamondTransfer struct {
 	// 数据指针
 	// 所属交易
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_5_DiamondTransfer) Kind() uint16 {
@@ -885,7 +890,7 @@ func (elm *Action_5_DiamondTransfer) RequestSignAddresses() []fields.Address {
 	return []fields.Address{} // not sign
 }
 
-func (act *Action_5_DiamondTransfer) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_5_DiamondTransfer) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
@@ -1007,7 +1012,7 @@ func (elm *Action_5_DiamondTransfer) SetBelongTransaction(t interfacev2.Transact
 	elm.belong_trs = t
 }
 
-func (elm *Action_5_DiamondTransfer) SetBelongTrs(t interfacev3.Transaction) {
+func (elm *Action_5_DiamondTransfer) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 
@@ -1027,7 +1032,7 @@ type Action_6_OutfeeQuantityDiamondTransfer struct {
 	// 数据指针
 	// 所属交易
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_6_OutfeeQuantityDiamondTransfer) Kind() uint16 {
@@ -1087,7 +1092,7 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) RequestSignAddresses() []fiel
 	return reqs
 }
 
-func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteInChainState(state interfaces.ChainStateOperation) error {
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -1234,7 +1239,7 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) SetBelongTransaction(t interf
 	elm.belong_trs = t
 }
 
-func (elm *Action_6_OutfeeQuantityDiamondTransfer) SetBelongTrs(t interfacev3.Transaction) {
+func (elm *Action_6_OutfeeQuantityDiamondTransfer) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 

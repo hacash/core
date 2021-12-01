@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/hacash/core/coinbase"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 	"github.com/hacash/core/sys"
 	"math/big"
@@ -54,7 +54,7 @@ type Action_17_BitcoinsSystemLendingCreate struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_17_BitcoinsSystemLendingCreate) Kind() uint16 {
@@ -116,7 +116,7 @@ func (*Action_17_BitcoinsSystemLendingCreate) RequestSignAddresses() []fields.Ad
 	return []fields.Address{} // not sign
 }
 
-func (act *Action_17_BitcoinsSystemLendingCreate) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_17_BitcoinsSystemLendingCreate) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
 		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
@@ -213,8 +213,7 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteInChainState(state interf
 	}
 
 	// 保存比特币抵押
-	pending := state.GetPending()
-	paddingHei := pending.GetPendingBlockHeight()
+	paddingHei := state.GetPendingBlockHeight()
 	dlsto := &stores.BitcoinSystemLending{
 		IsRansomed:                 fields.CreateBool(false), // 标记未赎回
 		CreateBlockHeight:          fields.BlockHeight(paddingHei),
@@ -488,7 +487,7 @@ func (act *Action_17_BitcoinsSystemLendingCreate) RecoverChainState(state interf
 func (act *Action_17_BitcoinsSystemLendingCreate) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }
-func (act *Action_17_BitcoinsSystemLendingCreate) SetBelongTrs(trs interfacev3.Transaction) {
+func (act *Action_17_BitcoinsSystemLendingCreate) SetBelongTrs(trs interfaces.Transaction) {
 	act.belong_trs_v3 = trs
 }
 
@@ -527,7 +526,7 @@ type Action_18_BitcoinsSystemLendingRansom struct {
 	RansomAmount fields.Amount           // 赎回金额
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_18_BitcoinsSystemLendingRansom) Kind() uint16 {
@@ -575,7 +574,7 @@ func (*Action_18_BitcoinsSystemLendingRansom) RequestSignAddresses() []fields.Ad
 	return []fields.Address{} // not sign
 }
 
-func (act *Action_18_BitcoinsSystemLendingRansom) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_18_BitcoinsSystemLendingRansom) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
 		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
@@ -585,8 +584,7 @@ func (act *Action_18_BitcoinsSystemLendingRansom) WriteInChainState(state interf
 		panic("Action belong to transaction not be nil !")
 	}
 
-	pending := state.GetPending()
-	paddingHeight := pending.GetPendingBlockHeight()
+	paddingHeight := state.GetPendingBlockHeight()
 	feeAddr := act.belong_trs_v3.GetAddress()
 
 	// 检查id格式
@@ -856,7 +854,7 @@ func (act *Action_18_BitcoinsSystemLendingRansom) RecoverChainState(state interf
 func (act *Action_18_BitcoinsSystemLendingRansom) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }
-func (act *Action_18_BitcoinsSystemLendingRansom) SetBelongTrs(trs interfacev3.Transaction) {
+func (act *Action_18_BitcoinsSystemLendingRansom) SetBelongTrs(trs interfaces.Transaction) {
 	act.belong_trs_v3 = trs
 }
 

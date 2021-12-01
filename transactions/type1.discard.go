@@ -3,7 +3,7 @@ package transactions
 import (
 	"bytes"
 	"fmt"
-	"github.com/hacash/core/interfacev3"
+	"github.com/hacash/core/interfaces"
 	"math/big"
 	"time"
 
@@ -63,7 +63,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Copy() interfacev2.Transaction {
 	return newtrs
 }
 
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Clone() interfacev3.Transaction {
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Clone() interfaces.Transaction {
 	// copy
 	bodys, _ := trs.Serialize()
 	newtrsbts := make([]byte, len(bodys))
@@ -459,19 +459,18 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RequestAddressBalance() ([][]byte,
 }
 
 // 修改 / 恢复 状态数据库
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteInChainState(state interfaces.ChainStateOperation) error {
 	/*********************************************************/
 	/******* 在区块37000 以上不能接受 trs_type==1 的交易 ********/
 	/******* 从而解决第一种交易类型的签名验证的BUG问题     ********/
 	/*********************************************************/
-	pending := state.GetPending()
-	if pending.GetPendingBlockHeight() > 37000 {
+	if state.GetPendingBlockHeight() > 37000 {
 		return fmt.Errorf("Transaction type<1> be discard DO_NOT_USE_WITH_BUG")
 	}
 	// actions
 	for i := 0; i < len(trs.Actions); i++ {
-		trs.Actions[i].(interfacev3.Action).SetBelongTrs(trs)
-		e := trs.Actions[i].(interfacev3.Action).WriteInChainState(state)
+		trs.Actions[i].(interfaces.Action).SetBelongTrs(trs)
+		e := trs.Actions[i].(interfaces.Action).WriteInChainState(state)
 		if e != nil {
 			return e
 		}
@@ -547,10 +546,10 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetActions() []interfacev2.Action 
 	return trs.Actions
 }
 
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetActionList() []interfacev3.Action {
-	var list = make([]interfacev3.Action, len(trs.Actions))
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetActionList() []interfaces.Action {
+	var list = make([]interfaces.Action, len(trs.Actions))
 	for i, v := range trs.Actions {
-		list[i] = v.(interfacev3.Action)
+		list[i] = v.(interfaces.Action)
 	}
 	return list
 }

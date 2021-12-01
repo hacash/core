@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/hacash/core/coinbase"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 	"github.com/hacash/core/sys"
 )
@@ -27,7 +27,7 @@ type Action_2_OpenPaymentChannel struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_2_OpenPaymentChannel) Kind() uint16 {
@@ -98,7 +98,7 @@ func (elm *Action_2_OpenPaymentChannel) RequestSignAddresses() []fields.Address 
 	return reqs
 }
 
-func (act *Action_2_OpenPaymentChannel) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_2_OpenPaymentChannel) WriteInChainState(state interfaces.ChainStateOperation) error {
 	var e error
 	// 查询通道是否存在
 	sto, e := state.Channel(act.ChannelId)
@@ -163,8 +163,8 @@ func (act *Action_2_OpenPaymentChannel) WriteInChainState(state interfacev3.Chai
 	if amt2.LessThan(&act.RightAmount) {
 		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.RightAddress.ToReadable(), act.RightAmount.ToFinString(), amt2.ToFinString())
 	}
-	pending := state.GetPending()
-	curheight := pending.GetPendingBlockHeight()
+
+	curheight := state.GetPendingBlockHeight()
 	// 创建 channel
 	var storeItem = stores.CreateEmptyChannel()
 	storeItem.BelongHeight = fields.BlockHeight(curheight)
@@ -363,7 +363,7 @@ func (elm *Action_2_OpenPaymentChannel) SetBelongTransaction(t interfacev2.Trans
 	elm.belong_trs = t
 }
 
-func (elm *Action_2_OpenPaymentChannel) SetBelongTrs(t interfacev3.Transaction) {
+func (elm *Action_2_OpenPaymentChannel) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 
@@ -380,7 +380,7 @@ type Action_3_ClosePaymentChannel struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_3_ClosePaymentChannel) Kind() uint16 {
@@ -417,7 +417,7 @@ func (elm *Action_3_ClosePaymentChannel) RequestSignAddresses() []fields.Address
 	return []fields.Address{}
 }
 
-func (act *Action_3_ClosePaymentChannel) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_3_ClosePaymentChannel) WriteInChainState(state interfaces.ChainStateOperation) error {
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -493,7 +493,7 @@ func (elm *Action_3_ClosePaymentChannel) SetBelongTransaction(t interfacev2.Tran
 	elm.belong_trs = t
 }
 
-func (elm *Action_3_ClosePaymentChannel) SetBelongTrs(t interfacev3.Transaction) {
+func (elm *Action_3_ClosePaymentChannel) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 
@@ -516,7 +516,7 @@ type Action_12_ClosePaymentChannelBySetupAmount struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_12_ClosePaymentChannelBySetupAmount) Kind() uint16 {
@@ -602,7 +602,7 @@ func (elm *Action_12_ClosePaymentChannelBySetupAmount) RequestSignAddresses() []
 	}
 }
 
-func (act *Action_12_ClosePaymentChannelBySetupAmount) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_12_ClosePaymentChannelBySetupAmount) WriteInChainState(state interfaces.ChainStateOperation) error {
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -670,7 +670,7 @@ func (elm *Action_12_ClosePaymentChannelBySetupAmount) SetBelongTransaction(t in
 	elm.belong_trs = t
 }
 
-func (elm *Action_12_ClosePaymentChannelBySetupAmount) SetBelongTrs(t interfacev3.Transaction) {
+func (elm *Action_12_ClosePaymentChannelBySetupAmount) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 
@@ -689,7 +689,7 @@ type Action_21_ClosePaymentChannelBySetupOnlyLeftAmount struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) Kind() uint16 {
@@ -737,7 +737,7 @@ func (elm *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) RequestSignAddres
 	return []fields.Address{}
 }
 
-func (act *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	//if !sys.TestDebugLocalDevelopmentMark {
 	//	return fmt.Errorf("mainnet not yet") // 暂未启用等待review
@@ -874,7 +874,7 @@ func (elm *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) SetBelongTransact
 	elm.belong_trs = t
 }
 
-func (elm *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) SetBelongTrs(t interfacev3.Transaction) {
+func (elm *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 
@@ -1107,7 +1107,7 @@ func calculateChannelInterest(curheight uint64, openBelongHeight uint64, leftAmo
 
 // 关闭通道状态写入
 // isFinalClosed : 是否为仲裁终局结束，不可重用
-func closePaymentChannelWriteinChainStateV3(state interfacev3.ChainStateOperation, channelId []byte, paychan *stores.Channel, newLeftAmt *fields.Amount, newRightAmt *fields.Amount, leftNewSAT fields.Satoshi, rightNewSAT fields.Satoshi, isFinalClosed bool) error {
+func closePaymentChannelWriteinChainStateV3(state interfaces.ChainStateOperation, channelId []byte, paychan *stores.Channel, newLeftAmt *fields.Amount, newRightAmt *fields.Amount, leftNewSAT fields.Satoshi, rightNewSAT fields.Satoshi, isFinalClosed bool) error {
 	var e error
 	// 判断通道已经关闭
 	if paychan == nil {
@@ -1142,8 +1142,8 @@ func closePaymentChannelWriteinChainStateV3(state interfacev3.ChainStateOperatio
 	}
 	// 计算获得当前的区块高度
 	//var curheight uint64 = 1
-	pending := state.GetPending()
-	curheight := pending.GetPendingBlockHeight()
+
+	curheight := state.GetPendingBlockHeight()
 	leftAmount, rightAmount, haveinterest, e11 := calculateChannelInterest(
 		curheight, uint64(paychan.BelongHeight), newLeftAmt, newRightAmt, paychan.InterestAttribution)
 	if e11 != nil {

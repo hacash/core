@@ -12,14 +12,14 @@ type ChainStateOperationRead interface {
 	IsDatabaseVersionRebuildMode() bool
 
 	// status
-	IsInMemTxPool() bool // 否在交易池
+	IsInTxPool() bool // 否在交易池
 
 	//GetPending() (PendingStatus)
 	GetPendingBlockHeight() uint64
 	GetPendingBlockHash() fields.Hash
 
 	//LatestStatusRead() (LatestStatus, error)
-	ReadLastestBlockHeadMetaForRead() (BlockHeadMetaRead, error)
+	//ReadLastestBlockHeadMetaForRead() (BlockHeadMetaRead, error)
 	ReadLastestDiamond() (*stores.DiamondSmelt, error)
 
 	ReadTotalSupply() (*stores.TotalSupply, error)

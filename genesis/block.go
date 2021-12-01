@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"github.com/hacash/core/blocks"
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfacev2"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/transactions"
 	"sync"
 	"time"
@@ -49,9 +49,9 @@ func GetGenesisBlock() *blocks.Block_v1 {
 	coinbase.Reward = *reward
 	coinbase.Message = "hardertodobetter"
 	genesis.TransactionCount = 1
-	genesis.Transactions = make([]interfacev2.Transaction, 1)
+	genesis.Transactions = make([]interfaces.Transaction, 1)
 	genesis.Transactions[0] = coinbase
-	root := blocks.CalculateMrklRoot(genesis.GetTransactions())
+	root := blocks.CalculateMrklRoot(genesis.GetTrsList())
 	//fmt.Println( hex.EncodeToString(root) )
 	genesis.SetMrklRoot(root)
 	hash := genesis.HashFresh()

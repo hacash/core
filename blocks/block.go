@@ -4,8 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfacev2"
-
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/x16rs"
 )
 
@@ -24,7 +23,7 @@ const (
 
 ////////////////////////////////////////////////////////////
 
-func NewBlockByVersion(ty uint8) (interfacev2.Block, error) {
+func NewBlockByVersion(ty uint8) (interfaces.Block, error) {
 	switch ty {
 	////////////////////  BLOCK  ////////////////////
 	case 1:
@@ -34,7 +33,7 @@ func NewBlockByVersion(ty uint8) (interfacev2.Block, error) {
 	return nil, fmt.Errorf("Cannot find Block type of " + string(ty))
 }
 
-func ParseBlock(buf []byte, seek uint32) (interfacev2.Block, uint32, error) {
+func ParseBlock(buf []byte, seek uint32) (interfaces.Block, uint32, error) {
 	if len(buf) < 1 {
 		return nil, 0, fmt.Errorf("buf too short")
 	}
@@ -47,7 +46,7 @@ func ParseBlock(buf []byte, seek uint32) (interfacev2.Block, uint32, error) {
 	return blk, mv, err
 }
 
-func ParseBlockHead(buf []byte, seek uint32) (interfacev2.Block, uint32, error) {
+func ParseBlockHead(buf []byte, seek uint32) (interfaces.Block, uint32, error) {
 	if int(seek)+1 > len(buf) {
 		return nil, 0, fmt.Errorf("buf too short")
 	}
@@ -60,7 +59,7 @@ func ParseBlockHead(buf []byte, seek uint32) (interfacev2.Block, uint32, error) 
 	var mv, err = blk.ParseHead(buf, seek+1)
 	return blk, mv, err
 }
-func ParseExcludeTransactions(buf []byte, seek uint32) (interfacev2.Block, uint32, error) {
+func ParseExcludeTransactions(buf []byte, seek uint32) (interfaces.Block, uint32, error) {
 	if buf == nil || len(buf) < 1 {
 		return nil, 0, fmt.Errorf("buf is too short")
 	}
@@ -76,7 +75,7 @@ func ParseExcludeTransactions(buf []byte, seek uint32) (interfacev2.Block, uint3
 
 //////////////////////////////////
 
-func CalculateBlockHash(block interfacev2.Block) fields.Hash {
+func CalculateBlockHash(block interfaces.Block) fields.Hash {
 	stuff := CalculateBlockHashBaseStuff(block)
 	return x16rs.CalculateBlockHash(block.GetHeight(), stuff)
 }
@@ -88,7 +87,7 @@ func CalculateBlockHashByStuff(loopnum int, stuff []byte) fields.Hash {
 }
 */
 
-func CalculateBlockHashBaseStuff(block interfacev2.Block) []byte {
+func CalculateBlockHashBaseStuff(block interfaces.Block) []byte {
 	var buffer bytes.Buffer
 	head, _ := block.SerializeHead()
 	meta, _ := block.SerializeMeta()
@@ -111,7 +110,7 @@ func CalculateMrklRootByHashWithFee(hashsWithFee []fields.Hash) fields.Hash {
 	return nil
 }
 
-func CalculateMrklRoot(transactions []interfacev2.Transaction) fields.Hash {
+func CalculateMrklRoot(transactions []interfaces.Transaction) fields.Hash {
 	trslen := len(transactions)
 	if trslen == 0 {
 		return fields.EmptyZeroBytes32
@@ -163,7 +162,7 @@ func CalculateMrklRootByCoinbaseTxModify(coinbasetxhx fields.Hash, mdftree []fie
 }
 
 // 计算并获得与 coinbase tx 修改有关的默克尔相关哈希列表
-func PickMrklListForCoinbaseTxModify(transactions []interfacev2.Transaction) []fields.Hash {
+func PickMrklListForCoinbaseTxModify(transactions []interfaces.Transaction) []fields.Hash {
 	hxlist := make([]fields.Hash, 0)
 	trslen := len(transactions)
 	if trslen == 0 {

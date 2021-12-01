@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 )
 
@@ -104,7 +104,7 @@ func DoSubSatoshiFromChainState(state interfacev2.ChainStateOperation, addr fiel
 ////////////////////////////////////////
 
 // btc 转账 （amt 单位 聪）
-func DoSimpleSatoshiTransferFromChainStateV3(state interfacev3.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, sat fields.Satoshi) error {
+func DoSimpleSatoshiTransferFromChainStateV3(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, sat fields.Satoshi) error {
 	if sat == 0 {
 		return fmt.Errorf("Satoshi transfer amount is empty") // 不允许转账数量为0
 	}
@@ -147,7 +147,7 @@ func DoSimpleSatoshiTransferFromChainStateV3(state interfacev3.ChainStateOperati
 }
 
 // 单纯增加 BTC 余额 （amt 单位 聪）
-func DoAddSatoshiFromChainStateV3(state interfacev3.ChainStateOperation, addr fields.Address, sat fields.Satoshi) error {
+func DoAddSatoshiFromChainStateV3(state interfaces.ChainStateOperation, addr fields.Address, sat fields.Satoshi) error {
 	if sat == 0 {
 		return nil // 数量为0，直接成功
 	}
@@ -170,7 +170,7 @@ func DoAddSatoshiFromChainStateV3(state interfacev3.ChainStateOperation, addr fi
 }
 
 // 单纯扣除 BTC 余额 （amt 单位 聪）
-func DoSubSatoshiFromChainStateV3(state interfacev3.ChainStateOperation, addr fields.Address, sat fields.Satoshi) error {
+func DoSubSatoshiFromChainStateV3(state interfaces.ChainStateOperation, addr fields.Address, sat fields.Satoshi) error {
 	if sat == 0 {
 		return nil // 数量为0，直接成功
 	}

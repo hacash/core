@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 	"github.com/hacash/core/sys"
 )
@@ -165,7 +165,7 @@ type Action_25_PaymantChannelAndOnchainAtomicExchange struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_25_PaymantChannelAndOnchainAtomicExchange) Kind() uint16 {
@@ -206,7 +206,7 @@ func (elm *Action_25_PaymantChannelAndOnchainAtomicExchange) RequestSignAddresse
 	return []fields.Address{}
 }
 
-func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	var e error
 
@@ -329,7 +329,7 @@ func (elm *Action_25_PaymantChannelAndOnchainAtomicExchange) SetBelongTransactio
 	elm.belong_trs = t
 }
 
-func (elm *Action_25_PaymantChannelAndOnchainAtomicExchange) SetBelongTrs(t interfacev3.Transaction) {
+func (elm *Action_25_PaymantChannelAndOnchainAtomicExchange) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 

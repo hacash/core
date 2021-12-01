@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/sys"
 )
 
@@ -16,7 +16,7 @@ type Action_1_SimpleToTransfer struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func NewAction_1_SimpleToTransfer(addr fields.Address, amt *fields.Amount) *Action_1_SimpleToTransfer {
@@ -68,7 +68,7 @@ func (*Action_1_SimpleToTransfer) RequestSignAddresses() []fields.Address {
 	return []fields.Address{} // not sign
 }
 
-func (act *Action_1_SimpleToTransfer) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_1_SimpleToTransfer) WriteInChainState(state interfaces.ChainStateOperation) error {
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -110,7 +110,7 @@ func (act *Action_1_SimpleToTransfer) SetBelongTransaction(trs interfacev2.Trans
 	act.belong_trs = trs
 }
 
-func (act *Action_1_SimpleToTransfer) SetBelongTrs(trs interfacev3.Transaction) {
+func (act *Action_1_SimpleToTransfer) SetBelongTrs(trs interfaces.Transaction) {
 	act.belong_trs_v3 = trs
 }
 
@@ -132,7 +132,7 @@ type Action_13_FromTransfer struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func NewAction_13_FromTransfer(addr fields.Address, amt *fields.Amount) *Action_13_FromTransfer {
@@ -186,7 +186,7 @@ func (elm *Action_13_FromTransfer) RequestSignAddresses() []fields.Address {
 	} // from sign
 }
 
-func (act *Action_13_FromTransfer) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_13_FromTransfer) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
 		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
@@ -235,7 +235,7 @@ func (act *Action_13_FromTransfer) SetBelongTransaction(trs interfacev2.Transact
 	act.belong_trs = trs
 }
 
-func (act *Action_13_FromTransfer) SetBelongTrs(trs interfacev3.Transaction) {
+func (act *Action_13_FromTransfer) SetBelongTrs(trs interfaces.Transaction) {
 	act.belong_trs_v3 = trs
 }
 
@@ -253,7 +253,7 @@ type Action_14_FromToTransfer struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func NewAction_14_FromToTransfer(fromaddr fields.Address, toaddr fields.Address, amt *fields.Amount) *Action_14_FromToTransfer {
@@ -315,7 +315,7 @@ func (elm *Action_14_FromToTransfer) RequestSignAddresses() []fields.Address {
 	} // from sign
 }
 
-func (act *Action_14_FromToTransfer) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_14_FromToTransfer) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
 		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
@@ -364,7 +364,7 @@ func (act *Action_14_FromToTransfer) SetBelongTransaction(trs interfacev2.Transa
 	act.belong_trs = trs
 }
 
-func (act *Action_14_FromToTransfer) SetBelongTrs(trs interfacev3.Transaction) {
+func (act *Action_14_FromToTransfer) SetBelongTrs(trs interfaces.Transaction) {
 	act.belong_trs_v3 = trs
 }
 

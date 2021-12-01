@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/hacash/core/coinbase"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 	"github.com/hacash/core/sys"
 )
@@ -48,7 +48,7 @@ type Action_15_DiamondsSystemLendingCreate struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_15_DiamondsSystemLendingCreate) Kind() uint16 {
@@ -123,7 +123,7 @@ func (*Action_15_DiamondsSystemLendingCreate) RequestSignAddresses() []fields.Ad
 	return []fields.Address{} // not sign
 }
 
-func (act *Action_15_DiamondsSystemLendingCreate) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_15_DiamondsSystemLendingCreate) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
 		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
@@ -225,8 +225,7 @@ func (act *Action_15_DiamondsSystemLendingCreate) WriteInChainState(state interf
 	}
 
 	// 保存钻石抵押
-	pending := state.GetPending()
-	paddingHei := pending.GetPendingBlockHeight()
+	paddingHei := state.GetPendingBlockHeight()
 	dlsto := &stores.DiamondSystemLending{
 		IsRansomed:          fields.CreateBool(false), // 标记未赎回
 		CreateBlockHeight:   fields.BlockHeight(paddingHei),
@@ -476,7 +475,7 @@ func (act *Action_15_DiamondsSystemLendingCreate) RecoverChainState(state interf
 func (act *Action_15_DiamondsSystemLendingCreate) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }
-func (act *Action_15_DiamondsSystemLendingCreate) SetBelongTrs(trs interfacev3.Transaction) {
+func (act *Action_15_DiamondsSystemLendingCreate) SetBelongTrs(trs interfaces.Transaction) {
 	act.belong_trs_v3 = trs
 }
 
@@ -515,7 +514,7 @@ type Action_16_DiamondsSystemLendingRansom struct {
 	RansomAmount fields.Amount           // 赎回金额
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_16_DiamondsSystemLendingRansom) Kind() uint16 {
@@ -563,7 +562,7 @@ func (*Action_16_DiamondsSystemLendingRansom) RequestSignAddresses() []fields.Ad
 	return []fields.Address{} // not sign
 }
 
-func (act *Action_16_DiamondsSystemLendingRansom) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_16_DiamondsSystemLendingRansom) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
@@ -581,8 +580,7 @@ func (act *Action_16_DiamondsSystemLendingRansom) WriteInChainState(state interf
 		dslbpbn = 10 // 测试时使用 50 个区块为一个周期
 	}
 
-	pending := state.GetPending()
-	paddingHeight := pending.GetPendingBlockHeight()
+	paddingHeight := state.GetPendingBlockHeight()
 	feeAddr := act.belong_trs_v3.GetAddress()
 
 	// 检查id格式
@@ -914,7 +912,7 @@ func (act *Action_16_DiamondsSystemLendingRansom) SetBelongTransaction(trs inter
 	act.belong_trs = trs
 }
 
-func (act *Action_16_DiamondsSystemLendingRansom) SetBelongTrs(trs interfacev3.Transaction) {
+func (act *Action_16_DiamondsSystemLendingRansom) SetBelongTrs(trs interfaces.Transaction) {
 	act.belong_trs_v3 = trs
 }
 

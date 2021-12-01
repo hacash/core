@@ -1,4 +1,4 @@
-package interfacev2
+package interfaces
 
 type Miner interface {
 	Start() //

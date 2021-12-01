@@ -1,21 +1,20 @@
-package interfacev3
+package interfaces
 
 import (
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/stores"
 )
 
 // chain state 操作
 
 type ChainStateOperation interface {
-	interfaces.ChainStateOperationRead
+	ChainStateOperationRead
 
 	// 数据库升级模式
 	RecoverDatabaseVersionRebuildMode()
 
 	// status
-	SetInMemTxPool(bool)
+	SetInTxPool(bool)
 
 	GetPending() PendingStatus
 	SetPending(PendingStatus) error

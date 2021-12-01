@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 	"github.com/hacash/core/sys"
 	"math"
@@ -25,7 +25,7 @@ type Action_7_SatoshiGenesis struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func NewAction_7_SatoshiGenesis() *Action_7_SatoshiGenesis {
@@ -119,14 +119,10 @@ func (*Action_7_SatoshiGenesis) RequestSignAddresses() []fields.Address {
 	return []fields.Address{} // not sign
 }
 
-func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStateOperation) error {
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-
-	//if act.belong_trs != nil {
-	//	return fmt.Errorf("Not yet.")
-	//}
 
 	// 交易只能包含唯一一个action
 	belongactionnum := len(act.belong_trs_v3.GetActionList())
@@ -148,7 +144,7 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfacev3.ChainSta
 	if false == mustcheck {
 		// 添加进交易池时必须验证
 		// 防止为验证的BTC转移交易被打包进区块
-		mustcheck = state.IsInMemTxPool() == true
+		mustcheck = state.IsInTxPool() == true
 	}
 	if mustcheck {
 		// 交易位于交易池时 和 设置了check url时， 必须验证
@@ -227,10 +223,9 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfacev3.ChainSta
 		// 线性锁仓（周）
 		lkblsid := GainLockblsIdByBtcMove(uint32(act.TransferNo))
 
-		pending := state.GetPending()
 		// 存储
 		lockbls := stores.NewEmptyLockbls(act.OriginAddress)
-		lockbls.EffectBlockHeight = fields.BlockHeight(pending.GetPendingBlockHeight())
+		lockbls.EffectBlockHeight = fields.BlockHeight(state.GetPendingBlockHeight())
 		lockbls.LinearBlockNumber = fields.VarUint3(weekhei) // 2000
 		lockbls.TotalLockAmount = *totaladdhacamt            // 总锁仓
 		lockbls.BalanceAmount = *totaladdhacamt              // 余额
@@ -272,10 +267,6 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfacev2.ChainSta
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-
-	//if act.belong_trs != nil {
-	//	return fmt.Errorf("Not yet.")
-	//}
 
 	// 交易只能包含唯一一个action
 	belongactionnum := len(act.belong_trs.GetActions())
@@ -471,7 +462,7 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfacev2.ChainSta
 func (act *Action_7_SatoshiGenesis) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }
-func (act *Action_7_SatoshiGenesis) SetBelongTrs(trs interfacev3.Transaction) {
+func (act *Action_7_SatoshiGenesis) SetBelongTrs(trs interfaces.Transaction) {
 	act.belong_trs_v3 = trs
 }
 

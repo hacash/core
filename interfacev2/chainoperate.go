@@ -13,8 +13,8 @@ type ChainStateOperation interface {
 	RecoverDatabaseVersionRebuildMode()
 
 	// status
-	IsInMemTxPool() bool // 否在交易池
-	SetInMemTxPool(bool)
+	IsInTxPool() bool // 否在交易池
+	SetInTxPool(bool)
 
 	// status
 	GetPendingBlockHeight() uint64

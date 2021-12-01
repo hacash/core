@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 )
 
@@ -103,7 +103,7 @@ func DoSubDiamondFromChainState(state interfacev2.ChainStateOperation, addr fiel
 /////////////////////////////////////////////
 
 // diamond 转账
-func DoSimpleDiamondTransferFromChainStateV3(state interfacev3.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, dia fields.DiamondNumber) error {
+func DoSimpleDiamondTransferFromChainStateV3(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, dia fields.DiamondNumber) error {
 	if bytes.Compare(addr1, addr2) == 0 {
 		return nil // 可以自己转给自己，不改变状态，白费手续费
 	}
@@ -145,7 +145,7 @@ func DoSimpleDiamondTransferFromChainStateV3(state interfacev3.ChainStateOperati
 }
 
 // 单纯增加 Diamond 余额
-func DoAddDiamondFromChainStateV3(state interfacev3.ChainStateOperation, addr fields.Address, dia fields.DiamondNumber) error {
+func DoAddDiamondFromChainStateV3(state interfaces.ChainStateOperation, addr fields.Address, dia fields.DiamondNumber) error {
 	if dia == 0 {
 		return nil // 数量为0，直接成功
 	}
@@ -168,7 +168,7 @@ func DoAddDiamondFromChainStateV3(state interfacev3.ChainStateOperation, addr fi
 }
 
 // 单纯扣除 diamond 余额
-func DoSubDiamondFromChainStateV3(state interfacev3.ChainStateOperation, addr fields.Address, dia fields.DiamondNumber) error {
+func DoSubDiamondFromChainStateV3(state interfaces.ChainStateOperation, addr fields.Address, dia fields.DiamondNumber) error {
 	if dia == 0 {
 		return nil // 数量为0，直接成功
 	}

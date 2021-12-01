@@ -1,14 +1,13 @@
-package interfacev3
+package interfaces
 
 import (
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfaces"
 )
 
 type Action interface {
 
 	// base super
-	interfaces.Field
+	Field
 
 	// the action type number
 	Kind() uint16

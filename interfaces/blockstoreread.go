@@ -16,4 +16,5 @@ type BlockStoreRead interface {
 
 	GetBTCMoveLogTotalPage() (int, error)                        // 数据页数，每页100条数据
 	GetBTCMoveLogPageData(int) ([]*stores.SatoshiGenesis, error) // 获取数据页
+
 }

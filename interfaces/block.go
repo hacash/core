@@ -1,22 +1,21 @@
-package interfacev3
+package interfaces
 
 import (
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfaces"
 )
 
 type Block interface {
 
 	// base super
-	interfaces.Field
+	Field
 
 	// origin
 	OriginMark() string // "", "sync", "discover", "mining"
 	SetOriginMark(string)
 
 	// copy
-	//CopyHeadMetaForMining() Block
-	//CopyForMining() Block
+	CopyHeadMetaForMiningV3() Block
+	CopyForMiningV3() Block
 
 	// delete cache data
 	Fresh()

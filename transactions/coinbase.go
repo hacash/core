@@ -7,8 +7,8 @@ import (
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/actions"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 	"math/big"
 )
@@ -82,7 +82,7 @@ func (trs *Transaction_0_Coinbase) ClearHash() {
 
 }
 
-func (trs *Transaction_0_Coinbase) Clone() interfacev3.Transaction {
+func (trs *Transaction_0_Coinbase) Clone() interfaces.Transaction {
 	// copy
 	bodys, _ := trs.Serialize()
 	newtrsbts := make([]byte, len(bodys))
@@ -314,7 +314,7 @@ func (trs *Transaction_0_Coinbase) VerifyAllNeedSigns() (bool, error) {
 	return true, nil
 }
 
-func (trs *Transaction_0_Coinbase) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (trs *Transaction_0_Coinbase) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	// total supply 统计
 	// reward
@@ -433,7 +433,7 @@ func (trs *Transaction_0_Coinbase) SetFee(fee *fields.Amount) {
 func (trs *Transaction_0_Coinbase) GetActions() []interfacev2.Action {
 	return nil
 }
-func (trs *Transaction_0_Coinbase) GetActionList() []interfacev3.Action {
+func (trs *Transaction_0_Coinbase) GetActionList() []interfaces.Action {
 	return nil
 }
 

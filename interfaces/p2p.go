@@ -1,4 +1,4 @@
-package interfacev2
+package interfaces
 
 type P2PManager interface {
 	Start() error

@@ -3,7 +3,7 @@ package blocks
 import (
 	"fmt"
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfacev2"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/transactions"
 	"testing"
 )
@@ -16,7 +16,7 @@ func Test1(t *testing.T) {
 	trs1.Timestamp = 1111
 	fmt.Println(trs1.HashWithFee().ToHex())
 
-	trxs := []interfacev2.Transaction{trs1, trs1, trs1, trs1, trs1, trs1}
+	trxs := []interfaces.Transaction{trs1, trs1, trs1, trs1, trs1, trs1}
 
 	fmt.Println("------------")
 

@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 )
 
 type Action_8_SimpleSatoshiTransfer struct {
@@ -15,7 +15,7 @@ type Action_8_SimpleSatoshiTransfer struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func NewAction_8_SimpleSatoshiTransfer(addr fields.Address, amt fields.Satoshi) *Action_8_SimpleSatoshiTransfer {
@@ -68,7 +68,7 @@ func (elm *Action_8_SimpleSatoshiTransfer) RequestSignAddresses() []fields.Addre
 	return []fields.Address{}
 }
 
-func (act *Action_8_SimpleSatoshiTransfer) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_8_SimpleSatoshiTransfer) WriteInChainState(state interfaces.ChainStateOperation) error {
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -109,7 +109,7 @@ func (act *Action_8_SimpleSatoshiTransfer) SetBelongTransaction(trs interfacev2.
 	act.belong_trs = trs
 }
 
-func (act *Action_8_SimpleSatoshiTransfer) SetBelongTrs(trs interfacev3.Transaction) {
+func (act *Action_8_SimpleSatoshiTransfer) SetBelongTrs(trs interfaces.Transaction) {
 	act.belong_trs_v3 = trs
 }
 
@@ -127,7 +127,7 @@ type Action_11_FromToSatoshiTransfer struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func NewAction_11_FromToSatoshiTransfer(fromaddr fields.Address, toaddr fields.Address, amt fields.Satoshi) *Action_11_FromToSatoshiTransfer {
@@ -188,7 +188,7 @@ func (elm *Action_11_FromToSatoshiTransfer) RequestSignAddresses() []fields.Addr
 	}
 }
 
-func (act *Action_11_FromToSatoshiTransfer) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_11_FromToSatoshiTransfer) WriteInChainState(state interfaces.ChainStateOperation) error {
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -228,7 +228,7 @@ func (act *Action_11_FromToSatoshiTransfer) RecoverChainState(state interfacev2.
 func (act *Action_11_FromToSatoshiTransfer) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }
-func (act *Action_11_FromToSatoshiTransfer) SetBelongTrs(trs interfacev3.Transaction) {
+func (act *Action_11_FromToSatoshiTransfer) SetBelongTrs(trs interfaces.Transaction) {
 	act.belong_trs_v3 = trs
 }
 
@@ -245,7 +245,7 @@ type Action_28_FromSatoshiTransfer struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func NewAction_28_FromSatoshiTransfer(fromaddr fields.Address, amt fields.Satoshi) *Action_28_FromSatoshiTransfer {
@@ -299,7 +299,7 @@ func (elm *Action_28_FromSatoshiTransfer) RequestSignAddresses() []fields.Addres
 	}
 }
 
-func (act *Action_28_FromSatoshiTransfer) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_28_FromSatoshiTransfer) WriteInChainState(state interfaces.ChainStateOperation) error {
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -342,7 +342,7 @@ func (act *Action_28_FromSatoshiTransfer) SetBelongTransaction(trs interfacev2.T
 	act.belong_trs = trs
 }
 
-func (act *Action_28_FromSatoshiTransfer) SetBelongTrs(trs interfacev3.Transaction) {
+func (act *Action_28_FromSatoshiTransfer) SetBelongTrs(trs interfaces.Transaction) {
 	act.belong_trs_v3 = trs
 }
 

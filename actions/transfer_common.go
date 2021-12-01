@@ -3,8 +3,8 @@ package actions
 import (
 	"fmt"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 )
 
@@ -199,7 +199,7 @@ func DoSubBalanceFromChainState(state interfacev2.ChainStateOperation, addr fiel
 //////////////////////////////////////////////////////////
 
 // hac转账
-func DoSimpleTransferFromChainStateV3(state interfacev3.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, amt fields.Amount) error {
+func DoSimpleTransferFromChainStateV3(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, amt fields.Amount) error {
 
 	isTrsToMySelf := addr1.Equal(addr2)
 
@@ -233,8 +233,7 @@ func DoSimpleTransferFromChainStateV3(state interfacev3.ChainStateOperation, add
 
 	// 正常开始判断
 	//fmt.Println("addr1:", addr1.ToReadable(), "addr2:", addr2.ToReadable(), "amt:", amt.ToFinString())
-	pending := state.GetPending()
-	if pending.GetPendingBlockHeight() < 200000 && isTrsToMySelf {
+	if state.GetPendingBlockHeight() < 200000 && isTrsToMySelf {
 		// 高度 20万 之后，不允许出现自己转给自己的数额大于可用余额的情况！
 		return nil // 可以自己转给自己，不改变状态，白费手续费
 	}
@@ -315,7 +314,7 @@ func DoSimpleTransferFromChainStateV3(state interfacev3.ChainStateOperation, add
 }
 
 // 单纯增加余额
-func DoAddBalanceFromChainStateV3(state interfacev3.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
+func DoAddBalanceFromChainStateV3(state interfaces.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
 	blssto, e := state.Balance(addr)
 	if e != nil {
 		return e
@@ -347,7 +346,7 @@ func DoAddBalanceFromChainStateV3(state interfacev3.ChainStateOperation, addr fi
 }
 
 // 单纯扣除余额
-func DoSubBalanceFromChainStateV3(state interfacev3.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
+func DoSubBalanceFromChainStateV3(state interfaces.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
 	blssto, e := state.Balance(addr)
 	if e != nil {
 		return e

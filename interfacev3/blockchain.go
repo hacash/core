@@ -1,11 +1,6 @@
 package interfacev3
 
-import (
-	"github.com/hacash/core/interfaces"
-	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/stores"
-)
-
+/*
 type BlockChain interface {
 	Start() error
 
@@ -26,3 +21,6 @@ type BlockChain interface {
 
 	RollbackToBlockHeight(uint64) (uint64, error)
 }
+
+
+*/

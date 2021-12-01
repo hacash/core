@@ -1,4 +1,4 @@
-package interfacev3
+package interfaces
 
 import "github.com/hacash/core/fields"
 
@@ -13,6 +13,8 @@ type ChainState interface {
 	// 启动一个子状态
 	ForkNextBlock(uint64, fields.Hash, Block) (ChainState, error)
 	ForkSubChild() (ChainState, error)
+
+	TraversalCopy(ChainState) error
 
 	//GetReferBlock() (uint64, fields.Hash)
 	SearchBaseStateByBlockHash(fields.Hash) (ChainState, error)

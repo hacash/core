@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/hacash/core/interfaces"
-	"github.com/hacash/core/interfacev3"
 	"sync"
 	"time"
 
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
 	"github.com/hacash/core/transactions"
 )
@@ -27,7 +26,7 @@ type Block_v1 struct {
 	Difficulty   fields.VarUint4 // 目标难度值
 	WitnessStage fields.VarUint2 // 见证数量级别
 	// body
-	Transactions []interfacev2.Transaction
+	Transactions []interfaces.Transaction
 
 	/* -------- -------- */
 
@@ -80,6 +79,16 @@ func (block *Block_v1) CopyHeadMetaForMining() interfacev2.Block {
 	newblock.WitnessStage = block.WitnessStage
 	// ok
 	return newblock
+}
+
+func (block *Block_v1) CopyHeadMetaForMiningV3() interfaces.Block {
+	blk := block.CopyHeadMetaForMining()
+	return blk.(interfaces.Block)
+}
+
+func (block *Block_v1) CopyForMiningV3() interfaces.Block {
+	blk := block.CopyForMining()
+	return blk.(interfaces.Block)
 }
 
 // copy
@@ -172,7 +181,7 @@ func (block *Block_v1) SerializeTransactions(itr interfacev2.SerializeTransactio
 		}
 		buffer.Write(bi)
 		if itr != nil { // 迭代器
-			itr.FinishOneTrs(i, trs, bi)
+			itr.FinishOneTrs(i, trs.(interfacev2.Transaction), bi)
 		}
 	}
 	return buffer.Bytes(), nil
@@ -267,13 +276,13 @@ func (block *Block_v1) ParseExcludeTransactions(buf []byte, seek uint32) (uint32
 
 func (block *Block_v1) ParseTransactions(buf []byte, seek uint32) (uint32, error) {
 	length := int(block.TransactionCount)
-	block.Transactions = make([]interfacev2.Transaction, length)
+	block.Transactions = make([]interfaces.Transaction, length)
 	for i := 0; i < length; i++ {
 		var trx, sk, err = transactions.ParseTransaction(buf, seek)
 		if err != nil {
 			return seek, err
 		}
-		block.Transactions[i] = trx
+		block.Transactions[i] = trx.(interfaces.Transaction)
 		seek = sk
 	}
 	return seek, nil
@@ -397,37 +406,37 @@ func (block *Block_v1) SetNonceByte(nonce []byte) {
 	block.Nonce = fields.VarUint4(binary.BigEndian.Uint32(nonce))
 }
 
-func (block *Block_v1) SetTransactions(trs []interfacev2.Transaction) {
-	block.Transactions = trs
+func (block *Block_v1) SetTransactions(trslist []interfacev2.Transaction) {
+	trsset := make([]interfaces.Transaction, len(block.Transactions))
+	for i, v := range trslist {
+		trsset[i] = v.(interfaces.Transaction)
+	}
+	block.Transactions = trsset
 }
 
 func (block *Block_v1) GetTransactions() []interfacev2.Transaction {
-	return block.Transactions
-}
-
-func (block *Block_v1) AddTransaction(trs interfacev2.Transaction) {
-	block.Transactions = append(block.Transactions, trs)
-	block.TransactionCount += 1
-}
-
-func (block *Block_v1) SetTrsList(trs []interfacev3.Transaction) {
-	trslist := make([]interfacev2.Transaction, len(trs))
-	for i, v := range trs {
-		trslist[i] = v.(interfacev2.Transaction)
-	}
-	block.Transactions = trslist
-}
-
-func (block *Block_v1) GetTrsList() []interfacev3.Transaction {
-	trslist := make([]interfacev3.Transaction, len(block.Transactions))
+	trslist := make([]interfacev2.Transaction, len(block.Transactions))
 	for i, v := range block.Transactions {
-		trslist[i] = v.(interfacev3.Transaction)
+		trslist[i] = v.(interfacev2.Transaction)
 	}
 	return trslist
 }
 
-func (block *Block_v1) AddTrs(trs interfacev3.Transaction) {
-	block.Transactions = append(block.Transactions, trs.(interfacev2.Transaction))
+func (block *Block_v1) AddTransaction(trs interfacev2.Transaction) {
+	block.Transactions = append(block.Transactions, trs.(interfaces.Transaction))
+	block.TransactionCount += 1
+}
+
+func (block *Block_v1) SetTrsList(trslist []interfaces.Transaction) {
+	block.Transactions = trslist
+}
+
+func (block *Block_v1) GetTrsList() []interfaces.Transaction {
+	return block.Transactions
+}
+
+func (block *Block_v1) AddTrs(trs interfaces.Transaction) {
+	block.Transactions = append(block.Transactions, trs)
 	block.TransactionCount += 1
 }
 
@@ -442,7 +451,7 @@ func (block *Block_v1) VerifyNeedSigns() (bool, error) {
 	return true, nil
 }
 
-func (block *Block_v1) WriteInChainState(blockstate interfacev3.ChainStateOperation) error {
+func (block *Block_v1) WriteInChainState(blockstate interfaces.ChainStateOperation) error {
 	blkhei := block.GetHeight()
 	txlen := len(block.Transactions)
 	totalfeeuserpay := fields.NewEmptyAmount()
@@ -467,7 +476,7 @@ func (block *Block_v1) WriteInChainState(blockstate interfacev3.ChainStateOperat
 			return e
 		}
 		// 执行交易
-		e = tx.(interfacev3.Transaction).WriteInChainState(blockstate)
+		e = tx.(interfaces.Transaction).WriteInChainState(blockstate)
 		if e != nil {
 			return e // 验证失败
 		}
@@ -532,7 +541,7 @@ func (block *Block_v1) WriteinChainState(blockstate interfacev2.ChainStateOperat
 			return e
 		}
 		// 执行交易
-		e = tx.WriteinChainState(blockstate)
+		e = tx.(interfacev2.Transaction).WriteinChainState(blockstate)
 		if e != nil {
 			return e // 验证失败
 		}
@@ -583,7 +592,7 @@ func (block *Block_v1) RecoverChainState(blockstate interfacev2.ChainStateOperat
 	// 倒序从最后一笔交易开始 Recover
 	for i := txlen - 1; i > 0; i-- {
 		tx := block.Transactions[i]
-		e := tx.RecoverChainState(blockstate)
+		e := tx.(interfacev2.Transaction).RecoverChainState(blockstate)
 		if e != nil {
 			return e // 失败
 		}

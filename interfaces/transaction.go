@@ -1,15 +1,14 @@
-package interfacev3
+package interfaces
 
 import (
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/fields"
-	"github.com/hacash/core/interfaces"
 )
 
 type Transaction interface {
 
 	// base super
-	interfaces.Field
+	Field
 
 	Clone() Transaction
 

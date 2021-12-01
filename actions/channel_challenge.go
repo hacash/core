@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/hacash/core/channel"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 	"github.com/hacash/core/sys"
 )
@@ -22,7 +22,7 @@ type Action_22_UnilateralClosePaymentChannelByNothing struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_22_UnilateralClosePaymentChannelByNothing) Kind() uint16 {
@@ -71,7 +71,7 @@ func (elm *Action_22_UnilateralClosePaymentChannelByNothing) RequestSignAddresse
 	}
 }
 
-func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteInChainState(state interfaces.ChainStateOperation) error {
 	var e error
 
 	if act.belong_trs_v3 == nil {
@@ -96,8 +96,7 @@ func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteInChainState(s
 		return fmt.Errorf("Payment Channel <%s> address signature verify fail.", hex.EncodeToString(act.ChannelId))
 	}
 	// 挑战者状态
-	pending := state.GetPending()
-	clghei := pending.GetPendingBlockHeight()
+	clghei := state.GetPendingBlockHeight()
 	var clgamt = fields.Amount{}
 	var clgsat = fields.Satoshi(0)
 	if addrIsLeft {
@@ -182,7 +181,7 @@ func (elm *Action_22_UnilateralClosePaymentChannelByNothing) SetBelongTransactio
 	elm.belong_trs = t
 }
 
-func (elm *Action_22_UnilateralClosePaymentChannelByNothing) SetBelongTrs(t interfacev3.Transaction) {
+func (elm *Action_22_UnilateralClosePaymentChannelByNothing) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 
@@ -203,7 +202,7 @@ type Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeReconcil
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeReconciliation) Kind() uint16 {
@@ -252,7 +251,7 @@ func (elm *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 	}
 }
 
-func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeReconciliation) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeReconciliation) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
@@ -317,7 +316,7 @@ func (elm *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 	elm.belong_trs = t
 }
 
-func (elm *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeReconciliation) SetBelongTrs(t interfacev3.Transaction) {
+func (elm *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeReconciliation) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 
@@ -341,7 +340,7 @@ type Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelChainTran
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelChainTransferBody) Kind() uint16 {
@@ -398,7 +397,7 @@ func (elm *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 	}
 }
 
-func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelChainTransferBody) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelChainTransferBody) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	var e error
 
@@ -527,7 +526,7 @@ func (elm *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 	elm.belong_trs = t
 }
 
-func (elm *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelChainTransferBody) SetBelongTrs(t interfacev3.Transaction) {
+func (elm *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelChainTransferBody) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 
@@ -551,7 +550,7 @@ type Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnchainAt
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnchainAtomicExchange) Kind() uint16 {
@@ -608,7 +607,7 @@ func (elm *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 	}
 }
 
-func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnchainAtomicExchange) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnchainAtomicExchange) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	var e error
 
@@ -751,7 +750,7 @@ func (elm *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 	elm.belong_trs = t
 }
 
-func (elm *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnchainAtomicExchange) SetBelongTrs(t interfacev3.Transaction) {
+func (elm *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnchainAtomicExchange) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 
@@ -899,7 +898,7 @@ func checkChannelGotoChallegingOrFinalDistributionRecoverChainState(state interf
 //////////////////////////////////////////////////////////////
 
 // 检查通道进入挑战期或者最终仲裁
-func checkChannelGotoChallegingOrFinalDistributionWriteinChainStateV3(state interfacev3.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj channel.OnChainChannelPaymentArbitrationReconciliationBasis) error {
+func checkChannelGotoChallegingOrFinalDistributionWriteinChainStateV3(state interfaces.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj channel.OnChainChannelPaymentArbitrationReconciliationBasis) error {
 
 	channelId := obj.GetChannelId()
 
@@ -952,8 +951,7 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainStateV3(state inte
 	if paychan.IsOpening() {
 
 		// 进入挑战期
-		pending := state.GetPending()
-		blkhei := pending.GetPendingBlockHeight()
+		blkhei := state.GetPendingBlockHeight()
 		// 改变状态
 		paychan.SetChallenging(blkhei, assertAddressIsLeft,
 			&assertTargetAmount, assertTargetSAT, uint64(billAutoNumber))
@@ -1004,7 +1002,7 @@ type Action_27_ClosePaymentChannelByClaimDistribution struct {
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
-	belong_trs_v3 interfacev3.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_27_ClosePaymentChannelByClaimDistribution) Kind() uint16 {
@@ -1045,7 +1043,7 @@ func (elm *Action_27_ClosePaymentChannelByClaimDistribution) RequestSignAddresse
 	return []fields.Address{}
 }
 
-func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
@@ -1063,8 +1061,7 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteInChainState(s
 		return fmt.Errorf("Payment Channel status is not on challenging.")
 	}
 	// 检查挑战期限
-	pending := state.GetPending()
-	clghei := pending.GetPendingBlockHeight()
+	clghei := state.GetPendingBlockHeight()
 	expireHei := uint64(paychan.ChallengeLaunchHeight) + uint64(paychan.ArbitrationLockBlock)
 	if clghei <= expireHei {
 		// 挑战期还没过
@@ -1177,7 +1174,7 @@ func (elm *Action_27_ClosePaymentChannelByClaimDistribution) SetBelongTransactio
 	elm.belong_trs = t
 }
 
-func (elm *Action_27_ClosePaymentChannelByClaimDistribution) SetBelongTrs(t interfacev3.Transaction) {
+func (elm *Action_27_ClosePaymentChannelByClaimDistribution) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 

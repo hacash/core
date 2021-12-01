@@ -3,7 +3,7 @@ package transactions
 import (
 	"bytes"
 	"fmt"
-	"github.com/hacash/core/interfacev3"
+	"github.com/hacash/core/interfaces"
 	"math/big"
 	"time"
 
@@ -56,7 +56,7 @@ func (trs *Transaction_2_Simple) ClearHash() {
 	trs.hashnofee = nil
 }
 
-func (trs *Transaction_2_Simple) Clone() interfacev3.Transaction {
+func (trs *Transaction_2_Simple) Clone() interfaces.Transaction {
 	// copy
 	bodys, _ := trs.Serialize()
 	newtrsbts := make([]byte, len(bodys))
@@ -263,7 +263,7 @@ func (trs *Transaction_2_Simple) AppendAction(action interfacev2.Action) error {
 	return nil
 }
 
-func (trs *Transaction_2_Simple) AddAction(action interfacev3.Action) error {
+func (trs *Transaction_2_Simple) AddAction(action interfaces.Action) error {
 	if trs.ActionCount >= 65530 {
 		return fmt.Errorf("Actions too much")
 	}
@@ -500,18 +500,17 @@ func (trs *Transaction_2_Simple) RequestAddressBalance() ([][]byte, []big.Int, e
 }
 
 // 修改 / 恢复 状态数据库
-func (trs *Transaction_2_Simple) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (trs *Transaction_2_Simple) WriteInChainState(state interfaces.ChainStateOperation) error {
 	// 检查 fee size
-	pending := state.GetPending()
-	if pending.GetPendingBlockHeight() > 200000 {
+	if state.GetPendingBlockHeight() > 200000 {
 		if trs.Fee.Size() > 2+4 {
 			return fmt.Errorf("BlockHeight more than 20w trs.Fee.Size() must less than 6 bytes.")
 		}
 	}
 	// actions
 	for i := 0; i < len(trs.Actions); i++ {
-		trs.Actions[i].(interfacev3.Action).SetBelongTrs(trs)
-		e := trs.Actions[i].(interfacev3.Action).WriteInChainState(state)
+		trs.Actions[i].(interfaces.Action).SetBelongTrs(trs)
+		e := trs.Actions[i].(interfaces.Action).WriteInChainState(state)
 		if e != nil {
 			return e
 		}
@@ -601,10 +600,10 @@ func (trs *Transaction_2_Simple) GetActions() []interfacev2.Action {
 	return trs.Actions
 }
 
-func (trs *Transaction_2_Simple) GetActionList() []interfacev3.Action {
-	var list = make([]interfacev3.Action, len(trs.Actions))
+func (trs *Transaction_2_Simple) GetActionList() []interfaces.Action {
+	var list = make([]interfaces.Action, len(trs.Actions))
 	for i, v := range trs.Actions {
-		list[i] = v.(interfacev3.Action)
+		list[i] = v.(interfaces.Action)
 	}
 	return list
 }

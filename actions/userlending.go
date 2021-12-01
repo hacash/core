@@ -6,8 +6,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
-	"github.com/hacash/core/interfacev3"
 	"github.com/hacash/core/stores"
 	"github.com/hacash/core/sys"
 )
@@ -63,7 +63,8 @@ type Action_19_UsersLendingCreate struct {
 	PreBurningInterestAmount fields.Amount // 预先销毁的利息，必须大于等于 借出金额的 1%
 
 	// data ptr
-	belong_trs interfacev2.Transaction
+	belong_trs    interfacev2.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_19_UsersLendingCreate) Kind() uint16 {
@@ -176,13 +177,13 @@ func (act *Action_19_UsersLendingCreate) RequestSignAddresses() []fields.Address
 	} // 抵押人和放款人都需要签名
 }
 
-func (act *Action_19_UsersLendingCreate) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_19_UsersLendingCreate) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
 		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
 	}
 
-	if act.belong_trs == nil {
+	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
 
@@ -207,8 +208,7 @@ func (act *Action_19_UsersLendingCreate) WriteInChainState(state interfacev3.Cha
 	}
 
 	// 区块
-	pending := state.GetPending()
-	paddingHeight := pending.GetPendingBlockHeight()
+	paddingHeight := state.GetPendingBlockHeight()
 
 	// 检查id格式
 	if len(act.LendingID) != stores.UserLendingIdLength ||
@@ -671,6 +671,10 @@ func (act *Action_19_UsersLendingCreate) SetBelongTransaction(trs interfacev2.Tr
 	act.belong_trs = trs
 }
 
+func (act *Action_19_UsersLendingCreate) SetBelongTrs(trs interfaces.Transaction) {
+	act.belong_trs_v3 = trs
+}
+
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用
 func (act *Action_19_UsersLendingCreate) IsBurning90PersentTxFees() bool {
 	return false
@@ -706,7 +710,8 @@ type Action_20_UsersLendingRansom struct {
 	RansomAmount fields.Amount        // 赎回金额
 
 	// data ptr
-	belong_trs interfacev2.Transaction
+	belong_trs    interfacev2.Transaction
+	belong_trs_v3 interfaces.Transaction
 }
 
 func (elm *Action_20_UsersLendingRansom) Kind() uint16 {
@@ -754,19 +759,18 @@ func (*Action_20_UsersLendingRansom) RequestSignAddresses() []fields.Address {
 	return []fields.Address{} // not sign
 }
 
-func (act *Action_20_UsersLendingRansom) WriteInChainState(state interfacev3.ChainStateOperation) error {
+func (act *Action_20_UsersLendingRansom) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
 		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
 	}
 
-	if act.belong_trs == nil {
+	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
 
-	pending := state.GetPending()
-	paddingHeight := pending.GetPendingBlockHeight()
-	feeAddr := act.belong_trs.GetAddress()
+	paddingHeight := state.GetPendingBlockHeight()
+	feeAddr := act.belong_trs_v3.GetAddress()
 
 	// 检查id格式
 	if len(act.LendingID) != stores.UserLendingIdLength ||
@@ -1118,6 +1122,10 @@ func (act *Action_20_UsersLendingRansom) RecoverChainState(state interfacev2.Cha
 // 设置所属 belong_trs
 func (act *Action_20_UsersLendingRansom) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
+}
+
+func (act *Action_20_UsersLendingRansom) SetBelongTrs(trs interfaces.Transaction) {
+	act.belong_trs_v3 = trs
 }
 
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用

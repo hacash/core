@@ -1,6 +1,8 @@
 package interfacev3
 
+import "github.com/hacash/core/interfaces"
+
 type Backend interface {
-	BlockChain() BlockChain
+	BlockChain() interfaces.BlockChain
 	AllPeersDescribe() string
 }
