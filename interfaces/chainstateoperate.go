@@ -66,7 +66,7 @@ type ChainStateOperation interface {
 	// movebtc
 	SaveMoveBTCBelongTxHash(trsno uint32, txhash []byte) error
 	//ReadMoveBTCTxHashByNumber(trsno uint32) ([]byte, error)
-	ReadMoveBTCTxHashByTrsNo(trsno uint32) ([]byte, error)
+	//ReadMoveBTCTxHashByTrsNo(trsno uint32) ([]byte, error)
 	//LoadValidatedSatoshiGenesis(int64) (*stores.SatoshiGenesis, bool) // 获取已验证的BTC转移日志 & 是否需要验证
 
 }
