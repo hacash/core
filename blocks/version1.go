@@ -57,6 +57,7 @@ func NewEmptyBlockV1() *Block_v1 {
 		PrevHash:         fields.EmptyZeroBytes32,
 		MrklRoot:         fields.EmptyZeroBytes32,
 		TransactionCount: 0,
+		Transactions:     make([]interfaces.Transaction, 0),
 		Nonce:            0,
 		Difficulty:       0,
 		WitnessStage:     0,
@@ -67,7 +68,7 @@ func NewEmptyBlockV1() *Block_v1 {
 }
 
 // copy
-func (block *Block_v1) CopyHeadMetaForMining() interfacev2.Block {
+func (block *Block_v1) CopyHeadMetaForMining() interfaces.Block {
 	newblock := NewEmptyBlockVersion1(nil)
 	newblock.Height = block.Height
 	newblock.Timestamp = block.Timestamp
@@ -81,28 +82,18 @@ func (block *Block_v1) CopyHeadMetaForMining() interfacev2.Block {
 	return newblock
 }
 
-func (block *Block_v1) CopyHeadMetaForMiningV3() interfaces.Block {
-	blk := block.CopyHeadMetaForMining()
-	return blk.(interfaces.Block)
-}
-
-func (block *Block_v1) CopyForMiningV3() interfaces.Block {
-	blk := block.CopyForMining()
-	return blk.(interfaces.Block)
-}
-
 // copy
-func (block *Block_v1) CopyForMining() interfacev2.Block {
+func (block *Block_v1) CopyForMining() interfaces.Block {
 	// copy head and meta
 	newblock := block.CopyHeadMetaForMining()
 	// copy coinbase and txs
-	trs := block.GetTransactions()
+	trs := block.GetTrsList()
 	newtrs := trs
 	if len(trs) > 0 {
-		newtrs = append([]interfacev2.Transaction{}, trs[0].Copy())
+		newtrs = append([]interfaces.Transaction{}, trs[0].Clone())
 		newtrs = append(newtrs, trs[1:]...)
 	}
-	newblock.SetTransactions(newtrs)
+	newblock.SetTrsList(newtrs)
 	// ok
 	return newblock
 }
@@ -407,7 +398,7 @@ func (block *Block_v1) SetNonceByte(nonce []byte) {
 }
 
 func (block *Block_v1) SetTransactions(trslist []interfacev2.Transaction) {
-	trsset := make([]interfaces.Transaction, len(block.Transactions))
+	trsset := make([]interfaces.Transaction, len(trslist))
 	for i, v := range trslist {
 		trsset[i] = v.(interfaces.Transaction)
 	}
