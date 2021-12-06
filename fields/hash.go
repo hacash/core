@@ -37,6 +37,16 @@ func (h Hash) Equal(tar Hash) bool {
 	return bytes.Compare(h, tar) == 0
 }
 
+func (h Hash) NotZeroBlank() bool {
+	for i := len(h) - 1; i >= 0; i-- {
+		if h[i] > 0 {
+			return true
+		}
+	}
+	// empty
+	return false
+}
+
 func (h HashHalfChecker) Equal(tar HashHalfChecker) bool {
 	return bytes.Compare(h, tar) == 0
 }
