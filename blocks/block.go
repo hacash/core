@@ -35,7 +35,7 @@ func NewBlockByVersion(ty uint8) (interfaces.Block, error) {
 
 func ParseBlock(buf []byte, seek uint32) (interfaces.Block, uint32, error) {
 	if len(buf) < 1 {
-		return nil, 0, fmt.Errorf("buf too short")
+		return nil, 0, fmt.Errorf("ParseBlock: buf too short")
 	}
 	version := uint8(buf[seek])
 	var blk, e = NewBlockByVersion(version)
@@ -48,7 +48,7 @@ func ParseBlock(buf []byte, seek uint32) (interfaces.Block, uint32, error) {
 
 func ParseBlockHead(buf []byte, seek uint32) (interfaces.Block, uint32, error) {
 	if int(seek)+1 > len(buf) {
-		return nil, 0, fmt.Errorf("buf too short")
+		return nil, 0, fmt.Errorf("ParseBlockHead: buf too short")
 	}
 	version := uint8(buf[seek])
 	var blk, ee = NewBlockByVersion(version)

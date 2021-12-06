@@ -141,7 +141,7 @@ func (t *TotalSupply) Serialize() ([]byte, error) {
 // 反序列化
 func (t *TotalSupply) Parse(buf []byte, seek uint32) (uint32, error) {
 	if int(seek)+1 > len(buf) {
-		return 0, fmt.Errorf("buf too short")
+		return 0, fmt.Errorf("TotalSupply Parse: buf too short")
 	}
 	tysize := int(buf[seek])
 	t.changeMark = make([]bool, tysize)
