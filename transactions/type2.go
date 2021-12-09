@@ -19,7 +19,7 @@ type Transaction_2_Simple struct {
 	Fee         fields.Amount
 
 	ActionCount fields.VarUint2
-	Actions     []interfacev2.Action
+	Actions     []interfaces.Action
 
 	SignCount fields.VarUint2
 	Signs     []fields.Sign
@@ -255,10 +255,10 @@ func (trs *Transaction_2_Simple) AppendAction(action interfacev2.Action) error {
 	}
 	if trs.Actions == nil {
 		trs.ActionCount = 0 // 初始化
-		trs.Actions = make([]interfacev2.Action, 0)
+		trs.Actions = make([]interfaces.Action, 0)
 	}
 	trs.ActionCount += 1
-	trs.Actions = append(trs.Actions, action)
+	trs.Actions = append(trs.Actions, action.(interfaces.Action))
 	trs.ClearHash() // 重置哈希缓存
 	return nil
 }
@@ -269,10 +269,10 @@ func (trs *Transaction_2_Simple) AddAction(action interfaces.Action) error {
 	}
 	if trs.Actions == nil {
 		trs.ActionCount = 0 // 初始化
-		trs.Actions = make([]interfacev2.Action, 0)
+		trs.Actions = make([]interfaces.Action, 0)
 	}
 	trs.ActionCount += 1
-	trs.Actions = append(trs.Actions, action.(interfacev2.Action))
+	trs.Actions = append(trs.Actions, action)
 	trs.ClearHash() // 重置哈希缓存
 	return nil
 }
@@ -509,7 +509,7 @@ func (trs *Transaction_2_Simple) WriteInChainState(state interfaces.ChainStateOp
 	}
 	// actions
 	for i := 0; i < len(trs.Actions); i++ {
-		trs.Actions[i].(interfaces.Action).SetBelongTrs(trs)
+		trs.Actions[i].SetBelongTrs(trs)
 		e := trs.Actions[i].(interfaces.Action).WriteInChainState(state)
 		if e != nil {
 			return e
@@ -597,15 +597,15 @@ func (trs *Transaction_2_Simple) SetFee(fee *fields.Amount) {
 }
 
 func (trs *Transaction_2_Simple) GetActions() []interfacev2.Action {
-	return trs.Actions
+	var list = make([]interfacev2.Action, len(trs.Actions))
+	for i, v := range trs.Actions {
+		list[i] = v.(interfacev2.Action)
+	}
+	return list
 }
 
 func (trs *Transaction_2_Simple) GetActionList() []interfaces.Action {
-	var list = make([]interfaces.Action, len(trs.Actions))
-	for i, v := range trs.Actions {
-		list[i] = v.(interfaces.Action)
-	}
-	return list
+	return trs.Actions
 }
 
 func (trs *Transaction_2_Simple) GetTimestamp() uint64 { // 时间戳

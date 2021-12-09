@@ -24,7 +24,7 @@ type Transaction_1_DO_NOT_USE_WITH_BUG struct {
 	Fee       fields.Amount
 
 	ActionCount fields.VarUint2
-	Actions     []interfacev2.Action
+	Actions     []interfaces.Action
 
 	SignCount fields.VarUint2
 	Signs     []fields.Sign
@@ -257,7 +257,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) AppendAction(action interfacev2.Ac
 		return fmt.Errorf("Action too much")
 	}
 	trs.ActionCount += 1
-	trs.Actions = append(trs.Actions, action)
+	trs.Actions = append(trs.Actions, action.(interfaces.Action))
 	return nil
 }
 
@@ -543,15 +543,15 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) SetFee(fee *fields.Amount) {
 }
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetActions() []interfacev2.Action {
-	return trs.Actions
+	var list = make([]interfacev2.Action, len(trs.Actions))
+	for i, v := range trs.Actions {
+		list[i] = v.(interfacev2.Action)
+	}
+	return list
 }
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetActionList() []interfaces.Action {
-	var list = make([]interfaces.Action, len(trs.Actions))
-	for i, v := range trs.Actions {
-		list[i] = v.(interfaces.Action)
-	}
-	return list
+	return trs.Actions
 }
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetTimestamp() uint64 { // 时间戳
