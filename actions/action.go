@@ -67,6 +67,8 @@ func NewActionByKind(kind uint16) (interfaces.Action, error) {
 		return new(Action_27_ClosePaymentChannelByClaimDistribution), nil
 	case 28:
 		return new(Action_28_FromSatoshiTransfer), nil
+	case 29:
+		return new(Action_29_SubmitTimeLimit), nil
 
 	}
 	////////////////////    END      ////////////////////
