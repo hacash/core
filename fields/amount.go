@@ -288,6 +288,10 @@ func NewAmountFromMeiStringUnsafe(meistr string) (*Amount, error) {
 	if e1 != nil {
 		return nil, e1
 	}
+	return NewAmountFromMeiUnsafe(mei)
+}
+
+func NewAmountFromMeiUnsafe(mei float64) (*Amount, error) {
 	mei1yi := uint64(mei * 10000 * 10000)
 	return NewAmountByBigIntWithUnit(new(big.Int).SetUint64(mei1yi), 240)
 }
