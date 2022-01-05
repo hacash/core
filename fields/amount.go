@@ -284,7 +284,7 @@ func NewAmountFromString(numstr string) (*Amount, error) {
 
 // create form readble string
 func NewAmountFromMeiStringUnsafe(meistr string) (*Amount, error) {
-	mei, e1 := strconv.ParseFloat(meistr, 0)
+	mei, e1 := strconv.ParseFloat(meistr, 64)
 	if e1 != nil {
 		return nil, e1
 	}
