@@ -113,7 +113,7 @@ func (elm *StringMax65535) Parse(buf []byte, seek uint32) (uint32, error) {
 	if elm.Len > 0 {
 		end := seek + uint32(elm.Len)
 		if len(buf) < int(end) {
-			return 0, fmt.Errorf("Str lenght error")
+			return 0, fmt.Errorf("Str length error")
 		}
 		elm.Str = string(buf[seek:end])
 		seek = end
