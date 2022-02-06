@@ -309,13 +309,15 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 	}
 
 	// 保存钻石
-	e = blockstore.SaveDiamond(diamondstore)
-	if e != nil {
-		return e
-	}
-	e = blockstore.UpdateSetDiamondNameReferToNumber(uint32(diamondstore.Number), diamondstore.Diamond)
-	if e != nil {
-		return e
+	if state.IsInTxPool() == false {
+		e = blockstore.SaveDiamond(diamondstore)
+		if e != nil {
+			return e
+		}
+		e = blockstore.UpdateSetDiamondNameReferToNumber(uint32(diamondstore.Number), diamondstore.Diamond)
+		if e != nil {
+			return e
+		}
 	}
 
 	totalsupply.Set(stores.TotalSupplyStoreTypeOfDiamond, float64(act.Number))
