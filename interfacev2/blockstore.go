@@ -32,6 +32,7 @@ type BlockStore interface {
 	SaveDiamond(*stores.DiamondSmelt) error
 	ReadDiamond(fields.DiamondName) (*stores.DiamondSmelt, error)
 	ReadDiamondByNumber(uint32) (*stores.DiamondSmelt, error)
+	ReadDiamondNameByNumber(uint32) (fields.DiamondName, error)
 
 	// delete
 	DeleteTransactionByHash(fields.Hash) error
