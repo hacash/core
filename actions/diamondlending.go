@@ -844,7 +844,7 @@ func (act *Action_16_DiamondsSystemLendingRansom) RecoverChainState(state interf
 		return e
 	}
 	if dmdlendObj == nil {
-		return fmt.Errorf("Diamond Lending <%d> not exist.", hex.EncodeToString(act.LendingID))
+		return fmt.Errorf("Diamond Lending <%s> not exist.", hex.EncodeToString(act.LendingID))
 	}
 
 	// 回退赎回状态

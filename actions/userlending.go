@@ -861,7 +861,7 @@ func (act *Action_20_UsersLendingRansom) WriteInChainState(state interfaces.Chai
 		}
 		// 检查钻石归属地址
 		if diaitem.Address.NotEqual(usrlendObj.MortgagorAddress) {
-			return fmt.Errorf("diamond <%s> not belong to address %s", usrlendObj.MortgagorAddress.ToReadable())
+			return fmt.Errorf("diamond <%s> not belong to address %s", string(diamond), usrlendObj.MortgagorAddress.ToReadable())
 		}
 		// 检查钻石状态
 		if diaitem.Status != stores.DiamondStatusLendingOtherUser {
@@ -1008,7 +1008,7 @@ func (act *Action_20_UsersLendingRansom) WriteinChainState(state interfacev2.Cha
 		}
 		// 检查钻石归属地址
 		if diaitem.Address.NotEqual(usrlendObj.MortgagorAddress) {
-			return fmt.Errorf("diamond <%s> not belong to address %s", usrlendObj.MortgagorAddress.ToReadable())
+			return fmt.Errorf("diamond <%s> not belong to address %s", string(diamond), usrlendObj.MortgagorAddress.ToReadable())
 		}
 		// 检查钻石状态
 		if diaitem.Status != stores.DiamondStatusLendingOtherUser {
