@@ -3,7 +3,6 @@ package fields
 import (
 	"bytes"
 	"fmt"
-	"github.com/hacash/x16rs"
 	"strings"
 )
 
@@ -85,7 +84,7 @@ func (elm *DiamondListMaxLen200) ParseHACDlistBySplitCommaFromString(hacdlistspl
 	dianamesmap := make(map[string]bool) // 去重
 	diamondsbytes := make([]DiamondName, dianum)
 	for i, v := range diamonds {
-		dok := x16rs.IsDiamondValueString(v)
+		dok := IsDiamondValueString(v)
 		if !dok {
 			return fmt.Errorf("<%s> not a valid diamond name", v)
 		}
