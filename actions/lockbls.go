@@ -13,13 +13,13 @@ import (
 )
 
 type Action_9_LockblsCreate struct {
-	LockblsId           fields.LockblsId   // 线性锁仓id
-	PaymentAddress      fields.Address     // 付款地址
-	MasterAddress       fields.Address     // 主地址（领取权）
-	EffectBlockHeight   fields.BlockHeight // 生效（开始）区块
-	LinearBlockNumber   fields.VarUint3    // 步进区块数 < 17000000 约 160年
-	TotalStockAmount    fields.Amount      // 总共存入额度
-	LinearReleaseAmount fields.Amount      // 每次释放额度
+	LockblsId           fields.LockblsId   // Linear lock ID
+	PaymentAddress      fields.Address     // Payment address
+	MasterAddress       fields.Address     // Main address (claim)
+	EffectBlockHeight   fields.BlockHeight // Effective (start) block
+	LinearBlockNumber   fields.VarUint3    // Number of stepping blocks < 17000000 about 160 years
+	TotalStockAmount    fields.Amount      // Total deposit limit
+	LinearReleaseAmount fields.Amount      // Limit released each time
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
@@ -108,7 +108,7 @@ func (elm *Action_9_LockblsCreate) Parse(buf []byte, seek uint32) (uint32, error
 
 func (act *Action_9_LockblsCreate) RequestSignAddresses() []fields.Address {
 	return []fields.Address{
-		act.PaymentAddress, // 锁仓支付账户需要签名
+		act.PaymentAddress, // Signature is required for the payment account of warehouse lock
 	}
 }
 
@@ -117,13 +117,13 @@ func (act *Action_9_LockblsCreate) WriteInChainState(state interfaces.ChainState
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 检查id值合法性
+	// Check the validity of ID value
 	if len(act.LockblsId) != stores.LockblsIdLength || act.LockblsId[0] == 0 || act.LockblsId[stores.LockblsIdLength-1] == 0 {
-		// 用户创建的 锁仓ID， 第一位和最后一位不能为零
-		// 第一位为零的ID是比特币单向转移的锁仓id
+		// The first and last digits of the lock ID created by the user cannot be zero
+		// The first zero ID is the lockup ID of bitcoin one-way transfer
 		return fmt.Errorf("LockblsId format error.")
 	}
-	// 检查是否key已经存在
+	// Check whether the key already exists
 	haslock, e := state.Lockbls(act.LockblsId)
 	if e != nil {
 		return e
@@ -131,18 +131,18 @@ func (act *Action_9_LockblsCreate) WriteInChainState(state interfaces.ChainState
 	if haslock != nil {
 		return fmt.Errorf("Lockbls id<%s> already.", hex.EncodeToString(act.LockblsId))
 	}
-	// 检查 步进 block number
+	// Check step block number
 	if act.LinearBlockNumber < 288 {
 		return fmt.Errorf("LinearBlockNumber cannot less 288.")
 	}
 	if act.LinearBlockNumber > 1600*10000 {
 		return fmt.Errorf("LinearBlockNumber cannot over 16000000.")
 	}
-	// 检查数额
+	// Check amount
 	if !act.TotalStockAmount.IsPositive() || !act.LinearReleaseAmount.IsPositive() {
 		return fmt.Errorf("TotalStockAmount or LinearReleaseAmount error.")
 	}
-	// 检查余额
+	// Check balance
 	mainblsamt, e := state.Balance(act.PaymentAddress)
 	if e != nil {
 		return e
@@ -153,25 +153,25 @@ func (act *Action_9_LockblsCreate) WriteInChainState(state interfaces.ChainState
 	if mainblsamt.Hacash.LessThan(&act.TotalStockAmount) {
 		return fmt.Errorf("Balance not enough.")
 	}
-	// 步进不能大于存入额
+	// Step cannot be greater than deposit amount
 	if act.TotalStockAmount.LessThan(&act.LinearReleaseAmount) {
 		return fmt.Errorf("LinearReleaseAmount cannot more than TotalStockAmount.")
 	}
 
-	// 存储
+	// storage
 	lockbls := stores.NewEmptyLockbls(act.MasterAddress)
 	lockbls.EffectBlockHeight = act.EffectBlockHeight
 	lockbls.LinearBlockNumber = act.LinearBlockNumber
 	lockbls.TotalLockAmount = act.TotalStockAmount
 	lockbls.BalanceAmount = act.TotalStockAmount
 	lockbls.LinearReleaseAmount = act.LinearReleaseAmount
-	// 扣除 payment
+	// Deduct payment
 	e1 := DoSubBalanceFromChainStateV3(state, act.PaymentAddress, act.TotalStockAmount)
 	if e1 != nil {
 		return e1
 	}
 
-	// 保存锁仓
+	// Save lock
 	e2 := state.LockblsCreate(act.LockblsId, lockbls)
 	if e2 != nil {
 		return e2
@@ -186,13 +186,13 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfacev2.ChainStat
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 检查id值合法性
+	// Check the validity of ID value
 	if len(act.LockblsId) != stores.LockblsIdLength || act.LockblsId[0] == 0 || act.LockblsId[stores.LockblsIdLength-1] == 0 {
-		// 用户创建的 锁仓ID， 第一位和最后一位不能为零
-		// 第一位为零的ID是比特币单向转移的锁仓id
+		// The first and last digits of the lock ID created by the user cannot be zero
+		// The first zero ID is the lockup ID of bitcoin one-way transfer
 		return fmt.Errorf("LockblsId format error.")
 	}
-	// 检查是否key已经存在
+	// Check whether the key already exists
 	haslock, e := state.Lockbls(act.LockblsId)
 	if e != nil {
 		return e
@@ -200,18 +200,18 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfacev2.ChainStat
 	if haslock != nil {
 		return fmt.Errorf("Lockbls id<%s> already.", hex.EncodeToString(act.LockblsId))
 	}
-	// 检查 步进 block number
+	// Check step block number
 	if act.LinearBlockNumber < 288 {
 		return fmt.Errorf("LinearBlockNumber cannot less 288.")
 	}
 	if act.LinearBlockNumber > 1600*10000 {
 		return fmt.Errorf("LinearBlockNumber cannot over 16000000.")
 	}
-	// 检查数额
+	// Check amount
 	if !act.TotalStockAmount.IsPositive() || !act.LinearReleaseAmount.IsPositive() {
 		return fmt.Errorf("TotalStockAmount or LinearReleaseAmount error.")
 	}
-	// 检查余额
+	// Check balance
 	mainblsamt, e := state.Balance(act.PaymentAddress)
 	if e != nil {
 		return e
@@ -222,25 +222,25 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfacev2.ChainStat
 	if mainblsamt.Hacash.LessThan(&act.TotalStockAmount) {
 		return fmt.Errorf("Balance not enough.")
 	}
-	// 步进不能大于存入额
+	// Step cannot be greater than deposit amount
 	if act.TotalStockAmount.LessThan(&act.LinearReleaseAmount) {
 		return fmt.Errorf("LinearReleaseAmount cannot more than TotalStockAmount.")
 	}
 
-	// 存储
+	// storage
 	lockbls := stores.NewEmptyLockbls(act.MasterAddress)
 	lockbls.EffectBlockHeight = act.EffectBlockHeight
 	lockbls.LinearBlockNumber = act.LinearBlockNumber
 	lockbls.TotalLockAmount = act.TotalStockAmount
 	lockbls.BalanceAmount = act.TotalStockAmount
 	lockbls.LinearReleaseAmount = act.LinearReleaseAmount
-	// 扣除 payment
+	// Deduct payment
 	e1 := DoSubBalanceFromChainState(state, act.PaymentAddress, act.TotalStockAmount)
 	if e1 != nil {
 		return e1
 	}
 
-	// 保存锁仓
+	// Save lock
 	e2 := state.LockblsCreate(act.LockblsId, lockbls)
 	if e2 != nil {
 		return e2
@@ -254,12 +254,12 @@ func (act *Action_9_LockblsCreate) RecoverChainState(state interfacev2.ChainStat
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 回退 hac
+	// Fallback HAC
 	e1 := DoAddBalanceFromChainState(state, act.PaymentAddress, act.TotalStockAmount)
 	if e1 != nil {
 		return e1
 	}
-	// 删除 lockbls
+	// Delete lockbls
 	e2 := state.LockblsDelete(act.LockblsId)
 	if e2 != nil {
 		return e2
@@ -269,7 +269,7 @@ func (act *Action_9_LockblsCreate) RecoverChainState(state interfacev2.ChainStat
 	return nil
 }
 
-// 设置所属 belong_trs
+// Set belongs to long_ trs
 func (act *Action_9_LockblsCreate) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }
@@ -286,8 +286,8 @@ func (act *Action_9_LockblsCreate) IsBurning90PersentTxFees() bool {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 type Action_10_LockblsRelease struct {
-	LockblsId     fields.LockblsId // 线性锁仓id
-	ReleaseAmount fields.Amount    // 本次提取额度
+	LockblsId     fields.LockblsId // Linear lock ID
+	ReleaseAmount fields.Amount    // Current withdrawal limit
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
@@ -346,8 +346,8 @@ func (act *Action_10_LockblsRelease) WriteInChainState(state interfaces.ChainSta
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 因为只能提取到指定地址，所以任何人都能提取，不需要锁仓地址的签名
-	// 查询
+	// Because only the specified address can be extracted, anyone can extract it without the signature of the lock up address
+	// query
 	lockbls, e := state.Lockbls(act.LockblsId)
 	if e != nil {
 		return e
@@ -355,73 +355,73 @@ func (act *Action_10_LockblsRelease) WriteInChainState(state interfaces.ChainSta
 	if lockbls == nil {
 		return fmt.Errorf("Lockbls id<%s> not find.", hex.EncodeToString(act.LockblsId))
 	}
-	// 提取出来
+	// Extract
 	currentBlockHeight := state.GetPendingBlockHeight()
 	if currentBlockHeight < uint64(lockbls.EffectBlockHeight) {
 		return fmt.Errorf("EffectBlockHeight be set %d", lockbls.EffectBlockHeight)
 	}
-	// 计算提取额度
-	// rlsnum == 可提取次数
+	// Calculate withdrawal limit
+	// Rlsnum = = extractable times
 	rlsnum := (currentBlockHeight - uint64(lockbls.EffectBlockHeight)) / uint64(lockbls.LinearBlockNumber)
 	if rlsnum == 0 {
 		return fmt.Errorf("first release Block Height is %d, ", uint64(lockbls.EffectBlockHeight)+uint64(lockbls.LinearBlockNumber))
 	}
 	totalrlsamt := lockbls.TotalLockAmount
 	steprlsamt := lockbls.LinearReleaseAmount
-	// 有效可提余额
+	// Effective withdrawable balance
 	lockblsamt := lockbls.BalanceAmount
-	// 对比
+	// contrast
 	if lockblsamt.LessThan(&act.ReleaseAmount) {
-		return fmt.Errorf("BalanceAmount not enough.") // 余额不足
+		return fmt.Errorf("BalanceAmount not enough.") // Sorry, your credit is running low
 	}
 	maxrlsamtbig := new(big.Int).Mul(steprlsamt.GetValue(), new(big.Int).SetUint64(rlsnum))
 	currentMaxReleaseAmount, e3 := fields.NewAmountByBigInt(maxrlsamtbig)
 	if e3 != nil {
 		return e3
 	}
-	// 可提余额要减除掉已经提走的
+	// The withdrawable balance shall be deducted from the withdrawn balance
 	alreadyExtractedAmount, e9 := totalrlsamt.Sub(&lockblsamt) // 已经提走的余额
 	if e9 != nil {
 		return e9
 	}
-	// 有效可提余额
+	// Effective withdrawable balance
 	currentMaxReleaseAmount, e9 = currentMaxReleaseAmount.Sub(alreadyExtractedAmount)
 	if e9 != nil {
 		return e9
 	}
-	// 可提余额判断
+	// Available balance judgment
 	if currentMaxReleaseAmount.LessThan(&act.ReleaseAmount) {
-		return fmt.Errorf("Current Max Release Amount not enough.") // 目前可提余额不足
+		return fmt.Errorf("Current Max Release Amount not enough.") // The current available balance is insufficient
 	}
 
-	// 更新锁仓余额
+	// Update lock in balance
 	newBalanceAmount, e4 := lockblsamt.Sub(&act.ReleaseAmount)
 	if e4 != nil {
 		return e4
 	}
 	lockbls.BalanceAmount = *newBalanceAmount
 	if newBalanceAmount.IsEmpty() {
-		// 锁仓已经全部提取，删除
-		// 为了回退暂不删除，而是为区块回退而暂时保存
+		// All the locked warehouses have been extracted and deleted
+		// Not deleted for rollback, but saved for block rollback
 		e := state.LockblsUpdate(act.LockblsId, lockbls)
 		if e != nil {
 			return e
 		}
 	} else {
-		// 扣除 储存
+		// Deduct storage
 		e := state.LockblsUpdate(act.LockblsId, lockbls)
 		if e != nil {
 			return e
 		}
 	}
-	// total supply 统计
+	// Total supply statistics
 	isbtcmoveunlock := act.LockblsId[0] == 0 // 第一位为 0 则是比特币转移的锁定
 	if isbtcmoveunlock {
 		totalsupply, e2 := state.ReadTotalSupply()
 		if e2 != nil {
 			return e2
 		}
-		// 累加解锁的HAC
+		// Cumulative unlocked HAC
 		addamt := act.ReleaseAmount.ToMei()
 		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed, addamt)
 		// update total supply
@@ -430,7 +430,7 @@ func (act *Action_10_LockblsRelease) WriteInChainState(state interfaces.ChainSta
 			return e3
 		}
 	}
-	// 加上余额
+	// Plus balance
 	return DoAddBalanceFromChainStateV3(state, lockbls.MasterAddress, act.ReleaseAmount)
 }
 
@@ -439,8 +439,8 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfacev2.ChainSt
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 因为只能提取到指定地址，所以任何人都能提取，不需要锁仓地址的签名
-	// 查询
+	// Because only the specified address can be extracted, anyone can extract it without the signature of the lock up address
+	// query
 	lockbls, e := state.Lockbls(act.LockblsId)
 	if e != nil {
 		return e
@@ -448,73 +448,73 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfacev2.ChainSt
 	if lockbls == nil {
 		return fmt.Errorf("Lockbls id<%s> not find.", hex.EncodeToString(act.LockblsId))
 	}
-	// 提取出来
+	// Extract
 	currentBlockHeight := state.GetPendingBlockHeight()
 	if currentBlockHeight < uint64(lockbls.EffectBlockHeight) {
 		return fmt.Errorf("EffectBlockHeight be set %d", lockbls.EffectBlockHeight)
 	}
-	// 计算提取额度
-	// rlsnum == 可提取次数
+	// Calculate withdrawal limit
+	// Rlsnum = = extractable times
 	rlsnum := (currentBlockHeight - uint64(lockbls.EffectBlockHeight)) / uint64(lockbls.LinearBlockNumber)
 	if rlsnum == 0 {
 		return fmt.Errorf("first release Block Height is %d, ", uint64(lockbls.EffectBlockHeight)+uint64(lockbls.LinearBlockNumber))
 	}
 	totalrlsamt := lockbls.TotalLockAmount
 	steprlsamt := lockbls.LinearReleaseAmount
-	// 有效可提余额
+	// Effective withdrawable balance
 	lockblsamt := lockbls.BalanceAmount
-	// 对比
+	// contrast
 	if lockblsamt.LessThan(&act.ReleaseAmount) {
-		return fmt.Errorf("BalanceAmount not enough.") // 余额不足
+		return fmt.Errorf("BalanceAmount not enough.") // Sorry, your credit is running low
 	}
 	maxrlsamtbig := new(big.Int).Mul(steprlsamt.GetValue(), new(big.Int).SetUint64(rlsnum))
 	currentMaxReleaseAmount, e3 := fields.NewAmountByBigInt(maxrlsamtbig)
 	if e3 != nil {
 		return e3
 	}
-	// 可提余额要减除掉已经提走的
+	// The withdrawable balance shall be deducted from the withdrawn balance
 	alreadyExtractedAmount, e9 := totalrlsamt.Sub(&lockblsamt) // 已经提走的余额
 	if e9 != nil {
 		return e9
 	}
-	// 有效可提余额
+	// Effective withdrawable balance
 	currentMaxReleaseAmount, e9 = currentMaxReleaseAmount.Sub(alreadyExtractedAmount)
 	if e9 != nil {
 		return e9
 	}
-	// 可提余额判断
+	// Available balance judgment
 	if currentMaxReleaseAmount.LessThan(&act.ReleaseAmount) {
-		return fmt.Errorf("Current Max Release Amount not enough.") // 目前可提余额不足
+		return fmt.Errorf("Current Max Release Amount not enough.") // The current available balance is insufficient
 	}
 
-	// 更新锁仓余额
+	// Update lock in balance
 	newBalanceAmount, e4 := lockblsamt.Sub(&act.ReleaseAmount)
 	if e4 != nil {
 		return e4
 	}
 	lockbls.BalanceAmount = *newBalanceAmount
 	if newBalanceAmount.IsEmpty() {
-		// 锁仓已经全部提取，删除
-		// 为了回退暂不删除，而是为区块回退而暂时保存
+		// All the locked warehouses have been extracted and deleted
+		// Not deleted for rollback, but saved for block rollback
 		e := state.LockblsUpdate(act.LockblsId, lockbls)
 		if e != nil {
 			return e
 		}
 	} else {
-		// 扣除 储存
+		// Deduct storage
 		e := state.LockblsUpdate(act.LockblsId, lockbls)
 		if e != nil {
 			return e
 		}
 	}
-	// total supply 统计
+	// Total supply statistics
 	isbtcmoveunlock := act.LockblsId[0] == 0 // 第一位为 0 则是比特币转移的锁定
 	if isbtcmoveunlock {
 		totalsupply, e2 := state.ReadTotalSupply()
 		if e2 != nil {
 			return e2
 		}
-		// 累加解锁的HAC
+		// Cumulative unlocked HAC
 		addamt := act.ReleaseAmount.ToMei()
 		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed, addamt)
 		// update total supply
@@ -523,7 +523,7 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfacev2.ChainSt
 			return e3
 		}
 	}
-	// 加上余额
+	// Plus balance
 	return DoAddBalanceFromChainState(state, lockbls.MasterAddress, act.ReleaseAmount)
 }
 
@@ -538,24 +538,24 @@ func (act *Action_10_LockblsRelease) RecoverChainState(state interfacev2.ChainSt
 	if lockbls == nil {
 		return fmt.Errorf("Lockbls id<%s> not find.", hex.EncodeToString(act.LockblsId))
 	}
-	// 锁仓回退
-	// 更新锁仓余额
+	// Lock back
+	// Update lock in balance
 	lockblsamt := lockbls.BalanceAmount
 	oldBalanceAmount, e4 := lockblsamt.Add(&act.ReleaseAmount)
 	if e4 != nil {
 		return e4
 	}
 	lockbls.BalanceAmount = *oldBalanceAmount
-	// 扣除 储存
+	// Deduct storage
 	state.LockblsUpdate(act.LockblsId, lockbls)
-	// total supply 统计
+	// Total supply statistics
 	isbtcmoveunlock := act.LockblsId[0] == 0 // 第一位为 0 则是比特币转移的锁定
 	if isbtcmoveunlock {
 		totalsupply, e2 := state.ReadTotalSupply()
 		if e2 != nil {
 			return e2
 		}
-		// 累加解锁的HAC
+		// Cumulative unlocked HAC
 		addamt := act.ReleaseAmount.ToMei()
 		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed, addamt)
 		// update total supply
@@ -564,11 +564,11 @@ func (act *Action_10_LockblsRelease) RecoverChainState(state interfacev2.ChainSt
 			return e3
 		}
 	}
-	// 回退余额
+	// Return balance
 	return DoSubBalanceFromChainState(state, lockbls.MasterAddress, act.ReleaseAmount)
 }
 
-// 设置所属 belong_trs
+// Set belongs to long_ trs
 func (act *Action_10_LockblsRelease) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }

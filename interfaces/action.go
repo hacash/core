@@ -23,5 +23,5 @@ type Action interface {
 	Describe() map[string]interface{} // json api
 
 	// burning fees
-	IsBurning90PersentTxFees() bool // 是否销毁本笔交易的 90% 的交易费用
+	IsBurning90PersentTxFees() bool // Whether to destroy 90% of the transaction cost of this transaction
 }

@@ -5,14 +5,14 @@ type PowServer interface {
 	StopMining()                            // stop all
 }
 
-// 挖矿投喂单元
+// Mining feeding unit
 type PowWorkerMiningStuffItem interface {
 
-	// 设置或获取挖矿是否成功
+	// Set or obtain whether mining is successful
 	SetMiningSuccessed(bool)
 	GetMiningSuccessed() bool
 
-	// 拷贝并设置挖矿nonce
+	// Copy and set mining nonce
 	CopyForMiningByRandomSetCoinbaseNonce() PowWorkerMiningStuffItem
 
 	GetHeadMetaBlock() Block
@@ -21,21 +21,21 @@ type PowWorkerMiningStuffItem interface {
 	SetHeadNonce(nonce []byte)
 }
 
-// 执行端
+// Executive end
 type PowWorker interface {
-	InitStart() error              // 初始化
-	CloseUploadHashrate()          // 关闭算力统计
-	SetPowDevice(device PowDevice) // 设置挖矿设备端
+	InitStart() error              // initialization
+	CloseUploadHashrate()          // Turn off force statistics
+	SetPowDevice(device PowDevice) // Set mining equipment end
 	Excavate(miningStuffCh chan PowWorkerMiningStuffItem, resultCh chan PowWorkerMiningStuffItem)
 	DoNextMining(nextheight uint64) // to do next
 	StopAllMining()                 // stop all
 }
 
-// 设备端
+// Equipment end
 type PowDevice interface {
-	Init() error           // 初始化
-	CloseUploadHashrate()  // 关闭算力统计
-	GetSuperveneWide() int // 并发数
-	// 执行一次挖矿
+	Init() error           // initialization
+	CloseUploadHashrate()  // Turn off force statistics
+	GetSuperveneWide() int // Concurrent number
+	// Perform a mining operation
 	DoMining(blockHeight uint64, reporthashrate bool, stopmark *byte, tarhashvalue []byte, blockheadmeta [][]byte) (bool, int, []byte, []byte)
 }

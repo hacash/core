@@ -10,17 +10,17 @@ const (
 )
 
 type DiamondSystemLending struct {
-	IsRansomed          fields.Bool                 // 是否已经赎回(已经被赎回)
+	IsRansomed          fields.Bool                 // Whether it has been redeemed (redeemed)
 	CreateBlockHeight   fields.BlockHeight          // 借贷开启时的区块高度
-	MainAddress         fields.Address              // 借贷人地址
-	MortgageDiamondList fields.DiamondListMaxLen200 // 抵押钻石列表
+	MainAddress         fields.Address              // Address of Borrower
+	MortgageDiamondList fields.DiamondListMaxLen200 // Mortgage diamond list
 	LoanTotalAmountMei  fields.VarUint4             // [枚数]总共借出HAC额度，必须等于总可借额度，不能多也不能少
-	BorrowPeriod        fields.VarUint1             // 借款周期，一个周期代表 0.5%利息和10000个区块约35天，最低1最高20
+	BorrowPeriod        fields.VarUint1             // Borrowing cycle: one cycle represents 0.5% interest and 10000 blocks for about 35 days, with a minimum of 1 and a maximum of 20
 
-	// 如已经赎回则写入数据
-	RansomBlockHeight              fields.BlockHeight     // 赎回时的区块高度
-	RansomAmount                   fields.Amount          // 赎回金额
-	RansomAddressIfPublicOperation fields.OptionalAddress // 如果是第三方赎回则记录第三方地址
+	// Write data if redeemed
+	RansomBlockHeight              fields.BlockHeight     // Block height at redemption
+	RansomAmount                   fields.Amount          // Redemption amount
+	RansomAddressIfPublicOperation fields.OptionalAddress // If it is a third party redemption, record the third party address
 
 }
 
@@ -38,7 +38,7 @@ func (elm *DiamondSystemLending) Size() uint32 {
 		elm.MortgageDiamondList.Size() +
 		elm.LoanTotalAmountMei.Size() +
 		elm.BorrowPeriod.Size()
-	// 已经赎回状态
+	// Redeemed status
 	if elm.IsRansomed.Check() {
 		sz += elm.RansomBlockHeight.Size() +
 			elm.RansomAmount.Size() +
@@ -61,7 +61,7 @@ func (elm *DiamondSystemLending) Serialize() ([]byte, error) {
 	buffer.Write(b3)
 	buffer.Write(b4)
 	buffer.Write(b5)
-	// 已赎回状态
+	// Redeemed status
 	if elm.IsRansomed.Check() {
 		var b0, _ = elm.RansomBlockHeight.Serialize()
 		var b1, _ = elm.RansomAmount.Serialize()
@@ -99,7 +99,7 @@ func (elm *DiamondSystemLending) Parse(buf []byte, seek uint32) (uint32, error) 
 	if e != nil {
 		return 0, e
 	}
-	// 已赎回状态
+	// Redeemed status
 	if elm.IsRansomed.Check() {
 		seek, e = elm.RansomBlockHeight.Parse(buf, seek)
 		if e != nil {
@@ -117,10 +117,10 @@ func (elm *DiamondSystemLending) Parse(buf []byte, seek uint32) (uint32, error) 
 	return seek, nil
 }
 
-// 修改、回退赎回状态
+// Modify and return redemption status
 
 func (elm *DiamondSystemLending) SetRansomedStatus(height uint64, amount *fields.Amount, address fields.Address) error {
-	elm.IsRansomed.Set(true) // 设置赎回状态
+	elm.IsRansomed.Set(true) // Set redemption status
 	elm.RansomBlockHeight = fields.BlockHeight(height)
 	elm.RansomAmount = *amount
 	elm.RansomAddressIfPublicOperation = fields.NewEmptyOptionalAddress()
@@ -131,8 +131,8 @@ func (elm *DiamondSystemLending) SetRansomedStatus(height uint64, amount *fields
 	return nil
 }
 
-// 移除赎回状态
+// Remove redemption status
 func (elm *DiamondSystemLending) DropRansomedStatus() error {
-	elm.IsRansomed.Set(false) // 回退赎回状态
+	elm.IsRansomed.Set(false) // Return redemption status
 	return nil
 }

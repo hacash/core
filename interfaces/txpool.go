@@ -7,28 +7,28 @@ import (
 type TxPool interface {
 	SetBlockChain(BlockChain)
 
-	// 检查交易是否已经存在
+	// Check whether the transaction already exists
 	CheckTxExistByHash(fields.Hash) (Transaction, bool)
 	CheckTxExist(Transaction) (Transaction, bool)
-	// 添加交易
+	// Add transaction
 	AddTx(Transaction) error
-	// 从交易池里查询一笔交易
+	// Query a transaction from the trading pool
 	// FindTxByHash(fields.Hash) (Transaction, bool)
-	// 获取全部交易，按手续费纯度高到低排序
+	// Obtain all transactions, and sort them according to the service fee purity from high to low
 	CopyTxsOrderByFeePurity(targetblockheight uint64, maxcount uint32, maxsize uint32) []Transaction
-	// 过滤、清除交易
+	// Filter and clear transactions
 	RemoveTxs([]Transaction)
 	RemoveTxsOnNextBlockArrive([]Transaction)
 	SetAutomaticallyCleanInvalidTransactions(bool)
-	// 添加交易成功事件订阅
+	// Add transaction success event subscription
 	SubscribeOnAddTxSuccess(chan Transaction)
-	PauseEventSubscribe()   // 暂停事件订阅
-	RenewalEventSubscribe() // 重开事件订阅
+	PauseEventSubscribe()   // Pause event subscription
+	RenewalEventSubscribe() // Reopen event subscription
 
 	GetDiamondCreateTxs(int) []Transaction
 
-	// 获取手续费最高的一笔交易
+	// Get the transaction with the highest handling fee
 	// PopTxByHighestFee() Transaction
-	// 订阅交易池加入新交易事件
+	// Subscribe to the transaction pool and add a new transaction event
 	// SubscribeNewTx(chan<- []block.Transaction) event.Subscription
 }

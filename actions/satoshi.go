@@ -74,10 +74,10 @@ func (act *Action_8_SimpleSatoshiTransfer) WriteInChainState(state interfaces.Ch
 	}
 
 	if act.Amount <= 0 {
-		// 转账不能为 0 或负
+		// Transfer cannot be 0 or negative
 		return fmt.Errorf("Amount <%d> error.", act.Amount)
 	}
-	// 转移
+	// transfer
 	fromAddress := act.belong_trs_v3.GetAddress()
 	return DoSimpleSatoshiTransferFromChainStateV3(state, fromAddress, act.ToAddress, act.Amount)
 }
@@ -88,10 +88,10 @@ func (act *Action_8_SimpleSatoshiTransfer) WriteinChainState(state interfacev2.C
 	}
 
 	if act.Amount <= 0 {
-		// 转账不能为 0 或负
+		// Transfer cannot be 0 or negative
 		return fmt.Errorf("Amount <%d> error.", act.Amount)
 	}
-	// 转移
+	// transfer
 	fromAddress := act.belong_trs.GetAddress()
 	return DoSimpleSatoshiTransferFromChainState(state, fromAddress, act.ToAddress, act.Amount)
 }
@@ -100,11 +100,11 @@ func (act *Action_8_SimpleSatoshiTransfer) RecoverChainState(state interfacev2.C
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 回退
+	// Fallback
 	return DoSimpleSatoshiTransferFromChainState(state, act.ToAddress, act.belong_trs.GetAddress(), act.Amount)
 }
 
-// 设置所属 belong_trs
+// Set belongs to long_ trs
 func (act *Action_8_SimpleSatoshiTransfer) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }
@@ -184,7 +184,7 @@ func (elm *Action_11_FromToSatoshiTransfer) Size() uint32 {
 
 func (elm *Action_11_FromToSatoshiTransfer) RequestSignAddresses() []fields.Address {
 	return []fields.Address{
-		elm.FromAddress, // 需from签名
+		elm.FromAddress, // From signature required
 	}
 }
 
@@ -194,11 +194,11 @@ func (act *Action_11_FromToSatoshiTransfer) WriteInChainState(state interfaces.C
 	}
 
 	if act.Amount <= 0 {
-		// 转账不能为 0 或负
+		// Transfer cannot be 0 or negative
 		return fmt.Errorf("Amount <%d> error.", act.Amount)
 	}
 
-	// 转移
+	// transfer
 	return DoSimpleSatoshiTransferFromChainStateV3(state, act.FromAddress, act.ToAddress, act.Amount)
 }
 
@@ -208,11 +208,11 @@ func (act *Action_11_FromToSatoshiTransfer) WriteinChainState(state interfacev2.
 	}
 
 	if act.Amount <= 0 {
-		// 转账不能为 0 或负
+		// Transfer cannot be 0 or negative
 		return fmt.Errorf("Amount <%d> error.", act.Amount)
 	}
 
-	// 转移
+	// transfer
 	return DoSimpleSatoshiTransferFromChainState(state, act.FromAddress, act.ToAddress, act.Amount)
 }
 
@@ -220,11 +220,11 @@ func (act *Action_11_FromToSatoshiTransfer) RecoverChainState(state interfacev2.
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 回退
+	// Fallback
 	return DoSimpleSatoshiTransferFromChainState(state, act.ToAddress, act.FromAddress, act.Amount)
 }
 
-// 设置所属 belong_trs
+// Set belongs to long_ trs
 func (act *Action_11_FromToSatoshiTransfer) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }
@@ -295,7 +295,7 @@ func (elm *Action_28_FromSatoshiTransfer) Size() uint32 {
 
 func (elm *Action_28_FromSatoshiTransfer) RequestSignAddresses() []fields.Address {
 	return []fields.Address{
-		elm.FromAddress, // 需from签名
+		elm.FromAddress, // From signature required
 	}
 }
 
@@ -305,11 +305,11 @@ func (act *Action_28_FromSatoshiTransfer) WriteInChainState(state interfaces.Cha
 	}
 
 	if act.Amount <= 0 {
-		// 转账不能为 0 或负
+		// Transfer cannot be 0 or negative
 		return fmt.Errorf("Amount <%d> error.", act.Amount)
 	}
 
-	// 转移
+	// transfer
 	toAddress := act.belong_trs_v3.GetAddress()
 	return DoSimpleSatoshiTransferFromChainStateV3(state, act.FromAddress, toAddress, act.Amount)
 }
@@ -320,11 +320,11 @@ func (act *Action_28_FromSatoshiTransfer) WriteinChainState(state interfacev2.Ch
 	}
 
 	if act.Amount <= 0 {
-		// 转账不能为 0 或负
+		// Transfer cannot be 0 or negative
 		return fmt.Errorf("Amount <%d> error.", act.Amount)
 	}
 
-	// 转移
+	// transfer
 	toAddress := act.belong_trs.GetAddress()
 	return DoSimpleSatoshiTransferFromChainState(state, act.FromAddress, toAddress, act.Amount)
 }
@@ -333,11 +333,11 @@ func (act *Action_28_FromSatoshiTransfer) RecoverChainState(state interfacev2.Ch
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 回退
+	// Fallback
 	return DoSimpleSatoshiTransferFromChainState(state, act.belong_trs.GetAddress(), act.FromAddress, act.Amount)
 }
 
-// 设置所属 belong_trs
+// Set belongs to long_ trs
 func (act *Action_28_FromSatoshiTransfer) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }

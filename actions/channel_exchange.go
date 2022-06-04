@@ -14,20 +14,20 @@ import (
 
 ////////////////////////////////
 
-// 通道资金与链上资金相互转移，原子互换
+// Mutual transfer of channel funds and chain funds, atomic exchange
 
 type ChannelAmountAndOnChainAmountTransferEachOtherByAtomicExchange struct {
 	ChannelTranferProveBodyHashChecker fields.HashHalfChecker
 
-	OnChainTranferToAddress fields.Address // 链上转账收款地址
-	OnChainTranferAmount    fields.Amount  // 链上转账数额
+	OnChainTranferToAddress fields.Address // Online transfer collection address
+	OnChainTranferAmount    fields.Amount  // Online transfer amount
 
-	AddressCount                            fields.VarUint1 // 签名数量，只能取值 2 或 3
+	AddressCount                            fields.VarUint1 // Signature quantity, can only be 2 or 3
 	OnchainTransferFromAndMustSignAddresses []fields.Address
-	// 两个或三个地址，其中第一个地址必须为链上转账 From 地址
-	// 地址列表里必须包含通道双方的地址，否则提交挑战和仲裁时将验证失败
+	// Two or three addresses, the first of which must be the from address for online transfer
+	// The address list must contain the addresses of both sides of the channel, otherwise the verification will fail when submitting the challenge and Arbitration
 
-	// 地址对应的签名
+	// Signature corresponding to address
 	MustSigns []fields.Sign // 顺序与 []address 顺序必须一致
 }
 
@@ -59,7 +59,7 @@ func (elm *ChannelAmountAndOnChainAmountTransferEachOtherByAtomicExchange) Seria
 }
 
 func (elm *ChannelAmountAndOnChainAmountTransferEachOtherByAtomicExchange) SignStuffHash() (fields.Hash, error) {
-	var conbt, e = elm.SerializeNoSign() // 数据体
+	var conbt, e = elm.SerializeNoSign() // Data body
 	if e != nil {
 		return nil, e
 	}
@@ -68,7 +68,7 @@ func (elm *ChannelAmountAndOnChainAmountTransferEachOtherByAtomicExchange) SignS
 
 func (elm *ChannelAmountAndOnChainAmountTransferEachOtherByAtomicExchange) Serialize() ([]byte, error) {
 	var buffer bytes.Buffer
-	var bt1, _ = elm.SerializeNoSign() // 数据体
+	var bt1, _ = elm.SerializeNoSign() // Data body
 	buffer.Write(bt1)
 	for _, sign := range elm.MustSigns {
 		var bt1, _ = sign.Serialize()
@@ -91,7 +91,7 @@ func (elm *ChannelAmountAndOnChainAmountTransferEachOtherByAtomicExchange) Parse
 	if e != nil {
 		return 0, e
 	}
-	// 地址
+	// address
 	seek, e = elm.AddressCount.Parse(buf, seek)
 	if e != nil {
 		return 0, e
@@ -104,7 +104,7 @@ func (elm *ChannelAmountAndOnChainAmountTransferEachOtherByAtomicExchange) Parse
 			return 0, e
 		}
 	}
-	// 签名
+	// autograph
 	elm.MustSigns = make([]fields.Sign, scn)
 	for i := 0; i < scn; i++ {
 		seek, e = elm.MustSigns[i].Parse(buf, seek)
@@ -112,55 +112,55 @@ func (elm *ChannelAmountAndOnChainAmountTransferEachOtherByAtomicExchange) Parse
 			return 0, e
 		}
 	}
-	// 完成
+	// complete
 	return seek, nil
 }
 
-// 检查所有签名
+// Check all signatures
 func (elm *ChannelAmountAndOnChainAmountTransferEachOtherByAtomicExchange) CheckMustAddressAndSigns() error {
 	var e error
 
-	// 计算哈希
+	// Compute hash
 	conhx, e := elm.SignStuffHash()
 	if e != nil {
 		return e
 	}
 
-	// 检查地址最低数量
+	// Minimum number of check addresses
 	sgmn := len(elm.OnchainTransferFromAndMustSignAddresses)
 	if sgmn < 2 || sgmn > 3 || sgmn != int(elm.AddressCount) || sgmn != len(elm.MustSigns) {
 		return fmt.Errorf("Address or Sign length error, need 2~3 but got %d, %d, %d.",
 			sgmn, int(elm.AddressCount), len(elm.MustSigns))
 	}
 
-	// 签名按地址排列，检查所有地址和签名是否匹配
+	// Signatures are arranged by address. Check whether all addresses and signatures match
 	for i := 0; i < sgmn; i++ {
 		sign := elm.MustSigns[i]
 		addr := elm.OnchainTransferFromAndMustSignAddresses[i]
 		sgaddr := account.NewAddressFromPublicKeyV0(sign.PublicKey)
-		// 判断地址顺序
+		// Judge address order
 		if addr.NotEqual(sgaddr) {
 			return fmt.Errorf("Address not match, need %s nut got %s.",
 				addr.ToReadable(), fields.Address(sgaddr).ToReadable())
 		}
-		// 检查签名
+		// Check signature
 		ok, _ := account.CheckSignByHash32(conhx, sign.PublicKey, sign.Signature)
 		if !ok {
 			return fmt.Errorf("Left account %s verify signature fail.", addr.ToReadable())
 		}
 	}
 
-	// 全部签名验证成功
+	// All signatures verified successfully
 	return nil
 }
 
 ////////////////////////////////////////////////////////
 
-// 通道与链上原子互换
-// 提交通道与链上互换交易
+// Exchange of channels with atoms in chains
+// Submit channel and chain swap transactions
 type Action_25_PaymantChannelAndOnchainAtomicExchange struct {
 
-	// 原子互换交易凭证
+	// Atomic swap transaction receipt
 	ExchangeEvidence ChannelAmountAndOnChainAmountTransferEachOtherByAtomicExchange
 
 	// data ptr
@@ -202,7 +202,7 @@ func (elm *Action_25_PaymantChannelAndOnchainAtomicExchange) Parse(buf []byte, s
 }
 
 func (elm *Action_25_PaymantChannelAndOnchainAtomicExchange) RequestSignAddresses() []fields.Address {
-	// action 内部判断签名
+	// Action internal judgment signature
 	return []fields.Address{}
 }
 
@@ -211,22 +211,22 @@ func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteInChainState(s
 	var e error
 
 	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+		return fmt.Errorf("mainnet not yet") // Waiting for review is not enabled yet
 	}
 
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 查询是否为重复提交
+	// Query whether it is a duplicate submission
 	swaphx := act.ExchangeEvidence.ChannelTranferProveBodyHashChecker
 	chaswap, e := state.Chaswap(swaphx)
 	if e != nil {
 		return e
 	}
 	if chaswap != nil {
-		// 已经存在，不可重复提交
-		// 否则将会导致多次重复转账
+		// Already exists, cannot submit repeatedly
+		// Otherwise, it will cause repeated transfers
 		return fmt.Errorf("ChannelTranferProveBodyHashChecker <%s> is existence.",
 			swaphx.ToHex())
 	}
@@ -235,13 +235,13 @@ func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteInChainState(s
 		return fmt.Errorf("Address lenght error.")
 	}
 
-	// 提交时不验证通道相关内容，仅仅操作链上转账
+	// The content related to the channel is not verified during submission, and only the online transfer is operated
 	e = act.ExchangeEvidence.CheckMustAddressAndSigns()
 	if e != nil {
 		return e
 	}
 
-	// 创建，保存凭证
+	// Create, save voucher
 	objsto := stores.Chaswap{
 		IsBeUsed:                                fields.CreateBool(false), // 未使用过
 		AddressCount:                            act.ExchangeEvidence.AddressCount,
@@ -252,7 +252,7 @@ func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteInChainState(s
 		return e
 	}
 
-	// 转账
+	// transfer accounts
 	fromAddr := act.ExchangeEvidence.OnchainTransferFromAndMustSignAddresses[0]
 	toAddr := act.ExchangeEvidence.OnChainTranferToAddress
 	trsAmt := act.ExchangeEvidence.OnChainTranferAmount
@@ -264,22 +264,22 @@ func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteinChainState(s
 	var e error
 
 	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+		return fmt.Errorf("mainnet not yet") // Waiting for review is not enabled yet
 	}
 
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 查询是否为重复提交
+	// Query whether it is a duplicate submission
 	swaphx := act.ExchangeEvidence.ChannelTranferProveBodyHashChecker
 	chaswap, e := state.Chaswap(swaphx)
 	if e != nil {
 		return e
 	}
 	if chaswap != nil {
-		// 已经存在，不可重复提交
-		// 否则将会导致多次重复转账
+		// Already exists, cannot submit repeatedly
+		// Otherwise, it will cause repeated transfers
 		return fmt.Errorf("ChannelTranferProveBodyHashChecker <%s> is existence.",
 			swaphx.ToHex())
 	}
@@ -288,13 +288,13 @@ func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteinChainState(s
 		return fmt.Errorf("Address lenght error.")
 	}
 
-	// 提交时不验证通道相关内容，仅仅操作链上转账
+	// The content related to the channel is not verified during submission, and only the online transfer is operated
 	e = act.ExchangeEvidence.CheckMustAddressAndSigns()
 	if e != nil {
 		return e
 	}
 
-	// 创建，保存凭证
+	// Create, save voucher
 	objsto := stores.Chaswap{
 		IsBeUsed:                                fields.CreateBool(false), // 未使用过
 		AddressCount:                            act.ExchangeEvidence.AddressCount,
@@ -305,7 +305,7 @@ func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteinChainState(s
 		return e
 	}
 
-	// 转账
+	// transfer accounts
 	fromAddr := act.ExchangeEvidence.OnchainTransferFromAndMustSignAddresses[0]
 	toAddr := act.ExchangeEvidence.OnChainTranferToAddress
 	trsAmt := act.ExchangeEvidence.OnChainTranferAmount
@@ -314,11 +314,11 @@ func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteinChainState(s
 
 func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) RecoverChainState(state interfacev2.ChainStateOperation) error {
 
-	// 取消保存
+	// Cancel save
 	swaphx := act.ExchangeEvidence.ChannelTranferProveBodyHashChecker
 	state.ChaswapDelete(swaphx)
 
-	// 转账回退
+	// Transfer return
 	fromAddr := act.ExchangeEvidence.OnchainTransferFromAndMustSignAddresses[0]
 	toAddr := act.ExchangeEvidence.OnChainTranferToAddress
 	trsAmt := act.ExchangeEvidence.OnChainTranferAmount

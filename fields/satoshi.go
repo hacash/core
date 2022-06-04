@@ -67,7 +67,7 @@ func (elm *SatoshiVariation) Parse(buf []byte, seek uint32) (uint32, error) {
 	return seek, nil
 }
 
-// 获得真实值
+// Get true value
 func (elm *SatoshiVariation) GetRealSatoshi() Satoshi {
 	if elm.NotEmpty.Check() {
 		return elm.ValueSAT

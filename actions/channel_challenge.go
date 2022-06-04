@@ -13,12 +13,12 @@ import (
 	"github.com/hacash/core/sys"
 )
 
-// 无任何单据单方面关闭通道，进入挑战期
-// 资金分配按初始存入计算
+// Without any documents, the channel is closed unilaterally, entering the challenge period
+// Fund allocation is calculated based on initial deposit
 type Action_22_UnilateralClosePaymentChannelByNothing struct {
-	// 通道 ID
-	ChannelId          fields.ChannelId // 通道id
-	AssertCloseAddress fields.Address   // 单方面主张关闭的提议地址
+	// Channel ID
+	ChannelId          fields.ChannelId // Channel ID
+	AssertCloseAddress fields.Address   // Proposed address of unilateral claim for closure
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
@@ -65,7 +65,7 @@ func (elm *Action_22_UnilateralClosePaymentChannelByNothing) Parse(buf []byte, s
 }
 
 func (elm *Action_22_UnilateralClosePaymentChannelByNothing) RequestSignAddresses() []fields.Address {
-	// 提议者必须签名
+	// Proposer must sign
 	return []fields.Address{
 		elm.AssertCloseAddress,
 	}
@@ -77,7 +77,7 @@ func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteInChainState(s
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(act.ChannelId)
 	if e != nil {
 		return e
@@ -85,17 +85,17 @@ func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteInChainState(s
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
-	// 检查状态（必须为开启状态）
+	// Check status (must be on)
 	if paychan.IsOpening() == false {
 		return fmt.Errorf("Payment Channel status is not on opening.")
 	}
-	// 检查两个账户地址看地址是否匹配
+	// Check the two account addresses to see if they match
 	addrIsLeft := paychan.LeftAddress.Equal(act.AssertCloseAddress)
 	addrIsRight := paychan.RightAddress.Equal(act.AssertCloseAddress)
 	if !addrIsLeft && !addrIsRight {
 		return fmt.Errorf("Payment Channel <%s> address signature verify fail.", hex.EncodeToString(act.ChannelId))
 	}
-	// 挑战者状态
+	// Challenger status
 	clghei := state.GetPendingBlockHeight()
 	var clgamt = fields.Amount{}
 	var clgsat = fields.Satoshi(0)
@@ -106,9 +106,9 @@ func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteInChainState(s
 		clgamt = paychan.RightAmount
 		clgsat = paychan.RightSatoshi.GetRealSatoshi()
 	}
-	// 更新至挑战期，没有账单编号
+	// Update to challenge period, no bill number
 	paychan.SetChallenging(clghei, addrIsLeft, &clgamt, clgsat, 0)
-	// 写入状态
+	// Write status
 	e = state.ChannelUpdate(act.ChannelId, paychan)
 	if e != nil {
 		return e
@@ -122,7 +122,7 @@ func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteinChainState(s
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(act.ChannelId)
 	if e != nil {
 		return e
@@ -130,17 +130,17 @@ func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteinChainState(s
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
-	// 检查状态（必须为开启状态）
+	// Check status (must be on)
 	if paychan.IsOpening() == false {
 		return fmt.Errorf("Payment Channel status is not on opening.")
 	}
-	// 检查两个账户地址看地址是否匹配
+	// Check the two account addresses to see if they match
 	addrIsLeft := paychan.LeftAddress.Equal(act.AssertCloseAddress)
 	addrIsRight := paychan.RightAddress.Equal(act.AssertCloseAddress)
 	if !addrIsLeft && !addrIsRight {
 		return fmt.Errorf("Payment Channel <%s> address signature verify fail.", hex.EncodeToString(act.ChannelId))
 	}
-	// 挑战者状态
+	// Challenger status
 	clghei := state.GetPendingBlockHeight()
 	var clgamt = fields.Amount{}
 	var clgsat = fields.Satoshi(0)
@@ -151,9 +151,9 @@ func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteinChainState(s
 		clgamt = paychan.RightAmount
 		clgsat = paychan.RightSatoshi.GetRealSatoshi()
 	}
-	// 更新至挑战期，没有账单编号
+	// Update to challenge period, no bill number
 	paychan.SetChallenging(clghei, addrIsLeft, &clgamt, clgsat, 0)
-	// 写入状态
+	// Write status
 	e = state.ChannelUpdate(act.ChannelId, paychan)
 	if e != nil {
 		return e
@@ -163,7 +163,7 @@ func (act *Action_22_UnilateralClosePaymentChannelByNothing) WriteinChainState(s
 
 func (act *Action_22_UnilateralClosePaymentChannelByNothing) RecoverChainState(state interfacev2.ChainStateOperation) error {
 
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(act.ChannelId)
 	if e != nil {
 		return e
@@ -171,7 +171,7 @@ func (act *Action_22_UnilateralClosePaymentChannelByNothing) RecoverChainState(s
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
-	// 回退状态
+	// Fallback status
 	paychan.SetOpening()
 	state.ChannelUpdate(act.ChannelId, paychan)
 	return nil
@@ -192,12 +192,12 @@ func (act *Action_22_UnilateralClosePaymentChannelByNothing) IsBurning90PersentT
 
 /////////////////////////////////////////////////////////////
 
-// 1. 通过中间实时对账单方面关闭通道，进入挑战期
+// 1. close the channel through the intermediate real-time statement and enter the challenge period
 // 2. 提供实时对账单，回应挑战，夺取对方全部金额
 type Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeReconciliation struct {
-	// 主张者地址
+	// Proposer address
 	AssertAddress fields.Address
-	// 对账单
+	// Account Statement
 	Reconciliation channel.OnChainArbitrationBasisReconciliation
 
 	// data ptr
@@ -245,7 +245,7 @@ func (elm *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 }
 
 func (elm *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeReconciliation) RequestSignAddresses() []fields.Address {
-	// 检查签名
+	// Check signature
 	return []fields.Address{
 		elm.AssertAddress,
 	}
@@ -260,7 +260,7 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 	// cid
 	channelId := act.Reconciliation.GetChannelId()
 
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(channelId)
 	if e != nil {
 		return e
@@ -268,8 +268,8 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel <%s> not find.", hex.EncodeToString(channelId))
 	}
-	// 检查两个账户地址签名，双方都检查
-	// 进入挑战期还是夺取资金
+	// Check the signatures of both account addresses, and both parties check
+	// Enter a challenging period or seize funds
 	return checkChannelGotoChallegingOrFinalDistributionWriteinChainStateV3(state, act.AssertAddress, paychan, &act.Reconciliation)
 }
 
@@ -282,7 +282,7 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 	// cid
 	channelId := act.Reconciliation.GetChannelId()
 
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(channelId)
 	if e != nil {
 		return e
@@ -290,8 +290,8 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel <%s> not find.", hex.EncodeToString(channelId))
 	}
-	// 检查两个账户地址签名，双方都检查
-	// 进入挑战期还是夺取资金
+	// Check the signatures of both account addresses, and both parties check
+	// Enter a challenging period or seize funds
 	return checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state, act.AssertAddress, paychan, &act.Reconciliation)
 }
 
@@ -299,7 +299,7 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 
 	channelId := act.Reconciliation.GetChannelId()
 
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(channelId)
 	if e != nil {
 		return e
@@ -308,7 +308,7 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(channelId))
 	}
 
-	// 回退
+	// Fallback
 	return checkChannelGotoChallegingOrFinalDistributionRecoverChainState(state, act.AssertAddress, paychan, &act.Reconciliation)
 }
 
@@ -327,15 +327,15 @@ func (act *Action_23_UnilateralCloseOrRespondChallengePaymentChannelByRealtimeRe
 
 ///////////////////////////////////////////////
 
-// 单方面结束
-// 1. 通过 通道链支付 单方面关闭通道，进入挑战期
+// Unilateral termination
+// 1. unilaterally close the channel through channel chain payment and enter the challenge period
 // 2. 提供通道链支付对账单，回应挑战，夺取对方全部金额
 type Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelChainTransferBody struct {
-	// 主张者地址
+	// Proposer address
 	AssertAddress fields.Address
-	// 通道整体支付数据
+	// Channel overall payment data
 	ChannelChainTransferData channel.OffChainFormPaymentChannelTransfer
-	// 本通道支付体数据
+	// Payment entity data of this channel
 	ChannelChainTransferTargetProveBody channel.ChannelChainTransferProveBodyInfo
 
 	// data ptr
@@ -391,7 +391,7 @@ func (elm *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 }
 
 func (elm *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelChainTransferBody) RequestSignAddresses() []fields.Address {
-	// 检查签名
+	// Check signature
 	return []fields.Address{
 		elm.AssertAddress,
 	}
@@ -405,7 +405,7 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
 	if e != nil {
 		return e
@@ -414,9 +414,9 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 		return fmt.Errorf("Payment Channel <%s> not find.", hex.EncodeToString(act.ChannelChainTransferTargetProveBody.ChannelId))
 	}
 
-	// 检查通道哈希是否正确
+	// Check whether the channel hash is correct
 	hxhalf := act.ChannelChainTransferTargetProveBody.GetSignStuffHashHalfChecker()
-	// 检查哈希值是否包含在列表内
+	// Check whether the hash value is included in the list
 	var isHashCheckOk = false
 	for _, hxckr := range act.ChannelChainTransferData.ChannelTransferProveHashHalfCheckers {
 		if hxhalf.Equal(hxckr) {
@@ -428,7 +428,7 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 		return fmt.Errorf("ChannelChainTransferTargetProveBody hash <%s> not find.", hxhalf.ToHex())
 	}
 
-	// 检查双方通道地址是否包含在签名列表内
+	// Check whether the channel addresses of both parties are included in the signature list
 	lsgok := false
 	rsgok := false
 	for _, v := range act.ChannelChainTransferData.MustSignAddresses {
@@ -442,13 +442,13 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 		return fmt.Errorf("Channel signature address is missing.")
 	}
 
-	// 检查所有签名是否完整和正确
+	// Check that all signatures are complete and correct
 	e = act.ChannelChainTransferData.CheckMustAddressAndSigns()
 	if e != nil {
 		return e
 	}
 
-	// 检查 进入挑战期，还是最终夺取
+	// Check whether it is a challenge or a final capture
 	return checkChannelGotoChallegingOrFinalDistributionWriteinChainStateV3(state, act.AssertAddress, paychan, &act.ChannelChainTransferTargetProveBody)
 }
 
@@ -460,7 +460,7 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
 	if e != nil {
 		return e
@@ -469,9 +469,9 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 		return fmt.Errorf("Payment Channel <%s> not find.", hex.EncodeToString(act.ChannelChainTransferTargetProveBody.ChannelId))
 	}
 
-	// 检查通道哈希是否正确
+	// Check whether the channel hash is correct
 	hxhalf := act.ChannelChainTransferTargetProveBody.GetSignStuffHashHalfChecker()
-	// 检查哈希值是否包含在列表内
+	// Check whether the hash value is included in the list
 	var isHashCheckOk = false
 	for _, hxckr := range act.ChannelChainTransferData.ChannelTransferProveHashHalfCheckers {
 		if hxhalf.Equal(hxckr) {
@@ -483,7 +483,7 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 		return fmt.Errorf("ChannelChainTransferTargetProveBody hash <%s> not find.", hxhalf.ToHex())
 	}
 
-	// 检查双方通道地址是否包含在签名列表内
+	// Check whether the channel addresses of both parties are included in the signature list
 	lsgok := false
 	rsgok := false
 	for _, v := range act.ChannelChainTransferData.MustSignAddresses {
@@ -497,19 +497,19 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 		return fmt.Errorf("Channel signature address is missing.")
 	}
 
-	// 检查所有签名是否完整和正确
+	// Check that all signatures are complete and correct
 	e = act.ChannelChainTransferData.CheckMustAddressAndSigns()
 	if e != nil {
 		return e
 	}
 
-	// 检查 进入挑战期，还是最终夺取
+	// Check whether it is a challenge or a final capture
 	return checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state, act.AssertAddress, paychan, &act.ChannelChainTransferTargetProveBody)
 }
 
 func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelChainTransferBody) RecoverChainState(state interfacev2.ChainStateOperation) error {
 
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
 	if e != nil {
 		return e
@@ -518,7 +518,7 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelChainTransferTargetProveBody.ChannelId))
 	}
 
-	// 回退
+	// Fallback
 	return checkChannelGotoChallegingOrFinalDistributionRecoverChainState(state, act.AssertAddress, paychan, &act.ChannelChainTransferTargetProveBody)
 }
 
@@ -537,15 +537,15 @@ func (act *Action_24_UnilateralCloseOrRespondChallengePaymentChannelByChannelCha
 
 ///////////////////////////////////////////////
 
-// 单方面结束
-// 1. 通过 通道&链上原子交换 单方面关闭通道，进入挑战期
+// Unilateral termination
+// 1. unilaterally close the channel through channel chain atom exchange and enter the challenge period
 // 2. 提供通道链支付对账单，回应挑战，夺取对方全部金额
 type Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnchainAtomicExchange struct {
-	// 主张者地址
+	// Proposer address
 	AssertAddress fields.Address
-	// 凭据
+	// credential
 	ProveBodyHashChecker fields.HashHalfChecker
-	// 对账数据
+	// Reconciliation data
 	ChannelChainTransferTargetProveBody channel.ChannelChainTransferProveBodyInfo
 
 	// data ptr
@@ -601,7 +601,7 @@ func (elm *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 }
 
 func (elm *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnchainAtomicExchange) RequestSignAddresses() []fields.Address {
-	// 检查签名
+	// Check signature
 	return []fields.Address{
 		elm.AssertAddress,
 	}
@@ -612,16 +612,16 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 	var e error
 
 	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+		return fmt.Errorf("mainnet not yet") // Waiting for review is not enabled yet
 	}
 
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 快速通道模式不能用来发起挑战和仲裁，只有普通模式才可以
+	// The fast channel mode cannot be used to initiate challenges and arbitrations. Only the normal mode can be used
 
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
 	if e != nil {
 		return e
@@ -630,7 +630,7 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 		return fmt.Errorf("Payment Channel <%s> not find.", hex.EncodeToString(act.ChannelChainTransferTargetProveBody.ChannelId))
 	}
 
-	// 查询互换交易
+	// Query swap transaction
 	swapex, e := state.Chaswap(act.ProveBodyHashChecker)
 	if e != nil {
 		return e
@@ -638,12 +638,12 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 	if swapex == nil {
 		return fmt.Errorf("Chaswap tranfer <%s> not find.", act.ProveBodyHashChecker.ToHex())
 	}
-	// 是否已经使用过
+	// Has it been used
 	if swapex.IsBeUsed.Check() {
 		return fmt.Errorf("Chaswap tranfer <%s> already be used.", act.ProveBodyHashChecker.ToHex())
 	}
 
-	// 检查必须签名的地址是否完整和正确
+	// Check that the address that must be signed is complete and correct
 	addrsmap := make(map[string]bool)
 	for _, addr := range swapex.OnchainTransferFromAndMustSignAddresses {
 		addrsmap[string(addr)] = true
@@ -654,14 +654,14 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 		return fmt.Errorf("Chaswap tranfer signature error.")
 	}
 
-	// 标记票据已使用
+	// Mark ticket used
 	swapex.IsBeUsed.Set(true)
 	e = state.ChaswapUpdate(act.ProveBodyHashChecker, swapex)
 	if e != nil {
 		return e
 	}
 
-	// 检查 进入挑战期，还是最终夺取
+	// Check whether it is a challenge or a final capture
 	return checkChannelGotoChallegingOrFinalDistributionWriteinChainStateV3(state, act.AssertAddress, paychan, &act.ChannelChainTransferTargetProveBody)
 }
 
@@ -670,16 +670,16 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 	var e error
 
 	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+		return fmt.Errorf("mainnet not yet") // Waiting for review is not enabled yet
 	}
 
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 快速通道模式不能用来发起挑战和仲裁，只有普通模式才可以
+	// The fast channel mode cannot be used to initiate challenges and arbitrations. Only the normal mode can be used
 
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
 	if e != nil {
 		return e
@@ -688,7 +688,7 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 		return fmt.Errorf("Payment Channel <%s> not find.", hex.EncodeToString(act.ChannelChainTransferTargetProveBody.ChannelId))
 	}
 
-	// 查询互换交易
+	// Query swap transaction
 	swapex, e := state.Chaswap(act.ProveBodyHashChecker)
 	if e != nil {
 		return e
@@ -696,12 +696,12 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 	if swapex == nil {
 		return fmt.Errorf("Chaswap tranfer <%s> not find.", act.ProveBodyHashChecker.ToHex())
 	}
-	// 是否已经使用过
+	// Has it been used
 	if swapex.IsBeUsed.Check() {
 		return fmt.Errorf("Chaswap tranfer <%s> already be used.", act.ProveBodyHashChecker.ToHex())
 	}
 
-	// 检查必须签名的地址是否完整和正确
+	// Check that the address that must be signed is complete and correct
 	addrsmap := make(map[string]bool)
 	for _, addr := range swapex.OnchainTransferFromAndMustSignAddresses {
 		addrsmap[string(addr)] = true
@@ -712,20 +712,20 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 		return fmt.Errorf("Chaswap tranfer signature error.")
 	}
 
-	// 标记票据已使用
+	// Mark ticket used
 	swapex.IsBeUsed.Set(true)
 	e = state.ChaswapUpdate(act.ProveBodyHashChecker, swapex)
 	if e != nil {
 		return e
 	}
 
-	// 检查 进入挑战期，还是最终夺取
+	// Check whether it is a challenge or a final capture
 	return checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state, act.AssertAddress, paychan, &act.ChannelChainTransferTargetProveBody)
 }
 
 func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnchainAtomicExchange) RecoverChainState(state interfacev2.ChainStateOperation) error {
 
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(act.ChannelChainTransferTargetProveBody.ChannelId)
 	if e != nil {
 		return e
@@ -734,7 +734,7 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelChainTransferTargetProveBody.ChannelId))
 	}
 
-	// 回退使用状态
+	// Fallback usage status
 	swapex, e := state.Chaswap(act.ProveBodyHashChecker)
 	if e != nil {
 		return e
@@ -742,7 +742,7 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 	swapex.IsBeUsed.Set(false)
 	state.ChaswapCreate(act.ProveBodyHashChecker, swapex)
 
-	// 回退状态
+	// Fallback status
 	return checkChannelGotoChallegingOrFinalDistributionRecoverChainState(state, act.AssertAddress, paychan, &act.ChannelChainTransferTargetProveBody)
 }
 
@@ -761,34 +761,34 @@ func (act *Action_26_UnilateralCloseOrRespondChallengePaymentChannelByChannelOnc
 
 //////////////////////////////////////////////////////////////
 
-// 检查通道进入挑战期或者最终仲裁
+// The inspection channel enters the challenge period or the final arbitration
 func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interfacev2.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj channel.OnChainChannelPaymentArbitrationReconciliationBasis) error {
 
 	channelId := obj.GetChannelId()
 
-	// 通道不能已经关闭
+	// Channel cannot be closed
 	if paychan.IsClosed() {
 		return fmt.Errorf("Payment Channel <%s> is closed.", hex.EncodeToString(channelId))
 	}
-	// 检查地址匹配你
+	// Check that the address matches you
 	var assertAddressIsLeft = paychan.LeftAddress.Equal(assertAddress)
 	var assertAddressIsRight = paychan.RightAddress.Equal(assertAddress)
 	if !assertAddressIsLeft && !assertAddressIsRight {
 		return fmt.Errorf("Payment Channel AssertAddress is not match left or right.")
 	}
-	// 检查两个账户地址签名，双方都检查
+	// Check the signatures of both account addresses, and both parties check
 	e20 := obj.CheckAddressAndSign(paychan.LeftAddress, paychan.RightAddress)
 	if e20 != nil {
 		return e20
 	}
-	// 检查对账单资金数额和重用版本
+	// Check the reconciliation fund amount and reuse version
 	channelReuseVersion := obj.GetReuseVersion()
 	billAutoNumber := obj.GetAutoNumber()
 	if channelReuseVersion != uint32(paychan.ReuseVersion) {
 		return fmt.Errorf("Payment Channel ReuseVersion is not match, need <%d> but got <%d>.",
 			paychan.ReuseVersion, channelReuseVersion)
 	}
-	// 检查对账单资金数额和重用版本
+	// Check the reconciliation fund amount and reuse version
 	objlamt := obj.GetLeftBalance()
 	objramt := obj.GetRightBalance()
 	billTotalAmt, e21 := objlamt.Add(&objramt)
@@ -803,23 +803,23 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interf
 		return fmt.Errorf("Payment Channel Total Amount is not match, need %s but got %s.",
 			paychanTotalAmt.ToFinString(), billTotalAmt.ToFinString())
 	}
-	// 仲裁金额
-	var assertTargetAmount = objlamt // 左侧
+	// Arbitration amount
+	var assertTargetAmount = objlamt // left
 	var assertTargetSAT = obj.GetLeftSatoshi()
 	if assertAddressIsRight {
-		assertTargetAmount = objramt // 右侧
+		assertTargetAmount = objramt // right
 		assertTargetSAT = obj.GetRightSatoshi()
 	}
 
-	// 判断通道状态，是进入挑战期，还是最终夺取
+	// Judge the channel status, whether to enter the challenge period or finally seize it
 	if paychan.IsOpening() {
 
-		// 进入挑战期
+		// Enter a challenging period
 		blkhei := state.GetPendingBlockHeight()
-		// 改变状态
+		// Change state
 		paychan.SetChallenging(blkhei, assertAddressIsLeft,
 			&assertTargetAmount, assertTargetSAT, uint64(billAutoNumber))
-		// 写入状态
+		// Write status
 		return state.ChannelUpdate(channelId, paychan)
 
 	} else if paychan.IsChallenging() {
@@ -831,24 +831,24 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interf
 
 		// 判断仲裁，是否夺取对方资金
 		if billAutoNumber <= uint64(paychan.AssertBillAutoNumber) {
-			// 账单流水号不满足（必须大于等待挑战的流水号）
+			// The serial number of the bill is not satisfied (it must be greater than the serial number waiting for the challenge)
 			return fmt.Errorf("Payment Channel BillAutoNumber must more than %d.", paychan.AssertBillAutoNumber)
 		}
-		// 更高的流水号
-		// 夺取全部资金，关闭通道
+		// Higher serial number
+		// Seize all funds and close the channel
 		var lamt = fields.NewEmptyAmount()
 		var ramt = fields.NewEmptyAmount()
 		var lsat = fields.Satoshi(0)
 		var rsat = fields.Satoshi(0)
 		ttsat := paychan.LeftSatoshi.GetRealSatoshi() + paychan.RightSatoshi.GetRealSatoshi()
 		if assertAddressIsLeft {
-			lamt = paychanTotalAmt // 左侧账户夺取全部资金，包括HAC和SAT
+			lamt = paychanTotalAmt // The left account captures all funds, including HAC and sat
 			lsat = ttsat
 		} else {
-			ramt = paychanTotalAmt // 右侧账户夺取全部资金，包括HAC和SAT
+			ramt = paychanTotalAmt // The right account captures all funds, including HAC and sat
 			rsat = ttsat
 		}
-		// 关闭通道，夺取全部资金和利息
+		// Close channels and seize all funds and interests
 		isFinalClosed := true // 最终仲裁永久关闭
 		return closePaymentChannelWriteinChainState(state, channelId, paychan, lamt, ramt, lsat, rsat, isFinalClosed)
 
@@ -857,35 +857,35 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainState(state interf
 	}
 }
 
-// 挑战期或最终仲裁回退
+// Challenge period or final arbitration fallback
 func checkChannelGotoChallegingOrFinalDistributionRecoverChainState(state interfacev2.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj channel.OnChainChannelPaymentArbitrationReconciliationBasis) error {
 
 	panic("RecoverChainState() func is deleted.")
 
 	channelId := obj.GetChannelId()
 
-	// 判断通道状态，是进入挑战期，还是最终夺取
+	// Judge the channel status, whether to enter the challenge period or finally seize it
 	if paychan.IsFinalDistributionClosed() {
 		if !paychan.IsHaveChallengeLog.Check() {
 			return fmt.Errorf("IsHaveChallengeLog is not find.")
 		}
-		// 计算回退数额
+		// Calculate the fallback amount
 		paychanTotalAmt, _ := paychan.LeftAmount.Add(&paychan.RightAmount)
 		var lamt = fields.NewEmptyAmount()
 		var ramt = fields.NewEmptyAmount()
 		if paychan.LeftAddress.Equal(assertAddress) {
-			lamt = paychanTotalAmt // 左侧账户夺取全部资金
+			lamt = paychanTotalAmt // Account on the left seizes all funds
 		} else {
-			ramt = paychanTotalAmt // 右侧账户夺取全部资金
+			ramt = paychanTotalAmt // Account on the right seizes all funds
 		}
-		// 状态回到挑战期
+		// Return to challenge period
 		isBackToChalleging := true
-		// 回退账户余额
+		// Return account balance
 		return closePaymentChannelRecoverChainState_deprecated(state, channelId, lamt, ramt, isBackToChalleging)
 
 	} else if paychan.IsChallenging() {
 
-		// 回退到开启状态，清除挑战期数据
+		// Go back to the open state and clear the challenge period data
 		paychan.SetOpening()
 		paychan.CleanChallengingLog()
 		return state.ChannelUpdate(channelId, paychan)
@@ -897,34 +897,34 @@ func checkChannelGotoChallegingOrFinalDistributionRecoverChainState(state interf
 
 //////////////////////////////////////////////////////////////
 
-// 检查通道进入挑战期或者最终仲裁
+// The inspection channel enters the challenge period or the final arbitration
 func checkChannelGotoChallegingOrFinalDistributionWriteinChainStateV3(state interfaces.ChainStateOperation, assertAddress fields.Address, paychan *stores.Channel, obj channel.OnChainChannelPaymentArbitrationReconciliationBasis) error {
 
 	channelId := obj.GetChannelId()
 
-	// 通道不能已经关闭
+	// Channel cannot be closed
 	if paychan.IsClosed() {
 		return fmt.Errorf("Payment Channel <%s> is closed.", hex.EncodeToString(channelId))
 	}
-	// 检查地址匹配你
+	// Check that the address matches you
 	var assertAddressIsLeft = paychan.LeftAddress.Equal(assertAddress)
 	var assertAddressIsRight = paychan.RightAddress.Equal(assertAddress)
 	if !assertAddressIsLeft && !assertAddressIsRight {
 		return fmt.Errorf("Payment Channel AssertAddress is not match left or right.")
 	}
-	// 检查两个账户地址签名，双方都检查
+	// Check the signatures of both account addresses, and both parties check
 	e20 := obj.CheckAddressAndSign(paychan.LeftAddress, paychan.RightAddress)
 	if e20 != nil {
 		return e20
 	}
-	// 检查对账单资金数额和重用版本
+	// Check the reconciliation fund amount and reuse version
 	channelReuseVersion := obj.GetReuseVersion()
 	billAutoNumber := obj.GetAutoNumber()
 	if channelReuseVersion != uint32(paychan.ReuseVersion) {
 		return fmt.Errorf("Payment Channel ReuseVersion is not match, need <%d> but got <%d>.",
 			paychan.ReuseVersion, channelReuseVersion)
 	}
-	// 检查对账单资金数额和重用版本
+	// Check the reconciliation fund amount and reuse version
 	objlamt := obj.GetLeftBalance()
 	objramt := obj.GetRightBalance()
 	billTotalAmt, e21 := objlamt.Add(&objramt)
@@ -939,23 +939,23 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainStateV3(state inte
 		return fmt.Errorf("Payment Channel Total Amount is not match, need %s but got %s.",
 			paychanTotalAmt.ToFinString(), billTotalAmt.ToFinString())
 	}
-	// 仲裁金额
-	var assertTargetAmount = objlamt // 左侧
+	// Arbitration amount
+	var assertTargetAmount = objlamt // left
 	var assertTargetSAT = obj.GetLeftSatoshi()
 	if assertAddressIsRight {
-		assertTargetAmount = objramt // 右侧
+		assertTargetAmount = objramt // right
 		assertTargetSAT = obj.GetRightSatoshi()
 	}
 
-	// 判断通道状态，是进入挑战期，还是最终夺取
+	// Judge the channel status, whether to enter the challenge period or finally seize it
 	if paychan.IsOpening() {
 
-		// 进入挑战期
+		// Enter a challenging period
 		blkhei := state.GetPendingBlockHeight()
-		// 改变状态
+		// Change state
 		paychan.SetChallenging(blkhei, assertAddressIsLeft,
 			&assertTargetAmount, assertTargetSAT, uint64(billAutoNumber))
-		// 写入状态
+		// Write status
 		return state.ChannelUpdate(channelId, paychan)
 
 	} else if paychan.IsChallenging() {
@@ -967,24 +967,24 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainStateV3(state inte
 
 		// 判断仲裁，是否夺取对方资金
 		if billAutoNumber <= uint64(paychan.AssertBillAutoNumber) {
-			// 账单流水号不满足（必须大于等待挑战的流水号）
+			// The serial number of the bill is not satisfied (it must be greater than the serial number waiting for the challenge)
 			return fmt.Errorf("Payment Channel BillAutoNumber must more than %d.", paychan.AssertBillAutoNumber)
 		}
-		// 更高的流水号
-		// 夺取全部资金，关闭通道
+		// Higher serial number
+		// Seize all funds and close the channel
 		var lamt = fields.NewEmptyAmount()
 		var ramt = fields.NewEmptyAmount()
 		var lsat = fields.Satoshi(0)
 		var rsat = fields.Satoshi(0)
 		ttsat := paychan.LeftSatoshi.GetRealSatoshi() + paychan.RightSatoshi.GetRealSatoshi()
 		if assertAddressIsLeft {
-			lamt = paychanTotalAmt // 左侧账户夺取全部资金，包括HAC和SAT
+			lamt = paychanTotalAmt // The left account captures all funds, including HAC and sat
 			lsat = ttsat
 		} else {
-			ramt = paychanTotalAmt // 右侧账户夺取全部资金，包括HAC和SAT
+			ramt = paychanTotalAmt // The right account captures all funds, including HAC and sat
 			rsat = ttsat
 		}
-		// 关闭通道，夺取全部资金和利息
+		// Close channels and seize all funds and interests
 		isFinalClosed := true // 最终仲裁永久关闭
 		return closePaymentChannelWriteinChainStateV3(state, channelId, paychan, lamt, ramt, lsat, rsat, isFinalClosed)
 
@@ -995,10 +995,10 @@ func checkChannelGotoChallegingOrFinalDistributionWriteinChainStateV3(state inte
 
 /////////////////////////////////////////////////////
 
-// 挑战期结束，最终按主张分配通道资金
+// At the end of the challenge period, channel funds will be finally allocated as claimed
 type Action_27_ClosePaymentChannelByClaimDistribution struct {
-	// 通道 ID
-	ChannelId fields.ChannelId // 通道id
+	// Channel ID
+	ChannelId fields.ChannelId // Channel ID
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
@@ -1039,7 +1039,7 @@ func (elm *Action_27_ClosePaymentChannelByClaimDistribution) Parse(buf []byte, s
 }
 
 func (elm *Action_27_ClosePaymentChannelByClaimDistribution) RequestSignAddresses() []fields.Address {
-	// 不需要任何人签名
+	// No signature required
 	return []fields.Address{}
 }
 
@@ -1048,7 +1048,7 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteInChainState(s
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(act.ChannelId)
 	if e != nil {
 		return e
@@ -1056,18 +1056,18 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteInChainState(s
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
-	// 检查状态（必须为挑战期状态）
+	// Check status (must be challenge status)
 	if paychan.IsChallenging() == false {
 		return fmt.Errorf("Payment Channel status is not on challenging.")
 	}
-	// 检查挑战期限
+	// Check challenge duration
 	clghei := state.GetPendingBlockHeight()
 	expireHei := uint64(paychan.ChallengeLaunchHeight) + uint64(paychan.ArbitrationLockBlock)
 	if clghei <= expireHei {
-		// 挑战期还没过
+		// The challenge period is not over yet
 		return fmt.Errorf("Payment Channel Challenging expire is %d.", expireHei)
 	}
-	// 按主张分配资金，结束通道
+	// Allocate funds as claimed and close the channel
 	var lamt = fields.NewEmptyAmount()
 	var ramt = fields.NewEmptyAmount()
 	ttamt, e := paychan.LeftAmount.Add(&paychan.RightAmount)
@@ -1078,18 +1078,18 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteInChainState(s
 	var rsat = fields.Satoshi(0)
 	ttsat := paychan.LeftSatoshi.GetRealSatoshi() + paychan.RightSatoshi.GetRealSatoshi()
 	if paychan.AssertAddressIsLeftOrRight.Check() {
-		lamt = &paychan.AssertAmount // 左侧为主张者
+		lamt = &paychan.AssertAmount // Left main Zhang
 		ramt, _ = ttamt.Sub(lamt)
 		lsat = paychan.AssertSatoshi.GetRealSatoshi()
-		rsat = ttsat - lsat // 右侧自动分得剩余资金
+		rsat = ttsat - lsat // The right side automatically gets the remaining funds
 	} else {
-		ramt = &paychan.AssertAmount // 右侧为主张者
+		ramt = &paychan.AssertAmount // Right main Zhang
 		lamt, _ = ttamt.Sub(ramt)
 		rsat = paychan.AssertSatoshi.GetRealSatoshi()
-		lsat = ttsat - rsat // 左侧自动分得剩余资金
+		lsat = ttsat - rsat // The left side automatically gets the remaining funds
 	}
 
-	// 永久关闭
+	// Permanently closed
 	isFinnalClosed := true
 	return closePaymentChannelWriteinChainStateV3(state, act.ChannelId, paychan, lamt, ramt, lsat, rsat, isFinnalClosed)
 }
@@ -1099,7 +1099,7 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteinChainState(s
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(act.ChannelId)
 	if e != nil {
 		return e
@@ -1107,18 +1107,18 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteinChainState(s
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
-	// 检查状态（必须为挑战期状态）
+	// Check status (must be challenge status)
 	if paychan.IsChallenging() == false {
 		return fmt.Errorf("Payment Channel status is not on challenging.")
 	}
-	// 检查挑战期限
+	// Check challenge duration
 	clghei := state.GetPendingBlockHeight()
 	expireHei := uint64(paychan.ChallengeLaunchHeight) + uint64(paychan.ArbitrationLockBlock)
 	if clghei <= expireHei {
-		// 挑战期还没过
+		// The challenge period is not over yet
 		return fmt.Errorf("Payment Channel Challenging expire is %d.", expireHei)
 	}
-	// 按主张分配资金，结束通道
+	// Allocate funds as claimed and close the channel
 	var lamt = fields.NewEmptyAmount()
 	var ramt = fields.NewEmptyAmount()
 	ttamt, e := paychan.LeftAmount.Add(&paychan.RightAmount)
@@ -1129,25 +1129,25 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) WriteinChainState(s
 	var rsat = fields.Satoshi(0)
 	ttsat := paychan.LeftSatoshi.GetRealSatoshi() + paychan.RightSatoshi.GetRealSatoshi()
 	if paychan.AssertAddressIsLeftOrRight.Check() {
-		lamt = &paychan.AssertAmount // 左侧为主张者
+		lamt = &paychan.AssertAmount // Left main Zhang
 		ramt, _ = ttamt.Sub(lamt)
 		lsat = paychan.AssertSatoshi.GetRealSatoshi()
-		rsat = ttsat - lsat // 右侧自动分得剩余资金
+		rsat = ttsat - lsat // The right side automatically gets the remaining funds
 	} else {
-		ramt = &paychan.AssertAmount // 右侧为主张者
+		ramt = &paychan.AssertAmount // Right main Zhang
 		lamt, _ = ttamt.Sub(ramt)
 		rsat = paychan.AssertSatoshi.GetRealSatoshi()
-		lsat = ttsat - rsat // 左侧自动分得剩余资金
+		lsat = ttsat - rsat // The left side automatically gets the remaining funds
 	}
 
-	// 永久关闭
+	// Permanently closed
 	isFinnalClosed := true
 	return closePaymentChannelWriteinChainState(state, act.ChannelId, paychan, lamt, ramt, lsat, rsat, isFinnalClosed)
 }
 
 func (act *Action_27_ClosePaymentChannelByClaimDistribution) RecoverChainState(state interfacev2.ChainStateOperation) error {
 
-	// 查询通道
+	// Query channel
 	paychan, e := state.Channel(act.ChannelId)
 	if e != nil {
 		return e
@@ -1155,17 +1155,17 @@ func (act *Action_27_ClosePaymentChannelByClaimDistribution) RecoverChainState(s
 	if paychan == nil {
 		return fmt.Errorf("Payment Channel Id <%s> not find.", hex.EncodeToString(act.ChannelId))
 	}
-	// 回退状态
-	// 按主张分配资金，结束通道
+	// Fallback status
+	// Allocate funds as claimed and close the channel
 	var lamt = fields.NewEmptyAmount()
 	var ramt = fields.NewEmptyAmount()
 	if paychan.AssertAddressIsLeftOrRight.Check() {
-		lamt = &paychan.AssertAmount // 左侧为主张者
+		lamt = &paychan.AssertAmount // Left main Zhang
 	} else {
-		ramt = &paychan.AssertAmount // 右侧为主张者
+		ramt = &paychan.AssertAmount // Right main Zhang
 	}
 
-	// 关闭
+	// close
 	isFinnalClosed := true
 	return closePaymentChannelRecoverChainState_deprecated(state, act.ChannelId, lamt, ramt, isFinnalClosed)
 }

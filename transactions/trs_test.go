@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// 钻石借贷交易
+// Diamond lending transaction
 func Test_diamond_lending(t *testing.T) {
 
 	hash14, _ := hex.DecodeString("530dd68299cf6d2bd68299cf6d2b")
@@ -22,7 +22,7 @@ func Test_diamond_lending(t *testing.T) {
 	tx.Fee = *feeamt
 	tx.Timestamp = 1618839281
 
-	// 创建钻石
+	// Create diamond
 	amt1 := fields.NewAmountSmall(16, 248)
 	act1 := actions.Action_15_DiamondsSystemLendingCreate{
 		LendingID: hash14,
@@ -35,19 +35,19 @@ func Test_diamond_lending(t *testing.T) {
 	}
 	tx.AppendAction(&act1)
 
-	// 签名
+	// autograph
 	feeacc := account.CreateAccountByPassword("123456")
 	addrPrivateKeys := map[string][]byte{}
 	addrPrivateKeys[string(feeacc.Address)] = feeacc.PrivateKey
 	tx.FillNeedSigns(addrPrivateKeys, nil)
 
-	// 序列化
+	// serialize
 	txbody, _ := tx.Serialize()
 	fmt.Println("tx body:", hex.EncodeToString(txbody))
 
 }
 
-// 创建钻石交易
+// Create a diamond transaction
 func Test_create_diamond(t *testing.T) {
 
 	hash8, _ := hex.DecodeString("530dd68299cf6d2b")
@@ -60,7 +60,7 @@ func Test_create_diamond(t *testing.T) {
 	tx.Fee = *feeamt
 	tx.Timestamp = 1618839281
 
-	// 创建钻石
+	// Create diamond
 	act1 := actions.Action_4_DiamondCreate{
 		Diamond:       fields.DiamondName("WWWMMM"),
 		Number:        3,
@@ -71,13 +71,13 @@ func Test_create_diamond(t *testing.T) {
 	}
 	tx.AppendAction(&act1)
 
-	// 签名
+	// autograph
 	feeacc := account.CreateAccountByPassword("123456")
 	addrPrivateKeys := map[string][]byte{}
 	addrPrivateKeys[string(feeacc.Address)] = feeacc.PrivateKey
 	tx.FillNeedSigns(addrPrivateKeys, nil)
 
-	// 序列化
+	// serialize
 	txbody, _ := tx.Serialize()
 	fmt.Println("tx body:", hex.EncodeToString(txbody))
 
@@ -85,20 +85,20 @@ func Test_create_diamond(t *testing.T) {
 
 func Test_alltx(t *testing.T) {
 
-	// 全类别交易 测试
+	// Full category transaction test
 	feeamt, _ := fields.NewAmountFromFinString("ㄜ1234:246")
 	mainaddr, _ := fields.CheckReadableAddress("1MzNY1oA3kfgYi75zquj3SRUPYztzXHzK9")
 	tx, _ := NewEmptyTransaction_2_Simple(*mainaddr)
 	tx.Fee = *feeamt
 	tx.Timestamp = 1618839281
 
-	// 1 普通转账
+	// 1 ordinary transfer
 	addr1, _ := fields.CheckReadableAddress("1AVRuFXNFi3rdMrPH4hdqSgFrEBnWisWaS")
 	amt1, _ := fields.NewAmountFromFinString("ㄜ500:248")
 	act1 := actions.NewAction_1_SimpleToTransfer(*addr1, amt1)
 	tx.AppendAction(act1)
 
-	// 2 开启通道
+	// 2 open channel
 	addr2_1, _ := fields.CheckReadableAddress("1EDUeK8NAjrgYhgDFv9NJecn8dNyJJsu3y")
 	addr2_2, _ := fields.CheckReadableAddress("1MzNY1oA3kfgYi75zquj3SRUPYztzXHzK9")
 	channelid, _ := hex.DecodeString("277095b321f3ffe7e80f3dd328e2f338")
@@ -113,9 +113,9 @@ func Test_alltx(t *testing.T) {
 	}
 	tx.AppendAction(&act2)
 
-	// 3 关闭通道
+	// 3 close the channel
 
-	// 打印
+	// Print
 	fmt.Println("tx hash:", tx.Hash().ToHex())
 	fmt.Println("tx hash with fee:", tx.HashWithFee().ToHex())
 	txtime := time.Unix(int64(tx.Timestamp), 0)

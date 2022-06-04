@@ -72,7 +72,7 @@ func CreateNewRandomAccount() *Account {
 }
 
 func GetAccountByPrivateKeyOrPassword(password string) *Account {
-	// 私钥
+	// Private key
 	if len(password) == 64 {
 		if bts, e1 := hex.DecodeString(password); e1 == nil {
 			if acc, e2 := GetAccountByPriviteKey(bts); e2 == nil {
@@ -80,7 +80,7 @@ func GetAccountByPrivateKeyOrPassword(password string) *Account {
 			}
 		}
 	}
-	// 密码
+	// password
 	return CreateAccountByPassword(password)
 
 }

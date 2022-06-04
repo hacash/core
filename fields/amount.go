@@ -194,7 +194,7 @@ func (bill Amount) IsNotEmpty() bool {
 	return bill.IsEmpty() == false
 }
 
-// 判断必须为正数，且不能为零
+// Judgment must be positive and cannot be zero
 func (bill Amount) IsPositive() bool {
 	if bill.Unit == 0 {
 		return false
@@ -202,11 +202,11 @@ func (bill Amount) IsPositive() bool {
 	if bill.Dist <= 0 {
 		return false
 	}
-	// 满足要求
+	// Meet requirements
 	return true
 }
 
-// 判断必须为负数，且不能为零
+// Judgment must be negative and cannot be zero
 func (bill Amount) IsNegative() bool {
 	if bill.Unit == 0 {
 		return false
@@ -214,7 +214,7 @@ func (bill Amount) IsNegative() bool {
 	if bill.Dist >= 0 {
 		return false
 	}
-	// 满足要求
+	// Meet requirements
 	return true
 }
 
@@ -226,7 +226,7 @@ func (bill Amount) ToMeiOrFinString(usemei bool) string {
 	}
 }
 
-// 转换单位为枚 保留 8 位小数，多余的舍去
+// Convert the unit to pieces, keep 8 decimal places, and round off the excess
 func (bill Amount) ToMeiString() string {
 	bigmei := bill.ToMeiBigFloat()
 	meistr := bigmei.Text('f', 9)
@@ -240,9 +240,9 @@ func (bill Amount) ToMeiString() string {
 	return strings.TrimRight(strings.TrimRight(meistr, "0"), ".")
 }
 
-// 转换单位为枚
+// Conversion unit: piece
 func (bill Amount) ToMeiBigFloat() *big.Float {
-	// 处理
+	// handle
 	bigmei := new(big.Float).SetInt(new(big.Int).SetBytes(bill.Numeral))
 	//fmt.Println(bigmei.String(), int(bill.Unit), int(bill.Unit) - 248)
 	if bill.Dist < 0 {
@@ -266,14 +266,14 @@ func (bill Amount) ToMeiBigFloat() *big.Float {
 	return bigmei
 }
 
-// 转换单位为枚
+// Conversion unit: piece
 func (bill Amount) ToMei() float64 {
 	bigmei := bill.ToMeiBigFloat()
 	mei, _ := bigmei.Float64()
 	return mei
 }
 
-// 从字符串建立数额
+// Create amount from string
 func NewAmountFromString(numstr string) (*Amount, error) {
 	if strings.Contains(numstr, ":") {
 		return NewAmountFromFinString(numstr)
@@ -303,8 +303,8 @@ func AmountToZeroFinString() string {
 // create form readble string
 func NewAmountFromFinString(finstr string) (*Amount, error) {
 	finstr = strings.ToUpper(finstr)
-	finstr = strings.Replace(finstr, " ", "", -1) // 去掉空格
-	finstr = strings.Replace(finstr, ",", "", -1) // 去掉逗号
+	finstr = strings.Replace(finstr, " ", "", -1) // Remove spaces
+	finstr = strings.Replace(finstr, ",", "", -1) // Remove commas
 	var sig = 1
 	if strings.HasPrefix(finstr, "HCX") {
 		finstr = string([]byte(finstr)[3:])
@@ -313,10 +313,10 @@ func NewAmountFromFinString(finstr string) (*Amount, error) {
 	} else if strings.HasPrefix(finstr, "ㄜ") {
 		finstr = string([]byte(finstr)[3:])
 	}
-	// 负数
+	// negative
 	if strings.HasPrefix(finstr, "-") {
 		finstr = string([]byte(finstr)[1:])
-		sig = -1 // 负数
+		sig = -1 // negative
 	}
 	var main, dum, unit string
 	var main_num, dum_num *big.Int
@@ -352,7 +352,7 @@ func NewAmountFromFinString(finstr string) (*Amount, error) {
 			return nil, fmt.Errorf("format error")
 		}
 	}
-	// 处理小数部分
+	// Process decimal parts
 	bigint0, _ := new(big.Int).SetString("0", 10)
 	bigint1, _ := new(big.Int).SetString("1", 10)
 	bigint10, _ := new(big.Int).SetString("10", 10)
@@ -366,11 +366,11 @@ func NewAmountFromFinString(finstr string) (*Amount, error) {
 		main_num = main_num.Sub(main_num, mover)
 		unit_num = unit_num - int(dum_wide10)
 	}
-	// 负数
+	// negative
 	if sig == -1 {
 		main_num = main_num.Neg(main_num)
 	}
-	// 转换
+	// transformation
 	return NewAmountByBigIntWithUnit(main_num, unit_num)
 }
 
@@ -440,13 +440,13 @@ func (bill Amount) ToFinStringWithMarkBySegmentSplit(mark string) string {
 	return mark + sig + strings.Join(numStrX, ",") + ":" + unitStr
 }
 
-// 省略小数部分 为了存进 4 位空间里面
-// enlarge 表示是否扩大（向上取整）
+// Omit the decimal part in order to save it in the 4-digit space
+// Enlargeindicates whether to enlarge (round up)
 func (bill *Amount) CompressForMainNumLen(numlen int, enlarge bool) (*Amount, bool, error) {
 	var bignum = new(big.Int)
 	bignum.SetBytes(bill.Numeral)
 	if len(bignum.String()) <= numlen {
-		return bill, false, nil // 数据没变
+		return bill, false, nil // Data unchanged
 	}
 	var unitaddnum int = 0
 	var bn1 = big.NewInt(int64(1))
@@ -470,17 +470,17 @@ func (bill *Amount) CompressForMainNumLen(numlen int, enlarge bool) (*Amount, bo
 		return nil, false, nil
 	}
 
-	// 成功
+	// success
 	return newamt, true, nil
 }
 
-// 省略小数部分 为了存进 11 位空间里面
+// Omit the decimal part in order to save it in the 11 bit space
 func (bill *Amount) EllipsisDecimalFor11SizeStore() (*Amount, bool, error) {
 	maxnumlen := 11 - 1 - 1
 	if len(bill.Numeral) <= maxnumlen {
-		return bill, false, nil // 数据没变
+		return bill, false, nil // Data unchanged
 	}
-	// 省略小数部分
+	// Omit decimal part
 	new_unit := int(bill.Unit)
 	new_dist := int(bill.Dist)
 	new_numeral := append([]byte{}, bill.Numeral...)
@@ -511,13 +511,13 @@ func (bill *Amount) EllipsisDecimalFor11SizeStore() (*Amount, bool, error) {
 
 /*
 
-// 省略小数部分 为了存进 23 位空间里面
+// Omit the decimal part in order to save it in the 23 bit space
 func (bill *Amount) EllipsisDecimalFor23SizeStore() (*Amount, bool) {
 	maxnumlen := 23 - 1 - 1
 	if len(bill.Numeral) <= maxnumlen {
-		return bill, false // 数据没变
+		return bill, false // Data unchanged
 	}
-	// 省略小数部分
+	// Omit decimal part
 	longnumstr := new(big.Int).SetBytes(bill.Numeral).String()
 	baselen := 0
 	mvseek := len(longnumstr) / 2
@@ -529,7 +529,7 @@ func (bill *Amount) EllipsisDecimalFor23SizeStore() (*Amount, bool) {
 		}
 		mvseek = mvseek / 2
 		if mvseek == 0 {
-			mvseek = 1 // 最小移动
+			mvseek = 1 // Minimum movement
 		}
 		cutbytes := cutnum.Bytes()
 		if len(cutbytes) == maxnumlen {
@@ -545,7 +545,7 @@ func (bill *Amount) EllipsisDecimalFor23SizeStore() (*Amount, bool) {
 				uint8(unit),
 				19 * sig,
 				cutbytes,
-			}, true // 改变了
+			}, true // Changed
 		} else if len(cutbytes) > maxnumlen {
 			baselen -= mvseek
 

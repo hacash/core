@@ -12,14 +12,14 @@ import (
 const SatoshiGenesisLogStorePageLimit int = 50
 
 type SatoshiGenesis struct {
-	TransferNo               fields.VarUint4         // 转账流水编号
-	BitcoinBlockHeight       fields.VarUint4         // 转账的比特币区块高度
-	BitcoinBlockTimestamp    fields.BlockTxTimestamp // 转账的比特币区块时间戳
-	BitcoinEffectiveGenesis  fields.VarUint4         // 在这笔之前已经成功转移的比特币数量
-	BitcoinQuantity          fields.VarUint4         // 本笔转账的比特币数量（单位：枚）
+	TransferNo               fields.VarUint4         // Transfer serial number
+	BitcoinBlockHeight       fields.VarUint4         // Height of bitcoin block transferred
+	BitcoinBlockTimestamp    fields.BlockTxTimestamp // Bitcoin block timestamp of transfer
+	BitcoinEffectiveGenesis  fields.VarUint4         // The number of bitcoins successfully transferred before this
+	BitcoinQuantity          fields.VarUint4         // Number of bitcoins transferred in this transaction (unit: piece)
 	AdditionalTotalHacAmount fields.VarUint4         // 本次转账[总共]应该增发的 hac 数量 （单位：枚）
-	OriginAddress            fields.Address          // 转出的比特币来源地址
-	BitcoinTransferHash      fields.Hash             // 比特币转账交易哈希
+	OriginAddress            fields.Address          // Bitcoin source address transferred out
+	BitcoinTransferHash      fields.Hash             // Bitcoin transfer transaction hash
 }
 
 ///////////////////////////////////////
@@ -140,7 +140,7 @@ func SatoshiGenesisPageParse(buf []byte, seek uint32) []*SatoshiGenesis {
 }
 
 func SatoshiGenesisPageParseForShow(logitemstrlist []string) []*SatoshiGenesis {
-	// 开始解析
+	// Start parsing
 	var allgenesis = make([]*SatoshiGenesis, 0)
 	for _, logitemstr := range logitemstrlist {
 		logitemstr = strings.Replace(logitemstr, " ", "", -1)
@@ -156,7 +156,7 @@ func SatoshiGenesisPageParseForShow(logitemstrlist []string) []*SatoshiGenesis {
 			}
 			nums[i] = n
 		}
-		// 检查地址 和 txhx
+		// Check address and txhx
 		addr, ae := fields.CheckReadableAddress(dts[6])
 		if ae != nil {
 			return nil
@@ -168,7 +168,7 @@ func SatoshiGenesisPageParseForShow(logitemstrlist []string) []*SatoshiGenesis {
 		if len(trshx) != 32 {
 			return nil
 		}
-		// 生成
+		// generate
 		genesis := SatoshiGenesis{
 			TransferNo:               fields.VarUint4(nums[0]),         // 转账流水编号
 			BitcoinBlockHeight:       fields.VarUint4(nums[1]),         // 转账的比特币区块高度
@@ -181,6 +181,6 @@ func SatoshiGenesisPageParseForShow(logitemstrlist []string) []*SatoshiGenesis {
 		}
 		allgenesis = append(allgenesis, &genesis)
 	}
-	// 返回
+	// return
 	return allgenesis
 }

@@ -134,7 +134,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) SerializeNoSignEx(nofee bool) ([]b
 	buffer.Write(b1)
 	buffer.Write(b2)
 	if !nofee {
-		buffer.Write(b3) // 费用付出着 签名 不需要 fee
+		buffer.Write(b3) // No fee required for signature
 	}
 	buffer.Write(b4)
 	for i := 0; i < len(trs.Actions); i++ {
@@ -223,7 +223,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) Size() uint32 {
 	return totalsize
 }
 
-// 交易唯一哈希值
+// Transaction unique hash value
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) HashWithFee() fields.Hash {
 	if trs.hash == nil {
 		return trs.HashWithFeeFresh()
@@ -261,7 +261,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) AppendAction(action interfacev2.Ac
 	return nil
 }
 
-// 从 actions 拿出需要签名的地址
+// Get the address to be signed from actions
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RequestSignAddresses(appends []fields.Address, dropfeeaddr bool) ([]fields.Address, error) {
 	if !trs.Address.IsValid() {
 		return nil, fmt.Errorf("Master Address is InValid ")
@@ -271,11 +271,11 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RequestSignAddresses(appends []fie
 		actreqs := trs.Actions[i].RequestSignAddresses()
 		requests = append(requests, actreqs...)
 	}
-	// 去重
+	// duplicate removal
 	results := make([][]byte, len(requests))
 	has := make(map[string]bool)
 	if !dropfeeaddr {
-		// 不去掉，加上主地址
+		// No, add the primary address
 		results = append(results, trs.Address)
 	}
 	// 费用方/主地址  去重
@@ -286,22 +286,22 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RequestSignAddresses(appends []fie
 			results = append(results, requests[i])
 		}
 	}
-	// 返回
+	// return
 	return requests, nil
 }
 
-// 清除所有签名
+// Clear all signatures
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) CleanSigns() {
 	trs.SignCount = 0
 	trs.Signs = []fields.Sign{}
 }
 
-// 返回所有签名
+// Return all signatures
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetSigns() []fields.Sign {
 	return trs.Signs
 }
 
-// 设置签名
+// Set signature
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) SetSigns(allsigns []fields.Sign) {
 	num := len(allsigns)
 	if num > 65535 {
@@ -312,7 +312,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) SetSigns(allsigns []fields.Sign) {
 	trs.Signs = append(trs.Signs, allsigns...) // copy
 }
 
-// 填充全部需要的签名
+// Fill in all required signatures
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) FillTargetSign(signacc *account.Account) error {
 	hashNoFee := trs.Hash()
 	addrPrivateKeys := map[string][]byte{}
@@ -321,7 +321,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) FillTargetSign(signacc *account.Ac
 	return trs.addOneSign(hashNoFee, addrPrivateKeys, signacc.Address)
 }
 
-// 填充签名
+// Fill in signature
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) FillNeedSigns(addrPrivates map[string][]byte, reqs []fields.Address) error {
 	// hash := trs.HashWithFeeFresh()
 	hashNoFee := trs.Hash()
@@ -329,19 +329,19 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) FillNeedSigns(addrPrivates map[str
 	if e0 != nil {
 		return e0
 	}
-	// 主签名
+	// Master signature
 	e1 := trs.addOneSign(hashNoFee, addrPrivates, trs.Address)
 	if e1 != nil {
 		return e1
 	}
-	// 其他签名
+	// Other signatures
 	for i := 0; i < len(requests); i++ {
 		e1 := trs.addOneSign(hashNoFee, addrPrivates, requests[i])
 		if e1 != nil {
 			return e1
 		}
 	}
-	// 填充成功
+	// Filled successfully
 	return nil
 }
 
@@ -367,17 +367,17 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) addOneSign(hash []byte, addrPrivat
 	return nil
 }
 
-// 验证需要的签名
+// Verify required signatures
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyAllNeedSigns() (bool, error) {
 	//hash := trs.HashWithFeeFresh()
 	hashNoFee := trs.Hash()
-	// 验证所有需要验证的签名
+	// Verify all signatures that need to be verified
 	requests, e := trs.RequestSignAddresses(nil, true)
 	if e != nil {
 		return false, e
 	}
 	if requests == nil || len(requests) == 0 {
-		return true, nil // 什么都不验证，直接通过
+		return true, nil // Pass without verifying anything
 	}
 	allSigns := make(map[string]fields.Sign)
 	for i := 0; i < len(trs.Signs); i++ {
@@ -390,20 +390,20 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyAllNeedSigns() (bool, error)
 	if e != nil || !ok {
 		return ok, e
 	}
-	// 验证其他所有签名
+	// Verify all other signatures
 	for i := 0; i < len(requests); i++ {
 		ok, e := verifyOneSignature_not_use_with_bug(allSigns, requests[i], hashNoFee)
 		if e != nil || !ok {
 			return ok, e
 		}
 	}
-	// 验证成功
+	// Validation successful
 	return true, nil
 }
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyTargetSigns(reqaddrs []fields.Address) (bool, error) {
 	hashNoFee := trs.Hash()
-	// 开始判断
+	// Start judging
 	// 验证主签名 /// BUG ///
 	allSigns := make(map[string]fields.Sign)
 	for i := 0; i < len(trs.Signs); i++ {
@@ -412,21 +412,21 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) VerifyTargetSigns(reqaddrs []field
 		addr := fields.Address(addrbts)
 		allSigns[string(addr)] = sig
 	}
-	// 以此验证
+	// To verify
 	for _, v := range reqaddrs {
 		if _, hav := allSigns[string(v)]; hav {
 			// /// BUG ///
 			ok, e := verifyOneSignature_not_use_with_bug(allSigns, v, hashNoFee)
 			if !ok || e != nil {
-				return ok, e // 验证失败
+				return ok, e // Validation failed
 			}
 			// next
 		} else {
-			// 验证失败
+			// Validation failed
 			return false, nil
 		}
 	}
-	// 验证成功
+	// Validation successful
 	return true, nil
 
 }
@@ -453,7 +453,7 @@ func verifyOneSignature_not_use_with_bug(allSigns map[string]fields.Sign, addres
 	return true, nil
 }
 
-// 需要的余额检查
+// Balance check required
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RequestAddressBalance() ([][]byte, []big.Int, error) {
 	return nil, nil, nil
 }
@@ -475,7 +475,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteInChainState(state interfaces
 			return e
 		}
 	}
-	// 扣除手续费
+	// Deduct handling charges
 	return actions.DoSubBalanceFromChainStateV3(state, trs.Address, trs.Fee)
 }
 
@@ -496,7 +496,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteinChainState(state interfacev
 			return e
 		}
 	}
-	// 扣除手续费
+	// Deduct handling charges
 	return actions.DoSubBalanceFromChainState(state, trs.Address, trs.Fee)
 }
 
@@ -512,16 +512,16 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RecoverChainState(state interfacev
 			return e
 		}
 	}
-	// 回退手续费
+	// Refund service charge
 	return actions.DoAddBalanceFromChainState(state, trs.Address, trs.Fee)
 }
 
-// 手续费含量 每byte的含有多少烁代币
+// Service charge content: how many tokens per byte
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) FeePurity() uint64 {
 	return CalculateFeePurity(&trs.Fee, trs.Size())
 }
 
-// 查询
+// query
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetAddress() fields.Address {
 	return trs.Address
 }
@@ -554,7 +554,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetActionList() []interfaces.Actio
 	return trs.Actions
 }
 
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetTimestamp() uint64 { // 时间戳
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) GetTimestamp() uint64 { // time stamp
 	return uint64(trs.Timestamp)
 }
 

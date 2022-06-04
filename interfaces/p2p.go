@@ -3,14 +3,14 @@ package interfaces
 type P2PManager interface {
 	Start() error
 	SetMsgHandler(P2PMsgDataHandler)
-	AddKnowledge(KnowledgeKind string, KnowledgeKey string) bool   // 返回 false 为已经知晓
-	CheckKnowledge(KnowledgeKind string, KnowledgeKey string) bool // 返回 true 为已经知晓
+	AddKnowledge(KnowledgeKind string, KnowledgeKey string) bool   // Return false as known
+	CheckKnowledge(KnowledgeKind string, KnowledgeKey string) bool // Return true to know
 	GetConfigOfBootNodeFastSync() bool
 }
 
 type P2PMsgPeer interface {
-	AddKnowledge(KnowledgeKind string, KnowledgeKey string) bool   // 返回 false 为已经知晓
-	CheckKnowledge(KnowledgeKind string, KnowledgeKey string) bool // 返回 true 为已经知晓
+	AddKnowledge(KnowledgeKind string, KnowledgeKey string) bool   // Return false as known
+	CheckKnowledge(KnowledgeKind string, KnowledgeKey string) bool // Return true to know
 	SendDataMsg(msgty uint16, msgbody []byte) error
 	Describe() string
 	Disconnect()

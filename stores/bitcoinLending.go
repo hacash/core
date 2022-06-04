@@ -10,18 +10,18 @@ const (
 )
 
 type BitcoinSystemLending struct {
-	IsRansomed                 fields.Bool        // 是否已经赎回(已经被赎回)
+	IsRansomed                 fields.Bool        // Whether it has been redeemed (redeemed)
 	CreateBlockHeight          fields.BlockHeight // 借贷开启时的区块高度
-	MainAddress                fields.Address     // 借贷人地址
-	MortgageBitcoinPortion     fields.VarUint2    // 抵押比特币份数（每份 = 0.01BTC）
-	LoanTotalAmount            fields.Amount      // 总共借出HAC数量，必须小于等于可借数
-	PreBurningInterestAmount   fields.Amount      // 预先销毁的利息，必须大于等于销毁数量
-	RealtimeTotalMortgageRatio fields.VarUint2    // 取值 0~10000， 单位 万分之
+	MainAddress                fields.Address     // Address of Borrower
+	MortgageBitcoinPortion     fields.VarUint2    // Number of mortgage bitcoin copies (each = 0.01btc)
+	LoanTotalAmount            fields.Amount      // The total lending HAC quantity must be less than or equal to the lendable quantity
+	PreBurningInterestAmount   fields.Amount      // Interest for pre destruction must be greater than or equal to the destroyed quantity
+	RealtimeTotalMortgageRatio fields.VarUint2    // Value: 0~10000, unit: 10000
 
-	// 如已经赎回则写入数据
-	RansomBlockHeight              fields.BlockHeight     // 赎回时的区块高度
-	RansomAmount                   fields.Amount          // 赎回金额
-	RansomAddressIfPublicOperation fields.OptionalAddress // 如果是第三方赎回则记录第三方地址
+	// Write data if redeemed
+	RansomBlockHeight              fields.BlockHeight     // Block height at redemption
+	RansomAmount                   fields.Amount          // Redemption amount
+	RansomAddressIfPublicOperation fields.OptionalAddress // If it is a third party redemption, record the third party address
 
 }
 
@@ -64,7 +64,7 @@ func (elm *BitcoinSystemLending) Serialize() ([]byte, error) {
 	buffer.Write(b4)
 	buffer.Write(b5)
 	buffer.Write(b6)
-	// 已赎回状态
+	// Redeemed status
 	if elm.IsRansomed.Check() {
 		var b0, _ = elm.RansomBlockHeight.Serialize()
 		var b1, _ = elm.RansomAmount.Serialize()
@@ -106,7 +106,7 @@ func (elm *BitcoinSystemLending) Parse(buf []byte, seek uint32) (uint32, error) 
 	if e != nil {
 		return 0, e
 	}
-	// 已赎回状态
+	// Redeemed status
 	if elm.IsRansomed.Check() {
 		seek, e = elm.RansomBlockHeight.Parse(buf, seek)
 		if e != nil {
@@ -124,10 +124,10 @@ func (elm *BitcoinSystemLending) Parse(buf []byte, seek uint32) (uint32, error) 
 	return seek, nil
 }
 
-// 修改、回退赎回状态
+// Modify and return redemption status
 
 func (elm *BitcoinSystemLending) SetRansomedStatus(height uint64, amount *fields.Amount, address fields.Address) error {
-	elm.IsRansomed.Set(true) // 设置赎回状态
+	elm.IsRansomed.Set(true) // Set redemption status
 	elm.RansomBlockHeight = fields.BlockHeight(height)
 	elm.RansomAmount = *amount
 	elm.RansomAddressIfPublicOperation = fields.NewEmptyOptionalAddress()
@@ -138,8 +138,8 @@ func (elm *BitcoinSystemLending) SetRansomedStatus(height uint64, amount *fields
 	return nil
 }
 
-// 移除赎回状态
+// Remove redemption status
 func (elm *BitcoinSystemLending) DropRansomedStatus() error {
-	elm.IsRansomed.Set(false) // 回退赎回状态
+	elm.IsRansomed.Set(false) // Return redemption status
 	return nil
 }

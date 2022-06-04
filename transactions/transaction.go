@@ -13,7 +13,7 @@ func NewTransactionByType(ty uint8) (interfaces.Transaction, error) {
 	case 0:
 		return new(Transaction_0_Coinbase), nil
 	case 1:
-		return new(Transaction_1_DO_NOT_USE_WITH_BUG), nil // 【有签名BUG，已废弃！！！】
+		return new(Transaction_1_DO_NOT_USE_WITH_BUG), nil // [signed bug, obsolete!!!]
 	case 2:
 		return new(Transaction_2_Simple), nil
 		////////////////////     END      ////////////////////

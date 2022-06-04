@@ -88,7 +88,7 @@ func (this *SignListMax255) Parse(buf []byte, seek uint32) (uint32, error) {
 		return 0, e
 	}
 	if this.Count == 0 {
-		return seek, nil // 列表为空
+		return seek, nil // List is empty
 	}
 	this.Signs = make([]Sign, int(this.Count))
 	for i := 0; i < int(this.Count); i++ {
@@ -136,7 +136,7 @@ func (this *SignListMax65535) Parse(buf []byte, seek uint32) (uint32, error) {
 		return 0, e
 	}
 	if this.Count == 0 {
-		return seek, nil // 列表为空
+		return seek, nil // List is empty
 	}
 	this.Signs = make([]Sign, int(this.Count))
 	for i := 0; i < int(this.Count); i++ {
@@ -160,15 +160,15 @@ func (this *SignListMax65535) Size() uint32 {
 //////////////////////////////////////////////////////////////////
 
 type Multisign2 struct {
-	CondElem          uint8      // 分子
-	CondBase          uint8      // 分母
-	SignatureInds     []VarUint2 // 签名位置
-	BasePublicKeyInds []VarUint2 // 公钥基础位置
+	CondElem          uint8      // molecule
+	CondBase          uint8      // denominator
+	SignatureInds     []VarUint2 // Signature location
+	BasePublicKeyInds []VarUint2 // Public key base location
 }
 
 type Multisign struct {
-	CondElem      uint8 // 分子
-	CondBase      uint8 // 分母
+	CondElem      uint8 // molecule
+	CondBase      uint8 // denominator
 	PublicKeyList []Bytes33
 	SignatureInds []uint8
 	SignatureList []Bytes64

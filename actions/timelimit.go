@@ -114,7 +114,7 @@ func (act *Action_29_SubmitTimeLimit) RecoverChainState(state interfacev2.ChainS
 	panic("RecoverChainState() removed !")
 }
 
-// 设置所属 belong_trs
+// Set belongs to long_ trs
 func (act *Action_29_SubmitTimeLimit) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs.(interfaces.Transaction)
 }

@@ -14,25 +14,25 @@ const (
 	ChannelTransferDirectionSatoshiRightToLeft uint8 = 4
 )
 
-// 通道转账，数据体
+// Channel transfer, data body
 type ChannelChainTransferProveBodyInfo struct {
-	ChannelId fields.ChannelId // 通道id
+	ChannelId fields.ChannelId // Channel ID
 
-	ReuseVersion   fields.VarUint4 // 通道重用序号
-	BillAutoNumber fields.VarUint8 // 通道账单流水序号
+	ReuseVersion   fields.VarUint4 // Channel reuse sequence number
+	BillAutoNumber fields.VarUint8 // Serial number of channel bill
 
-	PayDirection fields.VarUint1         // 资金流动方向： HAC 1.左=>右； 2.右=>左  BTC 3.左=>右；4.右=>左
-	PayAmount    fields.Amount           // 支付金额，不能为负
-	PaySatoshi   fields.SatoshiVariation // 支付比特币sat金额
+	PayDirection fields.VarUint1         // Capital flow direction: HAC 1 Left = > right; 2. right = > left BTC 3 Left = > right; 4. right = > left
+	PayAmount    fields.Amount           // Payment amount cannot be negative
+	PaySatoshi   fields.SatoshiVariation // Pay bitcoin sat amount
 
-	LeftBalance  fields.Amount // 左侧实时金额
-	RightBalance fields.Amount // 右侧实时金额
+	LeftBalance  fields.Amount // Real time amount on the left
+	RightBalance fields.Amount // Right real time amount
 
-	LeftSatoshi  fields.SatoshiVariation // 左侧比特币sat数量
-	RightSatoshi fields.SatoshiVariation // 右侧比特币sat数量
+	LeftSatoshi  fields.SatoshiVariation // Number of bitcoin sat on the left
+	RightSatoshi fields.SatoshiVariation // Number of bitcoin sat on the right
 
-	LeftAddress  fields.Address // 左侧地址
-	RightAddress fields.Address // 右侧地址
+	LeftAddress  fields.Address // Left address
+	RightAddress fields.Address // Right address
 }
 
 func CreateEmptyProveBody(cid fields.ChannelId) *ChannelChainTransferProveBodyInfo {
@@ -188,17 +188,17 @@ func (elm *ChannelChainTransferProveBodyInfo) Parse(buf []byte, seek uint32) (ui
 }
 
 func (elm *ChannelChainTransferProveBodyInfo) GetSignStuff() []byte {
-	var conbt, _ = elm.Serialize() // 数据体
-	return conbt                   // 哈希
+	var conbt, _ = elm.Serialize() // Data body
+	return conbt                   // Hash
 }
 func (elm *ChannelChainTransferProveBodyInfo) GetSignStuffHashHalfChecker() fields.HashHalfChecker {
-	var conbt = elm.GetSignStuff()                      // 数据体
-	return fields.CalculateHash(conbt).GetHalfChecker() // 哈希检测
+	var conbt = elm.GetSignStuff()                      // Data body
+	return fields.CalculateHash(conbt).GetHalfChecker() // Hash detection
 }
 
-// 检查签名
+// Check signature
 func (elm *ChannelChainTransferProveBodyInfo) CheckAddressAndSign(leftAddress, rightAddress fields.Address) error {
-	// 全部检查成功
+	// All checked successfully
 	return nil
 }
 
@@ -220,7 +220,7 @@ func (c ChannelPayProveBodyList) Size() uint32 {
 
 func (c ChannelPayProveBodyList) Serialize() ([]byte, error) {
 	var buffer bytes.Buffer
-	var bt1, _ = c.Count.Serialize() // 数据体
+	var bt1, _ = c.Count.Serialize() // Data body
 	buffer.Write(bt1)
 	for i := 0; i < len(c.ProveBodys); i++ {
 		var bt6, _ = c.ProveBodys[i].Serialize()
@@ -231,7 +231,7 @@ func (c ChannelPayProveBodyList) Serialize() ([]byte, error) {
 
 func (c *ChannelPayProveBodyList) Parse(buf []byte, seek uint32) (uint32, error) {
 	var e error
-	// 通道
+	// passageway
 	seek, e = c.Count.Parse(buf, seek)
 	if e != nil {
 		return 0, e
@@ -245,25 +245,25 @@ func (c *ChannelPayProveBodyList) Parse(buf []byte, seek uint32) (uint32, error)
 			return 0, e
 		}
 	}
-	// 完成
+	// complete
 	return seek, nil
 }
 
 ////////////////////////////////
 
-// 通道链支付
+// Channel chain payment
 
-// 通道链转账交易（链下签署）可以上链仲裁
-// 采用零知识证明模式
+// Channel chain transfer transactions (signed off the chain) can be arbitrated on the chain
+// Adopt zero knowledge proof mode
 type OffChainFormPaymentChannelTransfer struct {
-	Timestamp                fields.BlockTxTimestamp // 时间戳
-	OrderNoteHashHalfChecker fields.HashHalfChecker  // 订单详情数据哈希  len = 16
+	Timestamp                fields.BlockTxTimestamp // time stamp
+	OrderNoteHashHalfChecker fields.HashHalfChecker  // Order detail data hash len = 16
 
-	MustSignCount     fields.VarUint1  // 必须签名地址的数量，最大值 200
+	MustSignCount     fields.VarUint1  // Number of addresses that must be signed, max. 200
 	MustSignAddresses []fields.Address // 顺序打乱/随机的通道必须签名的地址
 
-	ChannelCount                         fields.VarUint1          // 途径通道数量，最大值 200
-	ChannelTransferProveHashHalfCheckers []fields.HashHalfChecker // 通道转账证明哈希，顺序为从付款到最后收款，哈希  len = 16
+	ChannelCount                         fields.VarUint1          // Number of access channels, max. 200
+	ChannelTransferProveHashHalfCheckers []fields.HashHalfChecker // Hash of channel transfer certificate, from payment to final collection, hash len = 16
 
 	MustSigns []fields.Sign // 顺序打乱/随机的签名，顺序与地址相同
 }
@@ -300,7 +300,7 @@ func (elm *OffChainFormPaymentChannelTransfer) SerializeForPrefixSignStuff() ([]
 
 func (elm *OffChainFormPaymentChannelTransfer) SerializeNoSign() ([]byte, error) {
 	var buffer bytes.Buffer
-	var bt1, _ = elm.SerializeForPrefixSignStuff() // 数据体
+	var bt1, _ = elm.SerializeForPrefixSignStuff() // Data body
 	buffer.Write(bt1)
 	for i := 0; i < len(elm.ChannelTransferProveHashHalfCheckers); i++ {
 		var bt4, _ = elm.ChannelTransferProveHashHalfCheckers[i].Serialize()
@@ -310,13 +310,13 @@ func (elm *OffChainFormPaymentChannelTransfer) SerializeNoSign() ([]byte, error)
 }
 
 func (elm *OffChainFormPaymentChannelTransfer) GetSignStuffHash() fields.Hash {
-	var conbt, _ = elm.SerializeNoSign() // 数据体
-	return fields.CalculateHash(conbt)   // 哈希
+	var conbt, _ = elm.SerializeNoSign() // Data body
+	return fields.CalculateHash(conbt)   // Hash
 }
 
 func (elm *OffChainFormPaymentChannelTransfer) Serialize() ([]byte, error) {
 	var buffer bytes.Buffer
-	var bt1, _ = elm.SerializeNoSign() // 数据体
+	var bt1, _ = elm.SerializeNoSign() // Data body
 	buffer.Write(bt1)
 	for i := 0; i < len(elm.MustSigns); i++ {
 		var bt6, _ = elm.MustSigns[i].Serialize()
@@ -335,7 +335,7 @@ func (elm *OffChainFormPaymentChannelTransfer) Parse(buf []byte, seek uint32) (u
 	if e != nil {
 		return 0, e
 	}
-	// 地址
+	// address
 	seek, e = elm.MustSignCount.Parse(buf, seek)
 	if e != nil {
 		return 0, e
@@ -349,7 +349,7 @@ func (elm *OffChainFormPaymentChannelTransfer) Parse(buf []byte, seek uint32) (u
 			return 0, e
 		}
 	}
-	// 通道
+	// passageway
 	seek, e = elm.ChannelCount.Parse(buf, seek)
 	if e != nil {
 		return 0, e
@@ -363,7 +363,7 @@ func (elm *OffChainFormPaymentChannelTransfer) Parse(buf []byte, seek uint32) (u
 			return 0, e
 		}
 	}
-	// 签名
+	// autograph
 	elm.MustSigns = make([]fields.Sign, scn)
 	for i := 0; i < scn; i++ {
 		elm.MustSigns[i] = fields.CreateEmptySign()
@@ -372,21 +372,21 @@ func (elm *OffChainFormPaymentChannelTransfer) Parse(buf []byte, seek uint32) (u
 			return 0, e
 		}
 	}
-	// 完成
+	// complete
 	return seek, nil
 }
 
-// 检查数据可用性
+// Check data availability
 func (elm *OffChainFormPaymentChannelTransfer) CheckValidity() error {
 	return nil
 }
 
-// 验证对票据的签名
+// Verify signature on ticket
 func (elm *OffChainFormPaymentChannelTransfer) VerifySignature() error {
 	return elm.CheckMustAddressAndSigns()
 }
 
-// 按位置填充签名
+// Populate signatures by location
 func (elm *OffChainFormPaymentChannelTransfer) FillSignByPosition(sign fields.Sign) error {
 	sgaddr := sign.GetAddress()
 	sn := int(elm.MustSignCount)
@@ -404,11 +404,11 @@ func (elm *OffChainFormPaymentChannelTransfer) FillSignByPosition(sign fields.Si
 	return nil
 }
 
-// 签名并填充至指定位置
+// Sign and fill to the specified location
 func (elm *OffChainFormPaymentChannelTransfer) DoSignFillPosition(acc *account.Account) (*fields.Sign, error) {
-	// 计算哈希
+	// Compute hash
 	hash := elm.GetSignStuffHash()
-	// 签名
+	// autograph
 	signature, e2 := acc.Private.Sign(hash)
 	if e2 != nil {
 		return nil, fmt.Errorf("Private Key '" + fields.Address(acc.Address).ToReadable() + "' do sign error")
@@ -417,7 +417,7 @@ func (elm *OffChainFormPaymentChannelTransfer) DoSignFillPosition(acc *account.A
 		PublicKey: acc.PublicKey,
 		Signature: signature.Serialize64(),
 	}
-	// 填充到指定位置
+	// Fill to specified position
 	sgaddr := sigObj.GetAddress()
 	sn := int(elm.MustSignCount)
 	var istok = false
@@ -434,7 +434,7 @@ func (elm *OffChainFormPaymentChannelTransfer) DoSignFillPosition(acc *account.A
 	return &sigObj, nil
 }
 
-// 检查某一个地址是否签名
+// Check whether an address is signed
 func (elm *OffChainFormPaymentChannelTransfer) CheckOneAddressSign(addr fields.Address) error {
 	hx := elm.GetSignStuffHash()
 	for _, v := range elm.MustSigns {
@@ -443,14 +443,14 @@ func (elm *OffChainFormPaymentChannelTransfer) CheckOneAddressSign(addr fields.A
 			if !ok {
 				return fmt.Errorf("address %s verify signature fail.", addr.ToReadable())
 			} else {
-				return nil // 验证成功
+				return nil // Validation successful
 			}
 		}
 	}
 	return fmt.Errorf("address %s signature not find.", addr.ToReadable())
 }
 
-// 检查所有签名
+// Check all signatures
 func (elm *OffChainFormPaymentChannelTransfer) CheckMustAddressAndSigns() error {
 	var e error
 
@@ -460,7 +460,7 @@ func (elm *OffChainFormPaymentChannelTransfer) CheckMustAddressAndSigns() error 
 	}
 	conhx := fields.CalculateHash(stuff)
 
-	// 检查数量
+	// Inspection quantity
 	sn := int(elm.MustSignCount)
 	if sn < 2 || sn > 200 {
 		return fmt.Errorf("MustSignCount error.")
@@ -469,23 +469,23 @@ func (elm *OffChainFormPaymentChannelTransfer) CheckMustAddressAndSigns() error 
 		return fmt.Errorf("Addresses or Signs length error.")
 	}
 
-	// 签名按地址排列，检查所有地址和签名是否匹配
+	// Signatures are arranged by address. Check whether all addresses and signatures match
 	for i := 0; i < sn; i++ {
 		sign := elm.MustSigns[i]
 		addr := elm.MustSignAddresses[i]
 		sgaddr := account.NewAddressFromPublicKeyV0(sign.PublicKey)
-		// 判断地址顺序
+		// Judge address order
 		if addr.NotEqual(sgaddr) {
 			return fmt.Errorf("Address not match, need %s nut got %s.",
 				addr.ToReadable(), fields.Address(sgaddr).ToReadable())
 		}
-		// 检查签名
+		// Check signature
 		ok, _ := account.CheckSignByHash32(conhx, sign.PublicKey, sign.Signature)
 		if !ok {
 			return fmt.Errorf("account %s verify signature fail.", addr.ToReadable())
 		}
 	}
 
-	// 全部签名验证成功
+	// All signatures verified successfully
 	return nil
 }

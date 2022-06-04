@@ -119,7 +119,7 @@ func (trs *Transaction_2_Simple) SerializeNoSign() ([]byte, error) {
 	return trs.SerializeNoSignEx(true)
 }
 
-// 序列化不包含签名内容的所有其它数据
+// Serialize all other data without signature content
 func (trs *Transaction_2_Simple) SerializeNoSignEx(hasfee bool) ([]byte, error) {
 	var buffer = new(bytes.Buffer)
 	buffer.Write([]byte{trs.Type()}) // type
@@ -127,9 +127,9 @@ func (trs *Transaction_2_Simple) SerializeNoSignEx(hasfee bool) ([]byte, error) 
 	buffer.Write(b1)
 	b2, _ := trs.MainAddress.Serialize()
 	buffer.Write(b2)
-	if hasfee { // 是否需要 fee 字段
+	if hasfee { // Need fee field
 		b3, _ := trs.Fee.Serialize()
-		buffer.Write(b3) // 费用付出者签名 需要fee字段， 否则不需要
+		buffer.Write(b3) // Fee payer signature requires fee field, otherwise it is not required
 	}
 	b4, _ := trs.ActionCount.Serialize()
 	buffer.Write(b4)
@@ -219,7 +219,7 @@ func (trs *Transaction_2_Simple) Size() uint32 {
 	return totalsize
 }
 
-// 交易唯一哈希值
+// Transaction unique hash value
 func (trs *Transaction_2_Simple) HashWithFee() fields.Hash {
 	if trs.hashwithfee == nil {
 		return trs.HashWithFeeFresh()
@@ -230,7 +230,7 @@ func (trs *Transaction_2_Simple) HashWithFee() fields.Hash {
 func (trs *Transaction_2_Simple) HashWithFeeFresh() fields.Hash {
 	stuff, _ := trs.SerializeNoSign()
 	digest := fields.CalculateHash(stuff)
-	trs.hashwithfee = digest // 缓存
+	trs.hashwithfee = digest // cache
 	return trs.hashwithfee
 }
 
@@ -254,12 +254,12 @@ func (trs *Transaction_2_Simple) AppendAction(action interfacev2.Action) error {
 		return fmt.Errorf("Actions too much")
 	}
 	if trs.Actions == nil {
-		trs.ActionCount = 0 // 初始化
+		trs.ActionCount = 0 // initialization
 		trs.Actions = make([]interfaces.Action, 0)
 	}
 	trs.ActionCount += 1
 	trs.Actions = append(trs.Actions, action.(interfaces.Action))
-	trs.ClearHash() // 重置哈希缓存
+	trs.ClearHash() // Reset hash cache
 	return nil
 }
 
@@ -268,37 +268,37 @@ func (trs *Transaction_2_Simple) AddAction(action interfaces.Action) error {
 		return fmt.Errorf("Actions too much")
 	}
 	if trs.Actions == nil {
-		trs.ActionCount = 0 // 初始化
+		trs.ActionCount = 0 // initialization
 		trs.Actions = make([]interfaces.Action, 0)
 	}
 	trs.ActionCount += 1
 	trs.Actions = append(trs.Actions, action)
-	trs.ClearHash() // 重置哈希缓存
+	trs.ClearHash() // Reset hash cache
 	return nil
 }
 
-// 从 actions 拿出需要签名的地址
+// Get the address to be signed from actions
 func (trs *Transaction_2_Simple) RequestSignAddresses(reqs []fields.Address, dropfeeaddr bool) ([]fields.Address, error) {
 	if !trs.MainAddress.IsValid() {
 		return nil, fmt.Errorf("Master Address is InValid ")
 	}
 	requests := make([]fields.Address, 0, 32)
-	// 另外新加的需要验证的
+	// In addition, the newly added ones need to be verified
 	if reqs != nil {
 		for _, r := range reqs {
 			requests = append(requests, r)
 		}
 	}
-	// 拿出 actions 的需要签名
+	// Take out the actions and sign them
 	for i := 0; i < int(trs.ActionCount); i++ {
 		actreqs := trs.Actions[i].RequestSignAddresses()
 		requests = append(requests, actreqs...)
 	}
-	// 去重
+	// duplicate removal
 	results := make([]fields.Address, 0, len(requests))
 	has := make(map[string]bool)
 	if !dropfeeaddr {
-		// 不去掉，加上主地址
+		// No, add the primary address
 		results = append(results, trs.MainAddress)
 	}
 	// 费用方/主地址  去重
@@ -307,25 +307,25 @@ func (trs *Transaction_2_Simple) RequestSignAddresses(reqs []fields.Address, dro
 		strkey := string(requests[i])
 		if _, ok := has[strkey]; !ok {
 			results = append(results, requests[i])
-			has[strkey] = true // 标记重复
+			has[strkey] = true // Duplicate tag
 		}
 	}
-	// 返回
+	// return
 	return results, nil
 }
 
-// 清清除所有签名
+// Clear clear all signatures
 func (trs *Transaction_2_Simple) CleanSigns() {
 	trs.SignCount = 0
 	trs.Signs = []fields.Sign{}
 }
 
-// 返回所有签名
+// Return all signatures
 func (trs *Transaction_2_Simple) GetSigns() []fields.Sign {
 	return trs.Signs
 }
 
-// 设置签名数据
+// Set signature data
 func (trs *Transaction_2_Simple) SetSigns(allsigns []fields.Sign) {
 	num := len(allsigns)
 	if num > 65535 {
@@ -336,20 +336,20 @@ func (trs *Transaction_2_Simple) SetSigns(allsigns []fields.Sign) {
 	trs.Signs = append(trs.Signs, allsigns...) // copy
 }
 
-// 填充单个需要的签名
+// Populate a single required signature
 func (trs *Transaction_2_Simple) FillTargetSign(signacc *account.Account) error {
 	signaddr := fields.Address(signacc.Address)
 	tarhash := trs.Hash()
 	if signaddr.Equal(trs.MainAddress) {
-		tarhash = trs.HashWithFee() // 主地址使用hash不同
+		tarhash = trs.HashWithFee() // The primary address uses different hash
 	}
 	addrPrivateKeys := map[string][]byte{}
 	addrPrivateKeys[string(signacc.Address)] = signacc.PrivateKey
-	// 执行一个签名
+	// Execute a signature
 	return trs.addOneSign(tarhash, addrPrivateKeys, signacc.Address)
 }
 
-// 填充全部需要的签名
+// Fill in all required signatures
 func (trs *Transaction_2_Simple) FillNeedSigns(addrPrivateKeys map[string][]byte, appendReqs []fields.Address) error {
 	hashWithFee := trs.HashWithFee()
 	hashNoFee := trs.Hash()
@@ -357,24 +357,24 @@ func (trs *Transaction_2_Simple) FillNeedSigns(addrPrivateKeys map[string][]byte
 	if e0 != nil {
 		return e0
 	}
-	// 主签名（包括手续费）
+	// Principal signature (including handling fee)
 	e1 := trs.addOneSign(hashWithFee, addrPrivateKeys, trs.MainAddress)
 	if e1 != nil {
 		return e1
 	}
-	// 其他签名（不包括手续费字段）
+	// Other signatures (excluding the handling fee field)
 	for i := 0; i < len(requests); i++ {
 		e1 := trs.addOneSign(hashNoFee, addrPrivateKeys, requests[i])
 		if e1 != nil {
 			return e1
 		}
 	}
-	// 填充成功
+	// Filled successfully
 	return nil
 }
 
 func (trs *Transaction_2_Simple) addOneSign(hash []byte, addrPrivates map[string][]byte, address []byte) error {
-	// 判断私钥是否存在
+	// Determine whether the private key exists
 	privitebytes, has := addrPrivates[string(address)]
 	if !has {
 		return fmt.Errorf("Private Key '" + account.Base58CheckEncode(address) + "' necessary")
@@ -383,7 +383,7 @@ func (trs *Transaction_2_Simple) addOneSign(hash []byte, addrPrivates map[string
 	if e1 != nil {
 		return fmt.Errorf("Private Key '" + account.Base58CheckEncode(address) + "' error")
 	}
-	// 判断签名是否已经存在，如果存在则去掉重新加入
+	// Judge whether the signature already exists. If it exists, remove it and rejoin it
 	var alreadly = -1
 	for i, sig := range trs.Signs {
 		if bytes.Compare(sig.PublicKey, privite.PublicKey) == 0 {
@@ -391,7 +391,7 @@ func (trs *Transaction_2_Simple) addOneSign(hash []byte, addrPrivates map[string
 			break
 		}
 	}
-	// 计算签名
+	// Calculate signature
 	signature, e2 := privite.Private.Sign(hash)
 	if e2 != nil {
 		return fmt.Errorf("Private Key '" + account.Base58CheckEncode(address) + "' do sign error")
@@ -418,11 +418,11 @@ func (trs *Transaction_2_Simple) addOneSign(hash []byte, addrPrivates map[string
 	return nil
 }
 
-// 单独验证其中一个签名
+// Verify one of the signatures individually
 func (trs *Transaction_2_Simple) VerifyTargetSigns(reqaddrs []fields.Address) (bool, error) {
 	otherhash := trs.Hash()
 	mainhash := trs.HashWithFee()
-	// 全部签名
+	// All signatures
 	allSigns := make(map[string]fields.Sign)
 	for i := 0; i < len(trs.Signs); i++ {
 		sig := trs.Signs[i]
@@ -430,37 +430,37 @@ func (trs *Transaction_2_Simple) VerifyTargetSigns(reqaddrs []fields.Address) (b
 		addr := fields.Address(addrbts)
 		allSigns[string(addr)] = sig
 	}
-	// 依次验证
+	// Sequential verification
 	for _, v := range reqaddrs {
-		// 判断是否为主地址
+		// Determine whether it is the primary address
 		tarhash := otherhash // 交易哈希
 		isMainAddr := v.Equal(trs.MainAddress)
-		if isMainAddr { // 是否为主地址
+		if isMainAddr { // Primary address or not
 			tarhash = mainhash
 		}
 		ok, e := verifyOneSignature(allSigns, v, tarhash)
 		if !ok || e != nil {
-			return ok, e // 验证失败
+			return ok, e // Validation failed
 		}
 		// next
 	}
-	// 验证成功
+	// Validation successful
 	return true, nil
 }
 
-// 验证需要的签名
-// reqs 附加的另外要验证的
+// Verify required signatures
+// Reqs additional to be verified
 func (trs *Transaction_2_Simple) VerifyAllNeedSigns() (bool, error) {
 	hashWithFee := trs.HashWithFee()
 	hashNoFee := trs.Hash()
-	// 开始判断
+	// Start judging
 	allSigns := make(map[string]fields.Sign)
 	for i := 0; i < len(trs.Signs); i++ {
 		sig := trs.Signs[i]
 		addr := account.NewAddressFromPublicKeyV0(sig.PublicKey)
 		allSigns[string(addr)] = sig
 	}
-	// 验证主签名（包括手续费）
+	// Verify master signature (including handling fee)
 	ok, e := verifyOneSignature(allSigns, trs.MainAddress, hashWithFee)
 	if e != nil || !ok {
 		return ok, e
@@ -471,16 +471,16 @@ func (trs *Transaction_2_Simple) VerifyAllNeedSigns() (bool, error) {
 		return false, e
 	}
 	if requests == nil || len(requests) == 0 {
-		return true, nil // 没有其他需要验证
+		return true, nil // There is nothing else to verify
 	}
-	// 验证其他所有签名（不包含手续费字段）
+	// Verify all other signatures (excluding the handling fee field)
 	for i := 0; i < len(requests); i++ {
 		ok, e := verifyOneSignature(allSigns, requests[i], hashNoFee)
 		if e != nil || !ok {
 			return ok, e
 		}
 	}
-	// 验证成功
+	// Validation successful
 	return true, nil
 }
 
@@ -490,18 +490,18 @@ func verifyOneSignature(allSigns map[string]fields.Sign, address fields.Address,
 	if !ok {
 		return false, fmt.Errorf("address %s signature not find!", address.ToReadable())
 	}
-	// 检查签名
+	// Check signature
 	return account.CheckSignByHash32(hash, main.PublicKey, main.Signature)
 }
 
-// 需要的余额检查
+// Balance check required
 func (trs *Transaction_2_Simple) RequestAddressBalance() ([][]byte, []big.Int, error) {
 	return nil, nil, nil
 }
 
 // 修改 / 恢复 状态数据库
 func (trs *Transaction_2_Simple) WriteInChainState(state interfaces.ChainStateOperation) error {
-	// 检查 fee size
+	// Check fee size
 	if state.GetPendingBlockHeight() > 200000 {
 		if trs.Fee.Size() > 2+4 {
 			return fmt.Errorf("BlockHeight more than 20w trs.Fee.Size() must less than 6 bytes.")
@@ -515,13 +515,13 @@ func (trs *Transaction_2_Simple) WriteInChainState(state interfaces.ChainStateOp
 			return e
 		}
 	}
-	// 扣除手续费
+	// Deduct handling charges
 	return actions.DoSubBalanceFromChainStateV3(state, trs.MainAddress, trs.Fee)
 }
 
 // 修改 / 恢复 状态数据库
 func (trs *Transaction_2_Simple) WriteinChainState(state interfacev2.ChainStateOperation) error {
-	// 检查 fee size
+	// Check fee size
 	if state.GetPendingBlockHeight() > 200000 {
 		if trs.Fee.Size() > 2+4 {
 			return fmt.Errorf("BlockHeight more than 20w trs.Fee.Size() must less than 6 bytes.")
@@ -535,7 +535,7 @@ func (trs *Transaction_2_Simple) WriteinChainState(state interfacev2.ChainStateO
 			return e
 		}
 	}
-	// 扣除手续费
+	// Deduct handling charges
 	return actions.DoSubBalanceFromChainState(state, trs.MainAddress, trs.Fee)
 }
 
@@ -551,35 +551,35 @@ func (trs *Transaction_2_Simple) RecoverChainState(state interfacev2.ChainStateO
 			return e
 		}
 	}
-	// 回退手续费
+	// Refund service charge
 	return actions.DoAddBalanceFromChainState(state, trs.MainAddress, trs.Fee)
 }
 
-// 手续费含量 每byte的含有多少烁代币
+// Service charge content: how many tokens per byte
 func (trs *Transaction_2_Simple) FeePurity() uint64 {
 	return CalculateFeePurity(&trs.Fee, trs.Size())
 }
 
-// 查询
+// query
 func (trs *Transaction_2_Simple) GetAddress() fields.Address {
 	return trs.MainAddress
 }
 
 func (trs *Transaction_2_Simple) SetAddress(addr fields.Address) {
 	trs.MainAddress = addr
-	trs.ClearHash() // 重置哈希缓存
+	trs.ClearHash() // Reset hash cache
 }
 
 func (trs *Transaction_2_Simple) GetFeeOfMinerRealReceived() *fields.Amount {
 	for _, act := range trs.Actions {
 		if act.IsBurning90PersentTxFees() {
-			// 销毁 90% 的tx费用
+			// Destroy 90% of TX cost
 			minerReceivedFee := trs.Fee.Copy()
 			if minerReceivedFee.Unit > 0 {
-				// 单位下降一位（例如248变247），大小变为原来的 10%， 而销毁了 90% 。
+				// The unit decreases by one bit (for example, 248 becomes 247), the size becomes 10% of the original, and 90% is destroyed.
 				minerReceivedFee.Unit -= 1
 			}
-			// 返回矿工真实收到的竞价费，为原来的 90%
+			// Return the bidding fee actually received by the miner, which is 90% of the original
 			return minerReceivedFee
 		}
 	}
@@ -593,7 +593,7 @@ func (trs *Transaction_2_Simple) GetFee() *fields.Amount {
 
 func (trs *Transaction_2_Simple) SetFee(fee *fields.Amount) {
 	trs.Fee = *fee
-	trs.ClearHash() // 重置哈希缓存
+	trs.ClearHash() // Reset hash cache
 }
 
 func (trs *Transaction_2_Simple) GetActions() []interfacev2.Action {
@@ -608,7 +608,7 @@ func (trs *Transaction_2_Simple) GetActionList() []interfaces.Action {
 	return trs.Actions
 }
 
-func (trs *Transaction_2_Simple) GetTimestamp() uint64 { // 时间戳
+func (trs *Transaction_2_Simple) GetTimestamp() uint64 { // time stamp
 	return uint64(trs.Timestamp)
 }
 

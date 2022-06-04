@@ -16,7 +16,7 @@ type Transaction interface {
 	Type() uint8
 
 	// hash data
-	Hash() fields.Hash        // 无手续费的哈希
+	Hash() fields.Hash        // Hash without service charge
 	HashWithFee() fields.Hash // inclued fee amount
 
 	// Addresses that need to verify signatures
@@ -24,11 +24,11 @@ type Transaction interface {
 
 	// sign
 	CleanSigns()
-	GetSigns() []fields.Sign // 返回所有签名数据
-	SetSigns([]fields.Sign)  // 设置签名数据
+	GetSigns() []fields.Sign // Return all signature data
+	SetSigns([]fields.Sign)  // Set signature data
 	// fill signatures
-	FillTargetSign(signacc *account.Account) error           // 指定账户签名
-	FillNeedSigns(map[string][]byte, []fields.Address) error // 全部签名
+	FillTargetSign(signacc *account.Account) error           // Designated account signature
+	FillNeedSigns(map[string][]byte, []fields.Address) error // All signatures
 	// verify signatures
 	VerifyAllNeedSigns() (bool, error)
 	VerifyTargetSigns(reqaddr []fields.Address) (bool, error)
@@ -42,8 +42,8 @@ type Transaction interface {
 	// get something
 	GetAddress() fields.Address
 	SetAddress(fields.Address)
-	// 矿工实际拿到的交易费用
-	// 如果某些交易拿到手续费的比原本付出的少，则剩下的被销毁了
+	// Transaction costs actually received by miners
+	// If some transactions receive less handling charges than they originally paid, the rest will be destroyed
 	GetFeeOfMinerRealReceived() *fields.Amount
 	GetFee() *fields.Amount
 	SetFee(*fields.Amount)

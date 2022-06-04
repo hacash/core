@@ -5,12 +5,12 @@ import "github.com/hacash/core/fields"
 type ChainState interface {
 	ChainStateOperation
 
-	// 获得父级状态
+	// Get parent status
 	GetParent() ChainState
-	// 获得所有子状态
+	// Get all child States
 	GetChilds() map[uint64]ChainState
 
-	// 启动一个子状态
+	// Start a sub state
 	ForkNextBlock(uint64, fields.Hash, Block) (ChainState, error)
 	ForkSubChild() (ChainState, error)
 
@@ -19,22 +19,22 @@ type ChainState interface {
 	//GetReferBlock() (uint64, fields.Hash)
 	SearchBaseStateByBlockHash(fields.Hash) (ChainState, error)
 
-	// 销毁
-	Destory() // 销毁，包括删除所有子状态、缓存、状态数据等
+	// Destruction
+	Destory() // Destroy, including deleting all sub States, caches, status data, etc
 
-	// 判断类型
+	// Judgment type
 	IsImmutable() bool
 
-	// 保存在磁盘
+	// Save on disk
 	ImmutableWriteToDisk() (ChainStateImmutable, error)
 }
 
-// 不可变、不可回退的锁定状态数据
+// Immutable, non fallback lock status data
 type ChainStateImmutable interface {
 	ChainState
 
-	// 遍历不成熟的区块哈希
+	// Traversing immature block hash
 	SeekImmatureBlockHashs() ([]fields.Hash, error)
 
-	Close() // 关闭文件句柄等
+	Close() // Close file handle, etc
 }

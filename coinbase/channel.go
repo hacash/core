@@ -7,8 +7,8 @@ import (
 	"math/big"
 )
 
-// 计算通道利息奖励 (amt1, amt2, 1, 0.001)
-// uint64 溢出 bug 导致 1BjbnHwh....MGRNS3f 地址余额计算错误
+// Calculate channel interest reward (AMT1, AMT2, 1, 0.001)
+// Uint64 overflow bug causes 1bjbnhwh Mgrns3f address balance calculation error
 func DoAppendCompoundInterestProportionOfHeightV2(amt1 *fields.Amount, amt2 *fields.Amount, caclnum uint64, wfzn uint64, interestgiveto fields.VarUint1) (*fields.Amount, *fields.Amount, error) {
 	if caclnum == 0 {
 		//panic("insnum cannot be 0.")
@@ -20,7 +20,7 @@ func DoAppendCompoundInterestProportionOfHeightV2(amt1 *fields.Amount, amt2 *fie
 
 	if interestgiveto == 0 {
 
-		// 利息两方分配
+		// Two party distribution of interest
 		resamt1, e1 := calculateInterestAndPrincipal(amt1, amt1, caclnum, wfzn)
 		if e1 != nil {
 			return nil, nil, e1
@@ -33,12 +33,12 @@ func DoAppendCompoundInterestProportionOfHeightV2(amt1 *fields.Amount, amt2 *fie
 
 	} else if interestgiveto == 1 {
 
-		// 利息全部左方得到 left
+		// Interest all left
 		totalamt, e0 := amt1.Add(amt2)
 		if e0 != nil {
 			return nil, nil, e0
 		}
-		// 利息全给left方
+		// Interest paid to the Left Party
 		resamt1, e1 := calculateInterestAndPrincipal(amt1, totalamt, caclnum, wfzn)
 		if e1 != nil {
 			return nil, nil, e1
@@ -47,12 +47,12 @@ func DoAppendCompoundInterestProportionOfHeightV2(amt1 *fields.Amount, amt2 *fie
 
 	} else if interestgiveto == 2 {
 
-		// 利息全部右方得到 right
+		// All interest earned on the right
 		totalamt, e0 := amt1.Add(amt2)
 		if e0 != nil {
 			return nil, nil, e0
 		}
-		// 利息全给right方
+		// Interest shall be paid to the right party
 		resamt2, e2 := calculateInterestAndPrincipal(amt2, totalamt, caclnum, wfzn)
 		if e2 != nil {
 			return nil, nil, e2
@@ -65,7 +65,7 @@ func DoAppendCompoundInterestProportionOfHeightV2(amt1 *fields.Amount, amt2 *fie
 
 }
 
-// 计算利息
+// Calculate interest
 // useramt: 用户资金
 // basevalamt: 用于计算利息的本金
 func calculateInterestAndPrincipal(useramt *fields.Amount, basevalamt *fields.Amount, caclnum uint64, wfzn uint64) (*fields.Amount, error) {
@@ -86,7 +86,7 @@ func calculateInterestAndPrincipal(useramt *fields.Amount, basevalamt *fields.Am
 	//fmt.Println(mulnumint)
 	newunit := int(basevalamt.Unit) - 8
 	if newunit < 0 {
-		resultAmt = useramt // 数额极小， 忽略， 余额不变
+		resultAmt = useramt // Very small amount, ignored, balance unchanged
 		return resultAmt, nil
 	}
 	for {
@@ -106,14 +106,14 @@ func calculateInterestAndPrincipal(useramt *fields.Amount, basevalamt *fields.Am
 		if e != nil {
 			return nil, e
 		}
-		resultAmt, e = useramt.Add(interestAmt) // 正常情况
+		resultAmt, e = useramt.Add(interestAmt) // Normal condition
 		if e != nil {
 			return nil, e
 		}
 
 	} else {
-		resultAmt = useramt // 计算错误， 余额不变
-		// 返回错误
+		resultAmt = useramt // Calculation error, balance unchanged
+		// Return error
 		return nil, fmt.Errorf("DoAppendCompoundInterestProportionOfHeightV2 error")
 	}
 
@@ -121,7 +121,7 @@ func calculateInterestAndPrincipal(useramt *fields.Amount, basevalamt *fields.Am
 	return resultAmt, nil
 }
 
-// 2500个区块万分之一的复利计算
+// Compound interest calculation of one ten thousandth of 2500 blocks
 func DoAppendCompoundInterest1Of10000By2500Height(amt1 *fields.Amount, amt2 *fields.Amount, insnum uint64) (*fields.Amount, *fields.Amount) {
 	if insnum == 0 {
 		//panic("insnum cannot be 0.")
@@ -145,7 +145,7 @@ func DoAppendCompoundInterest1Of10000By2500Height(amt1 *fields.Amount, amt2 *fie
 		//fmt.Println(mulnumint)
 		newunit := int(amts[i].Unit) - 8
 		if newunit < 0 {
-			coinnums[i] = amts[i] // 数额极小， 忽略， 余额不变
+			coinnums[i] = amts[i] // Very small amount, ignored, balance unchanged
 			continue
 		}
 		for {
@@ -160,9 +160,9 @@ func DoAppendCompoundInterest1Of10000By2500Height(amt1 *fields.Amount, amt2 *fie
 		//fmt.Println(newNumeral)
 		if newunit > 0 && newunit <= 255 {
 			newamt := fields.NewAmount(uint8(newunit), newNumeral)
-			coinnums[i] = newamt // 正常情况
+			coinnums[i] = newamt // Normal condition
 		} else {
-			coinnums[i] = amts[i] // 计算错误， 余额不变
+			coinnums[i] = amts[i] // Calculation error, balance unchanged
 		}
 	}
 

@@ -10,16 +10,16 @@ import (
 
 //////////////////////////////////////////////////////////
 
-// hac转账
+// HAC transfer
 func DoSimpleTransferFromChainState(state interfacev2.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, amt fields.Amount) error {
 
 	isTrsToMySelf := addr1.Equal(addr2)
 
-	// 如果是数据库升级模式，则去掉所有的判断，直接修改余额
+	// In the database upgrade mode, all judgments are removed and the balance is modified directly
 	if state.IsDatabaseVersionRebuildMode() {
-		// 判断是否为自己转给自己
+		// Determine whether to transfer for yourself
 		if isTrsToMySelf {
-			return nil // 可以自己转给自己，不改变状态，白费手续费
+			return nil // You can transfer it to yourself without changing the status, which is a waste of service fees
 		}
 		bls1, e := state.Balance(addr1)
 		if e != nil {
@@ -43,13 +43,13 @@ func DoSimpleTransferFromChainState(state interfacev2.ChainStateOperation, addr1
 		return nil
 	}
 
-	// 正常开始判断
+	// Normal start judgment
 	//fmt.Println("addr1:", addr1.ToReadable(), "addr2:", addr2.ToReadable(), "amt:", amt.ToFinString())
 	if state.GetPendingBlockHeight() < 200000 && isTrsToMySelf {
-		// 高度 20万 之后，不允许出现自己转给自己的数额大于可用余额的情况！
-		return nil // 可以自己转给自己，不改变状态，白费手续费
+		// After 200000 yuan, the amount transferred to you is not allowed to be greater than the available balance!
+		return nil // You can transfer it to yourself without changing the status, which is a waste of service fees
 	}
-	// 判断余额是否充足
+	// Judge whether the balance is sufficient
 	bls1, e := state.Balance(addr1)
 	if e != nil {
 		return e
@@ -67,11 +67,11 @@ func DoSimpleTransferFromChainState(state interfacev2.ChainStateOperation, addr1
 		//fmt.Println("[balance not enough]", "addr1: ", addr1.ToReadable(), "amt: " + amt.ToFinString(), "amt1: " + amt1.ToFinString())
 		return fmt.Errorf("address %s balance %s not enough， need %s.", addr1.ToReadable(), amt1.ToFinString(), amt.ToFinString())
 	}
-	// 判断是否为自己转给自己
+	// Determine whether to transfer for yourself
 	if isTrsToMySelf {
-		return nil // 可以自己转给自己，不改变状态，白费手续费
+		return nil // You can transfer it to yourself without changing the status, which is a waste of service fees
 	}
-	// 查询收款方余额
+	// Query payee balance
 	bls2, e := state.Balance(addr2)
 	if e != nil {
 		return e
@@ -125,7 +125,7 @@ func DoSimpleTransferFromChainState(state interfacev2.ChainStateOperation, addr1
 	return nil
 }
 
-// 单纯增加余额
+// Simply increase balance
 func DoAddBalanceFromChainState(state interfacev2.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
 	blssto, e := state.Balance(addr)
 	if e != nil {
@@ -157,7 +157,7 @@ func DoAddBalanceFromChainState(state interfacev2.ChainStateOperation, addr fiel
 	return nil
 }
 
-// 单纯扣除余额
+// Net balance
 func DoSubBalanceFromChainState(state interfacev2.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
 	blssto, e := state.Balance(addr)
 	if e != nil {
@@ -198,16 +198,16 @@ func DoSubBalanceFromChainState(state interfacev2.ChainStateOperation, addr fiel
 
 //////////////////////////////////////////////////////////
 
-// hac转账
+// HAC transfer
 func DoSimpleTransferFromChainStateV3(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, amt fields.Amount) error {
 
 	isTrsToMySelf := addr1.Equal(addr2)
 
-	// 如果是数据库升级模式，则去掉所有的判断，直接修改余额
+	// In the database upgrade mode, all judgments are removed and the balance is modified directly
 	if state.IsDatabaseVersionRebuildMode() {
-		// 判断是否为自己转给自己
+		// Determine whether to transfer for yourself
 		if isTrsToMySelf {
-			return nil // 可以自己转给自己，不改变状态，白费手续费
+			return nil // You can transfer it to yourself without changing the status, which is a waste of service fees
 		}
 		bls1, e := state.Balance(addr1)
 		if e != nil {
@@ -231,15 +231,15 @@ func DoSimpleTransferFromChainStateV3(state interfaces.ChainStateOperation, addr
 		return nil
 	}
 
-	// 正常开始判断
+	// Normal start judgment
 	//fmt.Println("addr1:", addr1.ToReadable(), "addr2:", addr2.ToReadable(), "amt:", amt.ToFinString())
 	if state.GetPendingBlockHeight() < 200000 && isTrsToMySelf {
-		// 高度 20万 之后，不允许出现自己转给自己的数额大于可用余额的情况！
-		return nil // 可以自己转给自己，不改变状态，白费手续费
+		// After 200000 yuan, the amount transferred to you is not allowed to be greater than the available balance!
+		return nil // You can transfer it to yourself without changing the status, which is a waste of service fees
 	}
 
-	// 首先判断余额是否充足
-	// 再判断是否是自己转给自己
+	// First, judge whether the balance is sufficient
+	// And then judge whether it is self transfer
 	bls1, e := state.Balance(addr1)
 	if e != nil {
 		return e
@@ -257,11 +257,11 @@ func DoSimpleTransferFromChainStateV3(state interfaces.ChainStateOperation, addr
 		//fmt.Println("[balance not enough]", "addr1: ", addr1.ToReadable(), "amt: " + amt.ToFinString(), "amt1: " + amt1.ToFinString())
 		return fmt.Errorf("address %s balance %s not enough， need %s.", addr1.ToReadable(), amt1.ToFinString(), amt.ToFinString())
 	}
-	// 判断是否为自己转给自己
+	// Determine whether to transfer for yourself
 	if isTrsToMySelf {
-		return nil // 可以自己转给自己，不改变状态，白费手续费
+		return nil // You can transfer it to yourself without changing the status, which is a waste of service fees
 	}
-	// 查询收款方余额
+	// Query payee balance
 	bls2, e := state.Balance(addr2)
 	if e != nil {
 		return e
@@ -315,7 +315,7 @@ func DoSimpleTransferFromChainStateV3(state interfaces.ChainStateOperation, addr
 	return nil
 }
 
-// 单纯增加余额
+// Simply increase balance
 func DoAddBalanceFromChainStateV3(state interfaces.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
 	blssto, e := state.Balance(addr)
 	if e != nil {
@@ -347,7 +347,7 @@ func DoAddBalanceFromChainStateV3(state interfaces.ChainStateOperation, addr fie
 	return nil
 }
 
-// 单纯扣除余额
+// Net balance
 func DoSubBalanceFromChainStateV3(state interfaces.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
 	blssto, e := state.Balance(addr)
 	if e != nil {

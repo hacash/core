@@ -18,13 +18,13 @@ func NewAddressFromPublicKey(version []byte, pubKey []byte) []byte {
 	hasher.Write(digest[:])
 	hs160 := hasher.Sum(nil)
 
-	// 原始以及编码后的
+	// Original and encoded
 	return append(version, hs160...)
 }
 
 func NewAddressReadableFromAddress(address []byte) string {
 	addr := Base58CheckEncode(address)
-	// 原始以及编码后的
+	// Original and encoded
 	return addr
 }
 

@@ -17,7 +17,7 @@ func (d DiamondName) Name() string {
 
 var diamond_hash_base_stuff = []byte("0WTYUIAHXVMEKBSZN")
 
-// 判断是否为钻石
+// Judge whether it is a diamond
 func IsDiamondValueString(diamondStr string) bool {
 	if len(diamondStr) != 6 {
 		return false
@@ -28,6 +28,6 @@ func IsDiamondValueString(diamondStr string) bool {
 			return false
 		}
 	}
-	// 检查成功
+	// Check successful
 	return true
 }
