@@ -7,7 +7,7 @@ import "github.com/hacash/core/fields"
  */
 func (bill OffChainCrossNodeSimplePaymentReconciliationBill) ConvertToRealtimeReconciliation() *OffChainFormPaymentChannelRealtimeReconciliation {
 
-	// 创建对账票据
+	// Create reconciliation bill
 	recbill := &OffChainFormPaymentChannelRealtimeReconciliation{
 		ChannelId:      bill.GetChannelId(),
 		ReuseVersion:   fields.VarUint4(bill.GetReuseVersion()),

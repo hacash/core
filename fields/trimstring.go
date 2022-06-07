@@ -41,7 +41,7 @@ func valueShow(str string) string {
 		if v < 32 || v > 126 {
 			break
 		}
-		if v == 34 { // 处理双引号转换为单引号
+		if v == 34 { // Process conversion of double quotation marks to single quotation marks
 			v = 39
 		}
 		msg += string([]byte{v})
@@ -76,8 +76,8 @@ func trimStringParse(elm interface{}, buf []byte, seek uint32, maxlen uint32) (u
 func trimStringSerialize(str string, maxlen int) ([]byte, error) {
 	//var str = string(*elm)
 	//fmt.Println("trimStringSerialize ---------", str, "===")
-	// 空格填充
+	// Space filling
 	newbts := bytes.Repeat([]byte{byte(' ')}, maxlen)
-	copy(newbts, str) // 按长度拷贝
+	copy(newbts, str) // Copy by length
 	return newbts, nil
 }

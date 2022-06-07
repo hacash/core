@@ -14,14 +14,14 @@ import (
 )
 
 type Action_7_SatoshiGenesis struct {
-	TransferNo               fields.VarUint4         // 转账流水编号
-	BitcoinBlockHeight       fields.VarUint4         // 转账的比特币区块高度
-	BitcoinBlockTimestamp    fields.BlockTxTimestamp // 转账的比特币区块时间戳
-	BitcoinEffectiveGenesis  fields.VarUint4         // 在这笔之前已经成功转移的比特币数量
-	BitcoinQuantity          fields.VarUint4         // 本笔转账的比特币数量（单位：枚）
+	TransferNo               fields.VarUint4         // Transfer serial number
+	BitcoinBlockHeight       fields.VarUint4         // Height of bitcoin block transferred
+	BitcoinBlockTimestamp    fields.BlockTxTimestamp // Bitcoin block timestamp of transfer
+	BitcoinEffectiveGenesis  fields.VarUint4         // The number of bitcoins successfully transferred before this
+	BitcoinQuantity          fields.VarUint4         // Number of bitcoins transferred in this transaction (unit: piece)
 	AdditionalTotalHacAmount fields.VarUint4         // 本次转账[总共]应该增发的 hac 数量 （单位：枚）
-	OriginAddress            fields.Address          // 转出的比特币来源地址
-	BitcoinTransferHash      fields.Hash             // 比特币转账交易哈希
+	OriginAddress            fields.Address          // Bitcoin source address transferred out
+	BitcoinTransferHash      fields.Hash             // Bitcoin transfer transaction hash
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
@@ -124,35 +124,35 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 交易只能包含唯一一个action
+	// Transaction can only contain one and only one action
 	belongactionnum := len(act.belong_trs_v3.GetActionList())
 	if 1 != belongactionnum {
 		return fmt.Errorf("Satoshi Genesis tx need only one action but got %d actions.", belongactionnum)
 	}
-	// 检查已经记录的增发（避免已完成的增发重复执行）
+	// Check the additional issuance that has been recorded (to avoid repeated execution of the completed additional issuance)
 	belongtxhx, berr2 := state.ReadMoveBTCTxHashByTrsNo(uint32(act.TransferNo))
 	if berr2 != nil {
 		return berr2
 	}
 	if belongtxhx != nil {
-		// 增发已经完成
+		// Additional issuance has been completed
 		return fmt.Errorf("Satoshi act TransferNo<%d> has been executed.", act.TransferNo)
 	}
 
-	// 请求验证数据
+	// Request validation data
 	checkact, mustcheck := state.BlockStore().LoadValidatedSatoshiGenesis(int64(act.TransferNo))
 	if false == mustcheck {
-		// 添加进交易池时必须验证
-		// 防止为验证的BTC转移交易被打包进区块
+		// Must be verified when adding to the transaction pool
+		// Prevent verified BTC transfer transactions from being packaged into blocks
 		mustcheck = state.IsInTxPool() == true
 	}
 	if mustcheck {
-		// 交易位于交易池时 和 设置了check url时， 必须验证
+		// When the transaction is in the transaction pool and the check URL is set, it must be verified
 		if checkact == nil {
-			// URL 未返回数据
+			// URL did not return data
 			return fmt.Errorf("SatoshiGenesis btc move logs url return invalid.")
 		}
-		// 比较
+		// compare
 		if act.TransferNo != checkact.TransferNo ||
 			act.BitcoinBlockHeight != checkact.BitcoinBlockHeight ||
 			act.BitcoinBlockTimestamp != checkact.BitcoinBlockTimestamp ||
@@ -163,41 +163,41 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 			bytes.Compare(act.BitcoinTransferHash, checkact.BitcoinTransferHash) != 0 {
 			return fmt.Errorf("Action_7_SatoshiGenesis act and check act is mismatch.")
 		}
-		// 验证数据 （转移比特币数量 1 ～ 1万枚）
+		// Verification data (transfer 10000 ~ 10000 bitcoins)
 		if act.BitcoinQuantity < 1 && act.BitcoinQuantity > 10000 {
 			return fmt.Errorf("SatoshiGenesis act BitcoinQuantity number is error (right is 1 ~ 10000).")
 		}
 		var ttHac int64 = 0
 		for i := act.BitcoinEffectiveGenesis + 1; i <= act.BitcoinEffectiveGenesis+act.BitcoinQuantity; i++ {
-			ttHac += moveBtcCoinRewardByIdx(int64(i)) // 累加总共HAC奖励
+			ttHac += moveBtcCoinRewardByIdx(int64(i)) // Cumulative total HAC Awards
 		}
 		if ttHac != int64(act.AdditionalTotalHacAmount) {
-			// 增发的 HAC 数量不对
+			// Incorrect number of additional HACs
 			return fmt.Errorf("SatoshiGenesis act AdditionalTotalHacAmount need %d but got %d.", ttHac, act.AdditionalTotalHacAmount)
 		}
-		// 检查时间（延迟28天才能领取）
+		// Inspection time (28 days later)
 		targettime := time.Unix(int64(act.BitcoinBlockTimestamp), 0).AddDate(0, 0, 28)
 		if time.Now().Before(targettime) {
 			return fmt.Errorf("SatoshiGenesis submit tx time must over %s", targettime.Format("2006/01/02 15:04:05"))
 		}
-		// 检查成功！！！
+		// Check succeeded!!!
 	}
-	// 直接加到解锁的统计
+	// Statistics directly added to unlock
 	totalsupply, e2 := state.ReadTotalSupply()
 	if e2 != nil {
 		return e2
 	}
 
-	// 统计比特币转移数量
+	// Count the number of bitcoin transfers
 	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfTransferBitcoin, float64(act.BitcoinQuantity))
 
-	// 记录 标记 已完成的 转移增发
+	// Record the transfer and additional issuance marked as completed
 	stoerr := state.SaveMoveBTCBelongTxHash(uint32(act.TransferNo), act.belong_trs_v3.Hash())
 	if stoerr != nil {
 		return stoerr
 	}
 
-	// 增发 hac
+	// Additional issuance of HAC
 	/*
 		hacmeibig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount))
 		totaladdhacamt, err := fields.NewAmountByBigIntWithUnit(hacmeibig, 248)
@@ -206,13 +206,13 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 		}
 	*/
 	totaladdhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount))
-	// 锁仓时间按最先一枚计算
-	// 判断是否线性锁仓至 lockbls
+	// The lock time shall be calculated according to the first one
+	// Judge whether to lock the warehouse to lockbls linearly
 	lockweek, weekhei := moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
 
-	// 开发者模式
+	// Developer mode
 	if sys.TestDebugLocalDevelopmentMark {
-		weekhei = 10 // 开发者模式，十个区块就释放
+		weekhei = 10 // Developer mode, release ten blocks
 	}
 
 	if weekhei > 17000000 {
@@ -220,19 +220,19 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 	}
 	if lockweek > 0 {
 
-		// 线性锁仓（周）
+		// Linear lock (week)
 		lkblsid := GainLockblsIdByBtcMove(uint32(act.TransferNo))
 
-		// 存储
+		// storage
 		lockbls := stores.NewEmptyLockbls(act.OriginAddress)
 		lockbls.EffectBlockHeight = fields.BlockHeight(state.GetPendingBlockHeight())
 		lockbls.LinearBlockNumber = fields.VarUint3(weekhei) // 2000
-		lockbls.TotalLockAmount = *totaladdhacamt            // 总锁仓
-		lockbls.BalanceAmount = *totaladdhacamt              // 余额
+		lockbls.TotalLockAmount = *totaladdhacamt            // General lock
+		lockbls.BalanceAmount = *totaladdhacamt              // balance
 		wklkhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount) / int64(lockweek))
-		lockbls.LinearReleaseAmount = *wklkhacamt // 每周可以解锁的币
+		lockbls.LinearReleaseAmount = *wklkhacamt // Coins that can be unlocked every week
 		// stores
-		// 创建线性锁仓
+		// Create linear lock
 		e := state.LockblsCreate(lkblsid, lockbls)
 		if e != nil {
 			return e
@@ -240,13 +240,13 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 
 	} else {
 
-		// 不锁仓，直接打到余额
+		// Do not lock the position, and directly transfer to the balance
 		e1 := DoAddBalanceFromChainStateV3(state, act.OriginAddress, *totaladdhacamt)
 		if e1 != nil {
 			return e1
 		}
 
-		// 累加解锁的HAC
+		// Cumulative unlocked HAC
 		addamt := totaladdhacamt.ToMei()
 		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed, addamt)
 
@@ -258,7 +258,7 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 		return e3
 	}
 
-	// 发行 btc 到地址
+	// Issue BTC to address
 	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位： 聪 (SAT)
 	return DoAddSatoshiFromChainStateV3(state, act.OriginAddress, fields.Satoshi(satBTC))
 }
@@ -268,30 +268,30 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfacev2.ChainSta
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 交易只能包含唯一一个action
+	// Transaction can only contain one and only one action
 	belongactionnum := len(act.belong_trs.GetActions())
 	if 1 != belongactionnum {
 		return fmt.Errorf("Satoshi Genesis tx need only one action but got %d actions.", belongactionnum)
 	}
-	// 检查已经记录的增发（避免已完成的增发重复执行）
+	// Check the additional issuance that has been recorded (to avoid repeated execution of the completed additional issuance)
 	belongtxhx, berr2 := state.ReadMoveBTCTxHashByNumber(uint32(act.TransferNo))
 	if berr2 != nil {
 		return berr2
 	}
 	if belongtxhx != nil {
-		// 增发已经完成
+		// Additional issuance has been completed
 		return fmt.Errorf("Satoshi act TransferNo<%d> has been executed.", act.TransferNo)
 	}
 
-	// 请求验证数据
+	// Request validation data
 	checkact, mustcheck := state.LoadValidatedSatoshiGenesis(int64(act.TransferNo))
 	if mustcheck {
-		// 交易位于交易池时 和 设置了check url时， 必须验证
+		// When the transaction is in the transaction pool and the check URL is set, it must be verified
 		if checkact == nil {
-			// URL 未返回数据
+			// URL did not return data
 			return fmt.Errorf("SatoshiGenesis btc move logs url return invalid.")
 		}
-		// 比较
+		// compare
 		if act.TransferNo != checkact.TransferNo ||
 			act.BitcoinBlockHeight != checkact.BitcoinBlockHeight ||
 			act.BitcoinBlockTimestamp != checkact.BitcoinBlockTimestamp ||
@@ -302,41 +302,41 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfacev2.ChainSta
 			bytes.Compare(act.BitcoinTransferHash, checkact.BitcoinTransferHash) != 0 {
 			return fmt.Errorf("Action_7_SatoshiGenesis act and check act is mismatch.")
 		}
-		// 验证数据 （转移比特币数量 1 ～ 1万枚）
+		// Verification data (transfer 10000 ~ 10000 bitcoins)
 		if act.BitcoinQuantity < 1 && act.BitcoinQuantity > 10000 {
 			return fmt.Errorf("SatoshiGenesis act BitcoinQuantity number is error (right is 1 ~ 10000).")
 		}
 		var ttHac int64 = 0
 		for i := act.BitcoinEffectiveGenesis + 1; i <= act.BitcoinEffectiveGenesis+act.BitcoinQuantity; i++ {
-			ttHac += moveBtcCoinRewardByIdx(int64(i)) // 累加总共HAC奖励
+			ttHac += moveBtcCoinRewardByIdx(int64(i)) // Cumulative total HAC Awards
 		}
 		if ttHac != int64(act.AdditionalTotalHacAmount) {
-			// 增发的 HAC 数量不对
+			// Incorrect number of additional HACs
 			return fmt.Errorf("SatoshiGenesis act AdditionalTotalHacAmount need %d but got %d.", ttHac, act.AdditionalTotalHacAmount)
 		}
-		// 检查时间（延迟28天才能领取）
+		// Inspection time (28 days later)
 		targettime := time.Unix(int64(act.BitcoinBlockTimestamp), 0).AddDate(0, 0, 28)
 		if time.Now().Before(targettime) {
 			return fmt.Errorf("SatoshiGenesis submit tx time must over %s", targettime.Format("2006/01/02 15:04:05"))
 		}
-		// 检查成功！！！
+		// Check succeeded!!!
 	}
-	// 直接加到解锁的统计
+	// Statistics directly added to unlock
 	totalsupply, e2 := state.ReadTotalSupply()
 	if e2 != nil {
 		return e2
 	}
 
-	// 统计比特币转移数量
+	// Count the number of bitcoin transfers
 	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfTransferBitcoin, float64(act.BitcoinQuantity))
 
-	// 记录 标记 已完成的 转移增发
+	// Record the transfer and additional issuance marked as completed
 	stoerr := state.SaveMoveBTCBelongTxHash(uint32(act.TransferNo), act.belong_trs.Hash())
 	if stoerr != nil {
 		return stoerr
 	}
 
-	// 增发 hac
+	// Additional issuance of HAC
 	/*
 		hacmeibig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount))
 		totaladdhacamt, err := fields.NewAmountByBigIntWithUnit(hacmeibig, 248)
@@ -345,13 +345,13 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfacev2.ChainSta
 		}
 	*/
 	totaladdhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount))
-	// 锁仓时间按最先一枚计算
-	// 判断是否线性锁仓至 lockbls
+	// The lock time shall be calculated according to the first one
+	// Judge whether to lock the warehouse to lockbls linearly
 	lockweek, weekhei := moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
 
-	// 开发者模式
+	// Developer mode
 	if sys.TestDebugLocalDevelopmentMark {
-		weekhei = 10 // 开发者模式，十个区块就释放
+		weekhei = 10 // Developer mode, release ten blocks
 	}
 
 	if weekhei > 17000000 {
@@ -359,30 +359,30 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfacev2.ChainSta
 	}
 	if lockweek > 0 {
 
-		// 线性锁仓（周）
+		// Linear lock (week)
 		lkblsid := GainLockblsIdByBtcMove(uint32(act.TransferNo))
 
-		// 存储
+		// storage
 		lockbls := stores.NewEmptyLockbls(act.OriginAddress)
 		lockbls.EffectBlockHeight = fields.BlockHeight(state.GetPendingBlockHeight())
 		lockbls.LinearBlockNumber = fields.VarUint3(weekhei) // 2000
-		lockbls.TotalLockAmount = *totaladdhacamt            // 总锁仓
-		lockbls.BalanceAmount = *totaladdhacamt              // 余额
+		lockbls.TotalLockAmount = *totaladdhacamt            // General lock
+		lockbls.BalanceAmount = *totaladdhacamt              // balance
 		wklkhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount) / int64(lockweek))
-		lockbls.LinearReleaseAmount = *wklkhacamt // 每周可以解锁的币
+		lockbls.LinearReleaseAmount = *wklkhacamt // Coins that can be unlocked every week
 		// stores
-		// 创建线性锁仓
+		// Create linear lock
 		state.LockblsCreate(lkblsid, lockbls)
 
 	} else {
 
-		// 不锁仓，直接打到余额
+		// Do not lock the position, and directly transfer to the balance
 		e1 := DoAddBalanceFromChainState(state, act.OriginAddress, *totaladdhacamt)
 		if e1 != nil {
 			return e1
 		}
 
-		// 累加解锁的HAC
+		// Cumulative unlocked HAC
 		addamt := totaladdhacamt.ToMei()
 		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed, addamt)
 
@@ -394,7 +394,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfacev2.ChainSta
 		return e3
 	}
 
-	// 发行 btc 到地址
+	// Issue BTC to address
 	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位： 聪 (SAT)
 	return DoAddSatoshiFromChainState(state, act.OriginAddress, fields.Satoshi(satBTC))
 }
@@ -404,32 +404,32 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfacev2.ChainSta
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// 回退解锁的统计
+	// Statistics of rollback unlocking
 	totalsupply, e2 := state.ReadTotalSupply()
 	if e2 != nil {
 		return e2
 	}
 
-	// 回退比特币转移数量
+	// Back bitcoin transfer quantity
 	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfTransferBitcoin, float64(act.BitcoinQuantity))
 
-	// 回退 hac
-	// 锁仓时间按最先一枚计算
-	// 判断是否线性锁仓至 lockbls
+	// Fallback HAC
+	// The lock time shall be calculated according to the first one
+	// Judge whether to lock the warehouse to lockbls linearly
 	lockweek, weekhei := moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
 	if weekhei > 17000000 {
 		return fmt.Errorf("moveBtcLockWeekByIdx weekhei overflow.")
 	}
 	if lockweek > 0 {
 
-		// 回退锁仓
+		// Back locking
 		lkblsid := GainLockblsIdByBtcMove(uint32(act.TransferNo))
-		// 删除线性锁仓
+		// Delete linear lock
 		state.LockblsDelete(lkblsid)
 
 	} else {
 
-		// 回退 HAC 增发
+		// Back HAC additional issue
 		/*
 			addhacamt, err := fields.NewAmountByBigIntWithUnit(hacmeibig, 248)
 			if err != nil {
@@ -441,7 +441,7 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfacev2.ChainSta
 		if e1 != nil {
 			return e1
 		}
-		// 减去解锁的HAC
+		// Subtract unlocked HAC
 		addamt := addhacamt.ToMei()
 		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed, addamt)
 
@@ -453,12 +453,12 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfacev2.ChainSta
 		return e3
 	}
 
-	// 扣除 btc
+	// Deduct BTC
 	satBTC := uint64(act.BitcoinQuantity) * 10000 * 10000 // 单位 聪
 	return DoSubSatoshiFromChainState(state, act.OriginAddress, fields.Satoshi(satBTC))
 }
 
-// 设置所属 belong_trs
+// Set belongs to long_ trs
 func (act *Action_7_SatoshiGenesis) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }
@@ -478,14 +478,14 @@ func powf2(n int) int64 {
 	return int64(res)
 }
 
-// 第几枚BTC增发HAC数量（单位：枚）
+// The number of additional HACs issued by the BTC (unit: PCS)
 func moveBtcCoinRewardByIdx(btcidx int64) int64 {
 	var lvn = 21
 	if btcidx == 1 {
 		return powf2(lvn - 1)
 	}
 	if btcidx > powf2(lvn)-1 {
-		return 1 // 最后始终增发一枚
+		return 1 // Finally, always issue an additional one
 	}
 	var tarlv int
 	for i := 0; i < lvn; i++ {
@@ -499,10 +499,10 @@ func moveBtcCoinRewardByIdx(btcidx int64) int64 {
 	return powf2(lvn - tarlv)
 }
 
-// 计算第几枚BTC锁仓信息
+// Calculate the lock information of the BTC
 func moveBtcLockWeekByIdx(btcidx int64) (int64, int64) {
 	var oneweekhei int64 = 2000   // 2000 / 288 = 6.9444天
-	var mostlockweek int64 = 1024 // 1024周约等于 20 年
+	var mostlockweek int64 = 1024 // 1024 weeks is about 20 years
 	if btcidx == 1 {
 		return mostlockweek, oneweekhei
 	}
@@ -526,7 +526,7 @@ func moveBtcLockWeekByIdx(btcidx int64) (int64, int64) {
 
 func GainLockblsIdByBtcMove(btcTransferNo uint32) []byte {
 
-	// 自己创建的 lockbls key 不允许创建这样的的前面全为0的key!!!
+	// Self created lockbls keys are not allowed to create such keys with 0 in front!!!
 	lockbleid := bytes.Repeat([]byte{0}, 4) // key size = 18
 	binary.BigEndian.PutUint32(lockbleid, uint32(btcTransferNo))
 	lockbleidbytes := bytes.NewBuffer(bytes.Repeat([]byte{0}, stores.LockblsIdLength-4))

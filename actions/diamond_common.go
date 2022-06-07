@@ -9,13 +9,13 @@ import (
 	"github.com/hacash/core/stores"
 )
 
-// diamond 转账
+// Diamond transfer
 func DoSimpleDiamondTransferFromChainState(state interfacev2.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, dia fields.DiamondNumber) error {
 	if bytes.Compare(addr1, addr2) == 0 {
-		return nil // 可以自己转给自己，不改变状态，白费手续费
+		return nil // You can transfer it to yourself without changing the status, which is a waste of service fees
 	}
 	if dia == 0 {
-		return nil // 数量为0，直接成功
+		return nil // Quantity is 0, direct success
 	}
 	bls1, e := state.Balance(addr1)
 	if e != nil {
@@ -25,7 +25,7 @@ func DoSimpleDiamondTransferFromChainState(state interfacev2.ChainStateOperation
 		return fmt.Errorf("Diamond not find.")
 	}
 	dia1 := bls1.Diamond
-	// 检查余额
+	// Check balance
 	if uint64(dia1) < uint64(dia) {
 		return fmt.Errorf("Address %s diamond %d not enough, need more %d.", addr1.ToReadable(), dia1, dia)
 	}
@@ -37,12 +37,12 @@ func DoSimpleDiamondTransferFromChainState(state interfacev2.ChainStateOperation
 		bls2 = stores.NewEmptyBalance() // create satoshi store
 	}
 	dia2 := bls2.Diamond
-	bls1.Diamond = fields.DiamondNumber(uint32(dia1) - uint32(dia)) // 扣除
+	bls1.Diamond = fields.DiamondNumber(uint32(dia1) - uint32(dia)) // deduction
 	bse1 := state.BalanceSet(addr1, bls1)
 	if bse1 != nil {
 		return bse1
 	}
-	bls2.Diamond = fields.DiamondNumber(uint32(dia2) + uint32(dia)) // 增加
+	bls2.Diamond = fields.DiamondNumber(uint32(dia2) + uint32(dia)) // increase
 	bse2 := state.BalanceSet(addr2, bls2)
 	if bse2 != nil {
 		return bse2
@@ -51,10 +51,10 @@ func DoSimpleDiamondTransferFromChainState(state interfacev2.ChainStateOperation
 	return nil
 }
 
-// 单纯增加 Diamond 余额
+// Simply increase diamond balance
 func DoAddDiamondFromChainState(state interfacev2.ChainStateOperation, addr fields.Address, dia fields.DiamondNumber) error {
 	if dia == 0 {
-		return nil // 数量为0，直接成功
+		return nil // Quantity is 0, direct success
 	}
 	blssto, e := state.Balance(addr)
 	if e != nil {
@@ -65,7 +65,7 @@ func DoAddDiamondFromChainState(state interfacev2.ChainStateOperation, addr fiel
 	}
 	basedia := blssto.Diamond
 	newdia := uint64(basedia) + uint64(dia)
-	// 新余额
+	// New balance
 	blssto.Diamond = fields.DiamondNumber(newdia)
 	bserr := state.BalanceSet(addr, blssto)
 	if bserr != nil {
@@ -74,10 +74,10 @@ func DoAddDiamondFromChainState(state interfacev2.ChainStateOperation, addr fiel
 	return nil
 }
 
-// 单纯扣除 diamond 余额
+// Simply deduct diamond balance
 func DoSubDiamondFromChainState(state interfacev2.ChainStateOperation, addr fields.Address, dia fields.DiamondNumber) error {
 	if dia == 0 {
-		return nil // 数量为0，直接成功
+		return nil // Quantity is 0, direct success
 	}
 	blssto, e := state.Balance(addr)
 	if e != nil {
@@ -87,7 +87,7 @@ func DoSubDiamondFromChainState(state interfacev2.ChainStateOperation, addr fiel
 		return fmt.Errorf("address %s diamond need %d not enough.", addr.ToReadable(), dia)
 	}
 	basedia := blssto.Diamond
-	// 检查余额
+	// Check balance
 	if uint64(basedia) < uint64(dia) {
 		return fmt.Errorf("address %s satoshi %d not enough, need more %d.", addr.ToReadable(), basedia, dia)
 	}
@@ -102,13 +102,13 @@ func DoSubDiamondFromChainState(state interfacev2.ChainStateOperation, addr fiel
 
 /////////////////////////////////////////////
 
-// diamond 转账
+// Diamond transfer
 func DoSimpleDiamondTransferFromChainStateV3(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, dia fields.DiamondNumber) error {
 	if bytes.Compare(addr1, addr2) == 0 {
-		return nil // 可以自己转给自己，不改变状态，白费手续费
+		return nil // You can transfer it to yourself without changing the status, which is a waste of service fees
 	}
 	if dia == 0 {
-		return nil // 数量为0，直接成功
+		return nil // Quantity is 0, direct success
 	}
 	bls1, e := state.Balance(addr1)
 	if e != nil {
@@ -118,7 +118,7 @@ func DoSimpleDiamondTransferFromChainStateV3(state interfaces.ChainStateOperatio
 		return fmt.Errorf("Diamond not find.")
 	}
 	dia1 := bls1.Diamond
-	// 检查余额
+	// Check balance
 	if uint64(dia1) < uint64(dia) {
 		return fmt.Errorf("Address %s diamond %d not enough, need more %d.", addr1.ToReadable(), dia1, dia)
 	}
@@ -130,12 +130,12 @@ func DoSimpleDiamondTransferFromChainStateV3(state interfaces.ChainStateOperatio
 		bls2 = stores.NewEmptyBalance() // create satoshi store
 	}
 	dia2 := bls2.Diamond
-	bls1.Diamond = fields.DiamondNumber(uint32(dia1) - uint32(dia)) // 扣除
+	bls1.Diamond = fields.DiamondNumber(uint32(dia1) - uint32(dia)) // deduction
 	bse1 := state.BalanceSet(addr1, bls1)
 	if bse1 != nil {
 		return bse1
 	}
-	bls2.Diamond = fields.DiamondNumber(uint32(dia2) + uint32(dia)) // 增加
+	bls2.Diamond = fields.DiamondNumber(uint32(dia2) + uint32(dia)) // increase
 	bse2 := state.BalanceSet(addr2, bls2)
 	if bse2 != nil {
 		return bse2
@@ -144,10 +144,10 @@ func DoSimpleDiamondTransferFromChainStateV3(state interfaces.ChainStateOperatio
 	return nil
 }
 
-// 单纯增加 Diamond 余额
+// Simply increase diamond balance
 func DoAddDiamondFromChainStateV3(state interfaces.ChainStateOperation, addr fields.Address, dia fields.DiamondNumber) error {
 	if dia == 0 {
-		return nil // 数量为0，直接成功
+		return nil // Quantity is 0, direct success
 	}
 	blssto, e := state.Balance(addr)
 	if e != nil {
@@ -158,7 +158,7 @@ func DoAddDiamondFromChainStateV3(state interfaces.ChainStateOperation, addr fie
 	}
 	basedia := blssto.Diamond
 	newdia := uint64(basedia) + uint64(dia)
-	// 新余额
+	// New balance
 	blssto.Diamond = fields.DiamondNumber(newdia)
 	bserr := state.BalanceSet(addr, blssto)
 	if bserr != nil {
@@ -167,10 +167,10 @@ func DoAddDiamondFromChainStateV3(state interfaces.ChainStateOperation, addr fie
 	return nil
 }
 
-// 单纯扣除 diamond 余额
+// Simply deduct diamond balance
 func DoSubDiamondFromChainStateV3(state interfaces.ChainStateOperation, addr fields.Address, dia fields.DiamondNumber) error {
 	if dia == 0 {
-		return nil // 数量为0，直接成功
+		return nil // Quantity is 0, direct success
 	}
 	blssto, e := state.Balance(addr)
 	if e != nil {
@@ -180,7 +180,7 @@ func DoSubDiamondFromChainStateV3(state interfaces.ChainStateOperation, addr fie
 		return fmt.Errorf("address %s diamond need %d not enough.", addr.ToReadable(), dia)
 	}
 	basedia := blssto.Diamond
-	// 检查余额
+	// Check balance
 	if uint64(basedia) < uint64(dia) {
 		return fmt.Errorf("address %s satoshi %d not enough, need more %d.", addr.ToReadable(), basedia, dia)
 	}

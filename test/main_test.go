@@ -26,7 +26,7 @@ func Test_t1(t *testing.T) {
 
 }
 
-// 测试 1BitcoinMoveToHacashNeverBack
+// Test 1bitcoinmovetohacashneverback
 func Test_1BitcoinMoveToHacashNeverBack(t *testing.T) {
 	// const alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 	//                        1Aq1iP9ddFSnsj3PyTuGA2N2fZtdvxVSbc

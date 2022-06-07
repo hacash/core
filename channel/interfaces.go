@@ -11,16 +11,16 @@ import (
 
 */
 
-// 链上仲裁对账依据
+// Online arbitration reconciliation basis
 type OnChainChannelPaymentArbitrationReconciliationBasis interface {
 	GetChannelId() fields.ChannelId
-	GetLeftBalance() fields.Amount   // 左侧HAC金额
-	GetRightBalance() fields.Amount  // 右侧HAC金额
-	GetLeftSatoshi() fields.Satoshi  // 左侧分配BTC sat数额
-	GetRightSatoshi() fields.Satoshi // 右侧分配BTC sat数额
-	GetReuseVersion() uint32         // 通道重用序号
+	GetLeftBalance() fields.Amount   // Left HAC amount
+	GetRightBalance() fields.Amount  // Right HAC amount
+	GetLeftSatoshi() fields.Satoshi  // BTC sat amount allocated on the left
+	GetRightSatoshi() fields.Satoshi // BTC sat amount allocated on the right
+	GetReuseVersion() uint32         // Channel reuse sequence number
 	GetAutoNumber() uint64
-	// 检查地址和签名
+	// Check address and signature
 	CheckAddressAndSign(laddr, raddr fields.Address) error
 }
 
@@ -32,8 +32,8 @@ type OnChainChannelPaymentArbitrationReconciliationBasis interface {
 
 */
 const (
-	BillTypeCodeSimplePay      uint8 = 1 // 普通支付
-	BillTypeCodeReconciliation uint8 = 2 // 对账
+	BillTypeCodeSimplePay      uint8 = 1 // Ordinary payment
+	BillTypeCodeReconciliation uint8 = 2 // Reconciliation
 )
 
 /**
@@ -42,13 +42,13 @@ const (
 
 */
 
-// 通用对账票据接口
+// General reconciliation bill interface
 type ReconciliationBalanceBill interface {
 	Size() uint32
-	Parse(buf []byte, seek uint32) (uint32, error) // 反序列化
-	Serialize() ([]byte, error)                    // 序列化
-	SerializeWithTypeCode() ([]byte, error)        // 序列化
-	TypeCode() uint8                               // 类型
+	Parse(buf []byte, seek uint32) (uint32, error) // Deserialization
+	Serialize() ([]byte, error)                    // serialize
+	SerializeWithTypeCode() ([]byte, error)        // serialize
+	TypeCode() uint8                               // type
 
 	GetChannelId() fields.ChannelId
 
@@ -61,15 +61,15 @@ type ReconciliationBalanceBill interface {
 	GetLeftAddress() fields.Address
 	GetRightAddress() fields.Address
 
-	GetTimestamp() uint64 // 对账时间戳，秒
+	GetTimestamp() uint64 // Reconciliation timestamp, seconds
 
-	// 通道重用序号 & 通道账单流水序号
+	// Channel reuse serial number channel bill serial number
 	GetReuseVersionAndAutoNumber() (uint32, uint64)
 	GetReuseVersion() uint32
 	GetAutoNumber() uint64
 
-	CheckValidity() error   // 检查数据可用性
-	VerifySignature() error // 验证对票据的签名
+	CheckValidity() error   // Check data availability
+	VerifySignature() error // Verify signature on ticket
 
 }
 
@@ -79,10 +79,10 @@ type ReconciliationBalanceBill interface {
 
 */
 
-// 序列化
+// serialize
 func SerializeReconciliationBalanceBillWithPrefixTypeCode(bill ReconciliationBalanceBill) ([]byte, error) {
-	// 类型
-	// 解析
+	// type
+	// analysis
 	bts, e := bill.SerializeWithTypeCode()
 	if e != nil {
 		return nil, e
@@ -91,12 +91,12 @@ func SerializeReconciliationBalanceBillWithPrefixTypeCode(bill ReconciliationBal
 
 }
 
-// 反序列化
+// Deserialization
 func ParseReconciliationBalanceBillByPrefixTypeCode(buf []byte, seek uint32) (ReconciliationBalanceBill, uint32, error) {
 	ty := buf[seek]
 	var bill ReconciliationBalanceBill = nil
 
-	// 类型
+	// type
 	switch ty {
 	case BillTypeCodeSimplePay: // 普通通道链支付
 		bill = &OffChainCrossNodeSimplePaymentReconciliationBill{}
@@ -106,7 +106,7 @@ func ParseReconciliationBalanceBillByPrefixTypeCode(buf []byte, seek uint32) (Re
 		return nil, 0, fmt.Errorf("Unsupported bill type <%d>", ty)
 	}
 
-	// 解析
+	// analysis
 	var e error
 	seek, e = bill.Parse(buf, seek+1)
 	if e != nil {

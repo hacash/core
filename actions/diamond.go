@@ -18,32 +18,32 @@ import (
  * 钻石交易类型
  */
 
-// 第 20001 个钻石开始，启用 32 位的 msg byte
+// Start with the 20001st diamond and enable the 32-bit MSG byte
 const DiamondCreateCustomMessageAboveNumber uint32 = 20000
 
-// 第 30001 个钻石开始，销毁 90% 的竞价费用
+// Starting from the 30001st diamond, destroy 90% of the bidding cost
 const DiamondCreateBurning90PercentTxFeesAboveNumber uint32 = 30000
 
-// 采用 30001 ~ 40000 枚钻石平均竞价费用，之前的设定为 10 枚
+// The average bidding cost of 30001 ~ 40000 diamonds is adopted, and the previous setting is 10 diamonds
 const DiamondStatisticsAverageBiddingBurningPriceAboveNumber uint32 = 40000
 
-// 第 40001 个钻石，开始用 sha3_hash(diamondreshash + blockhash) 决定钻石形状和配色
+// 40001 diamond, start with Sha3_ Hash (diamondreshash + blockhash) determines diamond shape and color matching
 const DiamondResourceHashAndContainBlockHashDecideVisualGeneAboveNumber uint32 = 40000
 
-// 第 41001 个钻石，开始用 sha3_hash(diamondreshash + blockhash + bidfee) 包括竞价费参与决定钻石形状配色
+// 41001 diamond, start with Sha3_ Hash (diamondreshash + blockhash + bidfee) includes the bidding fee to participate in the decision of diamond shape color matching
 const DiamondResourceAppendBiddingFeeDecideVisualGeneAboveNumber uint32 = 41000
 
-// 挖出钻石
+// Dig out diamonds
 type Action_4_DiamondCreate struct {
-	Diamond  fields.DiamondName   // 钻石字面量 WTYUIAHXVMEKBSZN
-	Number   fields.DiamondNumber // 钻石序号，用于难度检查
-	PrevHash fields.Hash          // 上一个包含钻石的区块hash
-	Nonce    fields.Bytes8        // 随机数
-	Address  fields.Address       // 所属账户
-	// 客户消息
+	Diamond  fields.DiamondName   // Diamond literal wtyuiahxvmekbszn
+	Number   fields.DiamondNumber // Diamond serial number for difficulty check
+	PrevHash fields.Hash          // Previous block hash containing diamond
+	Nonce    fields.Bytes8        // random number
+	Address  fields.Address       // Account
+	// Customer message
 	CustomMessage fields.Bytes32
 
-	// 所属交易
+	// Transaction
 	belong_trs    interfacev2.Transaction
 	belong_trs_v3 interfaces.Transaction
 }
@@ -65,7 +65,7 @@ func (elm *Action_4_DiamondCreate) Size() uint32 {
 		elm.PrevHash.Size() +
 		elm.Nonce.Size() +
 		elm.Address.Size()
-	// 加上 msg byte
+	// Add MSG byte
 	if uint32(elm.Number) > DiamondCreateCustomMessageAboveNumber {
 		size += elm.CustomMessage.Size()
 	}
@@ -95,7 +95,7 @@ func (elm *Action_4_DiamondCreate) Serialize() ([]byte, error) {
 	buffer.Write(prevBytes)
 	buffer.Write(nonceBytes)
 	buffer.Write(addrBytes)
-	// 加上 msg byte
+	// Add MSG byte
 	if uint32(elm.Number) > DiamondCreateCustomMessageAboveNumber {
 		var msgBytes, _ = elm.CustomMessage.Serialize()
 		buffer.Write(msgBytes)
@@ -125,7 +125,7 @@ func (elm *Action_4_DiamondCreate) Parse(buf []byte, seek uint32) (uint32, error
 	if e != nil {
 		return 0, e
 	}
-	// 加上 msg byte
+	// Add MSG byte
 	if uint32(elm.Number) > DiamondCreateCustomMessageAboveNumber {
 		moveseek5, e = elm.CustomMessage.Parse(buf, moveseek5)
 		if e != nil {
@@ -155,7 +155,7 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 		diamondVisualUseContainBlockHash = bytes.Repeat([]byte{0}, 32)
 	}
 
-	// 是否必须全面检查
+	// Whether comprehensive inspection is necessary
 	var mustDoAllCheck = true
 
 	lateststatus, e := state.LatestStatusRead()
@@ -164,33 +164,33 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 	}
 
 	if sys.TestDebugLocalDevelopmentMark {
-		mustDoAllCheck = false // 开发者模式 不检查
+		mustDoAllCheck = false // Developer mode does not check
 	}
 	//fmt.Println(state.IsDatabaseVersionRebuildMode(), "-------------------------")
 	if state.IsDatabaseVersionRebuildMode() {
-		mustDoAllCheck = false // 数据库升级模式 不检查
+		mustDoAllCheck = false // Database upgrade mode does not check
 	}
 
-	// 计算钻石哈希
+	// Calculate diamond hash
 	sha3hash, diamondResHash, diamondStr := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address, act.GetRealCustomMessage())
-	// 是否做全面的检查
+	// Whether to conduct comprehensive inspection
 	if mustDoAllCheck {
-		// 交易只能包含唯一一个action
+		// Transaction can only contain one and only one action
 		belongactionnum := len(act.belong_trs_v3.GetActionList())
 		if 1 != belongactionnum {
 			return fmt.Errorf("Diamond create tx need only one action but got %d actions.", belongactionnum)
 		}
-		// 检查区块高度
-		// 检查区块高度值是否为5的倍数
-		// {BACKTOPOOL} 表示扔回交易池等待下个区块再次处理
+		// Check block height
+		// Check whether the block height value is a multiple of 5
+		// {backtopool} means to throw it back to the trading pool and wait for the next block to be processed again
 		if blkhei%5 != 0 {
 			return fmt.Errorf("{BACKTOPOOL} Diamond must be in block height multiple of 5.")
 		}
 
-		// 矿工状态检查
+		// Miner status inspection
 		lastdiamond := lateststatus.ReadLastestDiamond()
 		if lastdiamond == nil && act.Number > 1 {
-			// 非首个钻石但读不出上一个钻石的信息
+			// Not the first diamond but can not read the information of the last diamond
 			return fmt.Errorf("Cannot ReadLastestDiamond() to get last diamond of act.Number > 1.")
 		}
 		if lastdiamond != nil {
@@ -202,7 +202,7 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 			if prevdiamondhash == nil {
 				return fmt.Errorf("lastdiamond.ContainBlockHash is nil.")
 			}
-			// 检查钻石是否是从上一个区块得来
+			// Check if the diamond is from the previous block
 			if act.PrevHash.Equal(prevdiamondhash) != true {
 				return fmt.Errorf("Diamond prev hash must be <%s> but got <%s>.", hex.EncodeToString(prevdiamondhash), hex.EncodeToString(act.PrevHash))
 			}
@@ -210,7 +210,7 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 				return fmt.Errorf("Diamond number must be <%d> but got <%d>.", prevdiamondnum+1, act.Number)
 			}
 		}
-		// 检查钻石挖矿计算
+		// Check diamond mining calculation
 		diamondstrval, isdia := x16rs.IsDiamondHashResultString(diamondStr)
 		if !isdia {
 			return fmt.Errorf("String <%s> is not diamond.", diamondStr)
@@ -218,12 +218,12 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 		if strings.Compare(diamondstrval, string(act.Diamond)) != 0 {
 			return fmt.Errorf("Diamond need <%s> but got <%s>", act.Diamond, diamondstrval)
 		}
-		// 检查钻石难度值
+		// Check diamond difficulty value
 		difok := x16rs.CheckDiamondDifficulty(uint32(act.Number), sha3hash, diamondResHash)
 		if !difok {
 			return fmt.Errorf("Diamond difficulty not meet the requirements.")
 		}
-		// 查询钻石是否已经存在
+		// Query whether the diamond already exists
 		hasaddr, e := state.Diamond(act.Diamond)
 		if e != nil {
 			return e
@@ -231,31 +231,31 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 		if hasaddr != nil {
 			return fmt.Errorf("Diamond <%s> already exist.", string(act.Diamond))
 		}
-		// 检查一个区块只能包含一枚钻石
+		// Check that a block can contain only one diamond
 		pendingdiamond := pending.GetWaitingSubmitDiamond()
 		if pendingdiamond != nil {
 			return fmt.Errorf("This block height:%d has already exist diamond:<%s> .", blkhei, pendingdiamond.Diamond)
 		}
-		// 全部条件检查成功
+		// All conditions checked successfully
 	}
 
-	// 存入钻石
+	// Deposit diamonds
 	//fmt.Println(act.Address.ToReadable())
 	var diastore = stores.NewDiamond(act.Address)
-	diastore.Address = act.Address                // 钻石所属地址
+	diastore.Address = act.Address                // Diamond address
 	e3 := state.DiamondSet(act.Diamond, diastore) // 保存
 	if e3 != nil {
 		return e3
 	}
-	// 增加钻石余额 +1
+	// Increase diamond balance +1
 	e9 := DoAddDiamondFromChainStateV3(state, act.Address, 1)
 	if e9 != nil {
 		return e9
 	}
 
-	// 设置矿工状态
-	// 标记本区块已经包含钻石
-	// 存储对象，计算视觉基因
+	// Set miner status
+	// Mark that this block already contains diamonds
+	// Storing objects, computing visual genes
 	visualGene, e15 := calculateVisualGeneByDiamondStuffHashV3(act.belong_trs_v3, uint32(act.Number), diamondResHash, diamondStr, diamondVisualUseContainBlockHash)
 	if e15 != nil {
 		return e15
@@ -273,42 +273,42 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 		VisualGene:           visualGene,
 	}
 
-	// 写入手续费报价
+	// Write service charge quotation
 	feeoffer := act.belong_trs_v3.GetFee()
 	e11 := diamondstore.ParseApproxFeeOffer(feeoffer)
 	if e11 != nil {
 		return e11
 	}
-	// total supply 统计
+	// Total supply statistics
 	totalsupply, e2 := state.ReadTotalSupply()
 	if e2 != nil {
 		return e2
 	}
 
-	// 计算平均竞价HAC枚数
+	// Calculate the average number of HACs for bidding
 	if uint32(act.Number) <= DiamondStatisticsAverageBiddingBurningPriceAboveNumber {
-		diamondstore.AverageBidBurnPrice = 10 // 固定设为 10 枚
+		diamondstore.AverageBidBurnPrice = 10 // Fixed to 10
 	} else {
 		bsnum := uint32(act.Number) - DiamondCreateBurning90PercentTxFeesAboveNumber
 		burnhac := totalsupply.Get(stores.TotalSupplyStoreTypeOfBurningFee)
 		bidprice := uint64(burnhac/float64(bsnum) + 0.99999999) // 向上取整
 		setprice := fields.VarUint2(bidprice)
 		if setprice < 1 {
-			setprice = 1 // 最小为1
+			setprice = 1 // Minimum 1
 		}
 		diamondstore.AverageBidBurnPrice = setprice
 	}
 
-	// 更新区块状态
+	// Update block status
 	lateststatus.SetLastestDiamond(diamondstore)
 	pending.SetWaitingSubmitDiamond(diamondstore)
-	// 保存状态
+	// Save status
 	e = state.LatestStatusSet(lateststatus)
 	if e != nil {
 		return e
 	}
 
-	// 保存钻石
+	// Save diamonds
 	if state.IsInTxPool() == false {
 		e = blockstore.SaveDiamond(diamondstore)
 		if e != nil {
@@ -358,40 +358,40 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 		diamondVisualUseContainBlockHash = bytes.Repeat([]byte{0}, 32)
 	}
 
-	// 是否必须全面检查
+	// Whether comprehensive inspection is necessary
 	var mustDoAllCheck = true
 
 	if sys.TestDebugLocalDevelopmentMark {
-		mustDoAllCheck = false // 开发者模式 不检查
+		mustDoAllCheck = false // Developer mode does not check
 	}
 	//fmt.Println(state.IsDatabaseVersionRebuildMode(), "-------------------------")
 	if state.IsDatabaseVersionRebuildMode() {
-		mustDoAllCheck = false // 数据库升级模式 不检查
+		mustDoAllCheck = false // Database upgrade mode does not check
 	}
 
-	// 计算钻石哈希
+	// Calculate diamond hash
 	sha3hash, diamondResHash, diamondStr := x16rs.Diamond(uint32(act.Number), act.PrevHash, act.Nonce, act.Address, act.GetRealCustomMessage())
-	// 是否做全面的检查
+	// Whether to conduct comprehensive inspection
 	if mustDoAllCheck {
-		// 交易只能包含唯一一个action
+		// Transaction can only contain one and only one action
 		belongactionnum := len(act.belong_trs.GetActions())
 		if 1 != belongactionnum {
 			return fmt.Errorf("Diamond create tx need only one action but got %d actions.", belongactionnum)
 		}
-		// 检查区块高度
-		// 检查区块高度值是否为5的倍数
-		// {BACKTOPOOL} 表示扔回交易池等待下个区块再次处理
+		// Check block height
+		// Check whether the block height value is a multiple of 5
+		// {backtopool} means to throw it back to the trading pool and wait for the next block to be processed again
 		if blkhei%5 != 0 {
 			return fmt.Errorf("{BACKTOPOOL} Diamond must be in block height multiple of 5.")
 		}
 
-		// 矿工状态检查
+		// Miner status inspection
 		lastdiamond, err := state.ReadLastestDiamond()
 		if err != nil {
 			return err
 		}
 		if lastdiamond == nil && act.Number > 1 {
-			// 非首个钻石但读不出上一个钻石的信息
+			// Not the first diamond but can not read the information of the last diamond
 			return fmt.Errorf("Cannot ReadLastestDiamond() to get last diamond of act.Number > 1.")
 		}
 		if lastdiamond != nil {
@@ -403,7 +403,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 			if prevdiamondhash == nil {
 				return fmt.Errorf("lastdiamond.ContainBlockHash is nil.")
 			}
-			// 检查钻石是否是从上一个区块得来
+			// Check if the diamond is from the previous block
 			if act.PrevHash.Equal(prevdiamondhash) != true {
 				return fmt.Errorf("Diamond prev hash must be <%s> but got <%s>.", hex.EncodeToString(prevdiamondhash), hex.EncodeToString(act.PrevHash))
 			}
@@ -411,7 +411,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 				return fmt.Errorf("Diamond number must be <%d> but got <%d>.", prevdiamondnum+1, act.Number)
 			}
 		}
-		// 检查钻石挖矿计算
+		// Check diamond mining calculation
 		diamondstrval, isdia := x16rs.IsDiamondHashResultString(diamondStr)
 		if !isdia {
 			return fmt.Errorf("String <%s> is not diamond.", diamondStr)
@@ -419,12 +419,12 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 		if strings.Compare(diamondstrval, string(act.Diamond)) != 0 {
 			return fmt.Errorf("Diamond need <%s> but got <%s>", act.Diamond, diamondstrval)
 		}
-		// 检查钻石难度值
+		// Check diamond difficulty value
 		difok := x16rs.CheckDiamondDifficulty(uint32(act.Number), sha3hash, diamondResHash)
 		if !difok {
 			return fmt.Errorf("Diamond difficulty not meet the requirements.")
 		}
-		// 查询钻石是否已经存在
+		// Query whether the diamond already exists
 		hasaddr, e := state.Diamond(act.Diamond)
 		if e != nil {
 			return e
@@ -432,7 +432,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 		if hasaddr != nil {
 			return fmt.Errorf("Diamond <%s> already exist.", string(act.Diamond))
 		}
-		// 检查一个区块只能包含一枚钻石
+		// Check that a block can contain only one diamond
 		pendingdiamond, e2 := state.GetPendingSubmitStoreDiamond()
 		if e2 != nil {
 			return e2
@@ -440,26 +440,26 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 		if pendingdiamond != nil {
 			return fmt.Errorf("This block height:%d has already exist diamond:<%s> .", blkhei, pendingdiamond.Diamond)
 		}
-		// 全部条件检查成功
+		// All conditions checked successfully
 	}
 
-	// 存入钻石
+	// Deposit diamonds
 	//fmt.Println(act.Address.ToReadable())
 	var diastore = stores.NewDiamond(act.Address)
-	diastore.Address = act.Address                // 钻石所属地址
+	diastore.Address = act.Address                // Diamond address
 	e3 := state.DiamondSet(act.Diamond, diastore) // 保存
 	if e3 != nil {
 		return e3
 	}
-	// 增加钻石余额 +1
+	// Increase diamond balance +1
 	e9 := DoAddDiamondFromChainState(state, act.Address, 1)
 	if e9 != nil {
 		return e9
 	}
 
-	// 设置矿工状态
-	// 标记本区块已经包含钻石
-	// 存储对象，计算视觉基因
+	// Set miner status
+	// Mark that this block already contains diamonds
+	// Storing objects, computing visual genes
 	visualGene, e15 := calculateVisualGeneByDiamondStuffHash(act.belong_trs, uint32(act.Number), diamondResHash, diamondStr, diamondVisualUseContainBlockHash)
 	if e15 != nil {
 		return e15
@@ -477,33 +477,33 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 		VisualGene:           visualGene,
 	}
 
-	// 写入手续费报价
+	// Write service charge quotation
 	feeoffer := act.belong_trs.GetFee()
 	e11 := diamondstore.ParseApproxFeeOffer(feeoffer)
 	if e11 != nil {
 		return e11
 	}
-	// total supply 统计
+	// Total supply statistics
 	totalsupply, e2 := state.ReadTotalSupply()
 	if e2 != nil {
 		return e2
 	}
 
-	// 计算平均竞价HAC枚数
+	// Calculate the average number of HACs for bidding
 	if uint32(act.Number) <= DiamondStatisticsAverageBiddingBurningPriceAboveNumber {
-		diamondstore.AverageBidBurnPrice = 10 // 固定设为 10 枚
+		diamondstore.AverageBidBurnPrice = 10 // Fixed to 10
 	} else {
 		bsnum := uint32(act.Number) - DiamondCreateBurning90PercentTxFeesAboveNumber
 		burnhac := totalsupply.Get(stores.TotalSupplyStoreTypeOfBurningFee)
 		bidprice := uint64(burnhac/float64(bsnum) + 0.99999999) // 向上取整
 		setprice := fields.VarUint2(bidprice)
 		if setprice < 1 {
-			setprice = 1 // 最小为1
+			setprice = 1 // Minimum 1
 		}
 		diamondstore.AverageBidBurnPrice = setprice
 	}
 
-	// 设置最新状态
+	// Set latest status
 	e4 := state.SetLastestDiamond(diamondstore)
 	if e4 != nil {
 		return e4
@@ -536,12 +536,12 @@ func (act *Action_4_DiamondCreate) RecoverChainState(state interfacev2.ChainStat
 	//if chainstate == nil {
 	//	panic("Action get state.Miner() cannot be nil !")
 	//}
-	// 删除钻石
+	// Delete diamond
 	e1 := state.DiamondDel(act.Diamond)
 	if e1 != nil {
 		return e1
 	}
-	// 回退矿工状态
+	// Fallback miner status
 	chainstore := state.BlockStore()
 	if chainstore == nil {
 		return fmt.Errorf("not find BlockStore object.")
@@ -556,12 +556,12 @@ func (act *Action_4_DiamondCreate) RecoverChainState(state interfacev2.ChainStat
 	if e3 != nil {
 		return e3
 	}
-	// 扣除钻石余额 -1
+	// Deduct diamond balance -1
 	e9 := DoSubDiamondFromChainState(state, act.Address, 1)
 	if e9 != nil {
 		return e9
 	}
-	// total supply 统计
+	// Total supply statistics
 	totalsupply, e2 := state.ReadTotalSupply()
 	if e2 != nil {
 		return e2
@@ -587,7 +587,7 @@ func (elm *Action_4_DiamondCreate) SetBelongTrs(t interfaces.Transaction) {
 // burning fees  // 是否销毁本笔交易的 90% 的交易费用
 func (act *Action_4_DiamondCreate) IsBurning90PersentTxFees() bool {
 	if uint32(act.Number) > DiamondCreateBurning90PercentTxFeesAboveNumber {
-		// 从第 30001 钻石开始，销毁本笔交易的 90% 的费用
+		// 90% of the cost of destroying this transaction from the 30001 diamond
 		return true
 	}
 	return false
@@ -595,7 +595,7 @@ func (act *Action_4_DiamondCreate) IsBurning90PersentTxFees() bool {
 
 ///////////////////////////////////////////////////////////////
 
-// 计算钻石的可视化基因
+// Calculate the visual gene of diamond
 func calculateVisualGeneByDiamondStuffHash(belong_trs interfacev2.Transaction, number uint32, stuffhx []byte, diamondstr string, peddingblkhash []byte) (fields.Bytes10, error) {
 	if len(stuffhx) != 32 || len(peddingblkhash) != 32 {
 		return nil, fmt.Errorf("stuffhx and peddingblkhash length must 32")
@@ -606,24 +606,24 @@ func calculateVisualGeneByDiamondStuffHash(belong_trs interfacev2.Transaction, n
 	vgenehash := make([]byte, 32)
 	copy(vgenehash, stuffhx)
 	if number > DiamondResourceHashAndContainBlockHashDecideVisualGeneAboveNumber {
-		// 第 40001 个钻石，开始用 sha3_hash(diamondreshash, blockhash) 决定钻石形状和配色
+		// 40001 diamond, start with Sha3_ Hash (diamondreshash, blockhash) determines diamond shape and color matching
 		vgenestuff := bytes.NewBuffer(stuffhx)
 		vgenestuff.Write(peddingblkhash)
 		if number > DiamondResourceAppendBiddingFeeDecideVisualGeneAboveNumber {
 			bidfeebts, e := belong_trs.GetFee().Serialize() // 竞价手续费
 			if e != nil {
-				return nil, e // 返回错误
+				return nil, e // Return error
 			}
-			vgenestuff.Write(bidfeebts) // 竞价费参与决定钻石形状和配色
+			vgenestuff.Write(bidfeebts) // Bidding fee participates in determining diamond shape and color matching
 		}
-		vgenehash = fields.CalculateHash(vgenestuff.Bytes()) // 开盲盒
-		// 跟区块哈希一样是随机的，需要等待钻石确认的那一刻才能知晓形状和配色
+		vgenehash = fields.CalculateHash(vgenestuff.Bytes()) // Open blind box
+		// Like block hash, it is random, and the shape and color matching can only be known when the diamond is confirmed
 		// fmt.Println(hex.EncodeToString(vgenestuff.Bytes()))
 	}
 	// fmt.Printf("Calculate Visual Gene #%d, vgenehash: %s, stuffhx: %s, peddingblkhash: %s\n", number, hex.EncodeToString(vgenehash), hex.EncodeToString(stuffhx), hex.EncodeToString(peddingblkhash))
 
 	genehexstr := make([]string, 18)
-	// 前6位
+	// Top 6
 	k := 0
 	for i := 10; i < 16; i++ {
 		s := diamondstr[i]
@@ -665,7 +665,7 @@ func calculateVisualGeneByDiamondStuffHash(belong_trs interfacev2.Transaction, n
 		genehexstr[k] = e
 		k++
 	}
-	// 后11位
+	// Last 11 digits
 	for i := 20; i < 31; i++ {
 		x := vgenehash[i]
 		x = x % 16
@@ -707,19 +707,19 @@ func calculateVisualGeneByDiamondStuffHash(belong_trs interfacev2.Transaction, n
 		genehexstr[k] = e
 		k++
 	}
-	// 补齐最后一位
+	// Make up the last digit
 	genehexstr[17] = "0"
 	resbts, e1 := hex.DecodeString(strings.Join(genehexstr, ""))
 	if e1 != nil {
 		return nil, e1
 	}
-	// 哈希的最后一位作为形状选择
+	// Last bit of hash as shape selection
 	resbuf := bytes.NewBuffer([]byte{vgenehash[31]})
-	resbuf.Write(resbts) // 颜色选择器
+	resbuf.Write(resbts) // Color selector
 	return resbuf.Bytes(), nil
 }
 
-// 计算钻石的可视化基因
+// Calculate the visual gene of diamond
 func calculateVisualGeneByDiamondStuffHashV3(belong_trs interfaces.Transaction, number uint32, stuffhx []byte, diamondstr string, peddingblkhash []byte) (fields.Bytes10, error) {
 	if len(stuffhx) != 32 || len(peddingblkhash) != 32 {
 		return nil, fmt.Errorf("stuffhx and peddingblkhash length must 32")
@@ -730,24 +730,24 @@ func calculateVisualGeneByDiamondStuffHashV3(belong_trs interfaces.Transaction, 
 	vgenehash := make([]byte, 32)
 	copy(vgenehash, stuffhx)
 	if number > DiamondResourceHashAndContainBlockHashDecideVisualGeneAboveNumber {
-		// 第 40001 个钻石，开始用 sha3_hash(diamondreshash, blockhash) 决定钻石形状和配色
+		// 40001 diamond, start with Sha3_ Hash (diamondreshash, blockhash) determines diamond shape and color matching
 		vgenestuff := bytes.NewBuffer(stuffhx)
 		vgenestuff.Write(peddingblkhash)
 		if number > DiamondResourceAppendBiddingFeeDecideVisualGeneAboveNumber {
 			bidfeebts, e := belong_trs.GetFee().Serialize() // 竞价手续费
 			if e != nil {
-				return nil, e // 返回错误
+				return nil, e // Return error
 			}
-			vgenestuff.Write(bidfeebts) // 竞价费参与决定钻石形状和配色
+			vgenestuff.Write(bidfeebts) // Bidding fee participates in determining diamond shape and color matching
 		}
-		vgenehash = fields.CalculateHash(vgenestuff.Bytes()) // 开盲盒
-		// 跟区块哈希一样是随机的，需要等待钻石确认的那一刻才能知晓形状和配色
+		vgenehash = fields.CalculateHash(vgenestuff.Bytes()) // Open blind box
+		// Like block hash, it is random, and the shape and color matching can only be known when the diamond is confirmed
 		// fmt.Println(hex.EncodeToString(vgenestuff.Bytes()))
 	}
 	// fmt.Printf("Calculate Visual Gene #%d, vgenehash: %s, stuffhx: %s, peddingblkhash: %s\n", number, hex.EncodeToString(vgenehash), hex.EncodeToString(stuffhx), hex.EncodeToString(peddingblkhash))
 
 	genehexstr := make([]string, 18)
-	// 前6位
+	// Top 6
 	k := 0
 	for i := 10; i < 16; i++ {
 		s := diamondstr[i]
@@ -789,7 +789,7 @@ func calculateVisualGeneByDiamondStuffHashV3(belong_trs interfaces.Transaction, 
 		genehexstr[k] = e
 		k++
 	}
-	// 后11位
+	// Last 11 digits
 	for i := 20; i < 31; i++ {
 		x := vgenehash[i]
 		x = x % 16
@@ -831,27 +831,27 @@ func calculateVisualGeneByDiamondStuffHashV3(belong_trs interfaces.Transaction, 
 		genehexstr[k] = e
 		k++
 	}
-	// 补齐最后一位
+	// Make up the last digit
 	genehexstr[17] = "0"
 	resbts, e1 := hex.DecodeString(strings.Join(genehexstr, ""))
 	if e1 != nil {
 		return nil, e1
 	}
-	// 哈希的最后一位作为形状选择
+	// Last bit of hash as shape selection
 	resbuf := bytes.NewBuffer([]byte{vgenehash[31]})
-	resbuf.Write(resbts) // 颜色选择器
+	resbuf.Write(resbts) // Color selector
 	return resbuf.Bytes(), nil
 }
 
 ///////////////////////////////////////////////////////////////
 
-// 转移钻石
+// Transfer diamond
 type Action_5_DiamondTransfer struct {
-	Diamond   fields.DiamondName // 钻石字面量 WTYUIAHXVMEKBSZN
+	Diamond   fields.DiamondName // Diamond literal wtyuiahxvmekbszn
 	ToAddress fields.Address     // 收钻方账户
 
-	// 数据指针
-	// 所属交易
+	// Data pointer
+	// Transaction
 	belong_trs    interfacev2.Transaction
 	belong_trs_v3 interfaces.Transaction
 }
@@ -906,7 +906,7 @@ func (act *Action_5_DiamondTransfer) WriteInChainState(state interfaces.ChainSta
 	if bytes.Compare(act.ToAddress, trsMainAddress) == 0 {
 		return fmt.Errorf("Cannot transfer to self.")
 	}
-	// 查询钻石是否已经存在
+	// Query whether the diamond already exists
 	diaitem, e := state.Diamond(act.Diamond)
 	if e != nil {
 		return e
@@ -915,21 +915,21 @@ func (act *Action_5_DiamondTransfer) WriteInChainState(state interfaces.ChainSta
 		return fmt.Errorf("Diamond <%s> not exist.", string(act.Diamond))
 	}
 	item := diaitem
-	// 检查是否抵押，是否可以转账
+	// Check whether it is mortgaged and whether it can be transferred
 	if diaitem.Status != stores.DiamondStatusNormal {
 		return fmt.Errorf("Diamond <%s> has been mortgaged and cannot be transferred.", string(act.Diamond))
 	}
-	// 检查所属
+	// Check which
 	if bytes.Compare(item.Address, trsMainAddress) != 0 {
 		return fmt.Errorf("Diamond <%s> not belong to belong_trs address.", string(act.Diamond))
 	}
-	// 转移钻石
+	// Transfer diamond
 	item.Address = act.ToAddress
 	err := state.DiamondSet(act.Diamond, item)
 	if err != nil {
 		return err
 	}
-	// 转移钻石余额
+	// Transfer diamond balance
 	e9 := DoSimpleDiamondTransferFromChainStateV3(state, trsMainAddress, act.ToAddress, 1)
 	if e9 != nil {
 		return e9
@@ -951,7 +951,7 @@ func (act *Action_5_DiamondTransfer) WriteinChainState(state interfacev2.ChainSt
 	if bytes.Compare(act.ToAddress, trsMainAddress) == 0 {
 		return fmt.Errorf("Cannot transfer to self.")
 	}
-	// 查询钻石是否已经存在
+	// Query whether the diamond already exists
 	diaitem, e := state.Diamond(act.Diamond)
 	if e != nil {
 		return e
@@ -960,21 +960,21 @@ func (act *Action_5_DiamondTransfer) WriteinChainState(state interfacev2.ChainSt
 		return fmt.Errorf("Diamond <%s> not exist.", string(act.Diamond))
 	}
 	item := diaitem
-	// 检查是否抵押，是否可以转账
+	// Check whether it is mortgaged and whether it can be transferred
 	if diaitem.Status != stores.DiamondStatusNormal {
 		return fmt.Errorf("Diamond <%s> has been mortgaged and cannot be transferred.", string(act.Diamond))
 	}
-	// 检查所属
+	// Check which
 	if bytes.Compare(item.Address, trsMainAddress) != 0 {
 		return fmt.Errorf("Diamond <%s> not belong to belong_trs address.", string(act.Diamond))
 	}
-	// 转移钻石
+	// Transfer diamond
 	item.Address = act.ToAddress
 	err := state.DiamondSet(act.Diamond, item)
 	if err != nil {
 		return err
 	}
-	// 转移钻石余额
+	// Transfer diamond balance
 	e9 := DoSimpleDiamondTransferFromChainState(state, trsMainAddress, act.ToAddress, 1)
 	if e9 != nil {
 		return e9
@@ -996,13 +996,13 @@ func (act *Action_5_DiamondTransfer) RecoverChainState(state interfacev2.ChainSt
 		return fmt.Errorf("Diamond <%s> not exist.", string(act.Diamond))
 	}
 	item := diaitem
-	// 回退钻石
+	// Back off diamond
 	item.Address = act.belong_trs.GetAddress()
 	err := state.DiamondSet(act.Diamond, item)
 	if err != nil {
 		return err
 	}
-	// 回退钻石余额
+	// Return diamond balance
 	e9 := DoSimpleDiamondTransferFromChainState(state, act.ToAddress, trsMainAddress, 1)
 	if e9 != nil {
 		return e9
@@ -1025,14 +1025,14 @@ func (act *Action_5_DiamondTransfer) IsBurning90PersentTxFees() bool {
 
 ///////////////////////////////////////////////////////////////
 
-// 批量转移钻石
+// Bulk transfer of diamonds
 type Action_6_OutfeeQuantityDiamondTransfer struct {
-	FromAddress fields.Address              // 拥有钻石的账户
+	FromAddress fields.Address              // Accounts with diamonds
 	ToAddress   fields.Address              // 收钻方账户
-	DiamondList fields.DiamondListMaxLen200 // 钻石列表
+	DiamondList fields.DiamondListMaxLen200 // Diamond list
 
-	// 数据指针
-	// 所属交易
+	// Data pointer
+	// Transaction
 	belong_trs    interfacev2.Transaction
 	belong_trs_v3 interfaces.Transaction
 }
@@ -1045,7 +1045,7 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) Size() uint32 {
 	return 2 +
 		elm.FromAddress.Size() +
 		elm.ToAddress.Size() +
-		elm.DiamondList.Size() // 每个钻石长6位
+		elm.DiamondList.Size() // Each diamond is 6 digits long
 }
 
 // json api
@@ -1098,7 +1098,7 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteInChainState(state inter
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 数量检查
+	// Quantity check
 	dianum := int(act.DiamondList.Count)
 	if dianum == 0 || dianum != len(act.DiamondList.Diamonds) {
 		return fmt.Errorf("Diamonds quantity error")
@@ -1110,14 +1110,14 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteInChainState(state inter
 	if bytes.Compare(act.FromAddress, act.ToAddress) == 0 {
 		return fmt.Errorf("Cannot transfer to self.")
 	}
-	// 批量转移钻石
+	// Bulk transfer of diamonds
 	for i := 0; i < len(act.DiamondList.Diamonds); i++ {
 		diamond := act.DiamondList.Diamonds[i]
 
 		//fmt.Println("Action_6_OutfeeQuantityDiamondTransfer:", act.FromAddress.ToReadable(), act.ToAddress.ToReadable(), string(diamond))
 
 		// fmt.Println("--- " + string(diamond))
-		// 查询钻石是否已经存在
+		// Query whether the diamond already exists
 		diaitem, e := state.Diamond(diamond)
 		if e != nil {
 			return e
@@ -1127,22 +1127,22 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteInChainState(state inter
 			return fmt.Errorf("Quantity Diamond <%s> not exist.", string(diamond))
 		}
 		item := diaitem
-		// 检查是否抵押，是否可以转账
+		// Check whether it is mortgaged and whether it can be transferred
 		if diaitem.Status != stores.DiamondStatusNormal {
 			return fmt.Errorf("Diamond <%s> has been mortgaged and cannot be transferred.", string(diamond))
 		}
-		// 检查所属
+		// Check which
 		if bytes.Compare(item.Address, act.FromAddress) != 0 {
 			return fmt.Errorf("Diamond <%s> not belong to address '%s'", string(diamond), act.FromAddress.ToReadable())
 		}
-		// 转移钻石
+		// Transfer diamond
 		item.Address = act.ToAddress
 		e5 := state.DiamondSet(diamond, item)
 		if e5 != nil {
 			return e5
 		}
 	}
-	// 转移钻石余额
+	// Transfer diamond balance
 	e9 := DoSimpleDiamondTransferFromChainStateV3(state, act.FromAddress, act.ToAddress, fields.DiamondNumber(dianum))
 	if e9 != nil {
 		return e9
@@ -1154,7 +1154,7 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 数量检查
+	// Quantity check
 	dianum := int(act.DiamondList.Count)
 	if dianum == 0 || dianum != len(act.DiamondList.Diamonds) {
 		return fmt.Errorf("Diamonds quantity error")
@@ -1166,14 +1166,14 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 	if bytes.Compare(act.FromAddress, act.ToAddress) == 0 {
 		return fmt.Errorf("Cannot transfer to self.")
 	}
-	// 批量转移钻石
+	// Bulk transfer of diamonds
 	for i := 0; i < len(act.DiamondList.Diamonds); i++ {
 		diamond := act.DiamondList.Diamonds[i]
 
 		//fmt.Println("Action_6_OutfeeQuantityDiamondTransfer:", act.FromAddress.ToReadable(), act.ToAddress.ToReadable(), string(diamond))
 
 		// fmt.Println("--- " + string(diamond))
-		// 查询钻石是否已经存在
+		// Query whether the diamond already exists
 		diaitem, e := state.Diamond(diamond)
 		if e != nil {
 			return e
@@ -1183,22 +1183,22 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 			return fmt.Errorf("Quantity Diamond <%s> not exist.", string(diamond))
 		}
 		item := diaitem
-		// 检查是否抵押，是否可以转账
+		// Check whether it is mortgaged and whether it can be transferred
 		if diaitem.Status != stores.DiamondStatusNormal {
 			return fmt.Errorf("Diamond <%s> has been mortgaged and cannot be transferred.", string(diamond))
 		}
-		// 检查所属
+		// Check which
 		if bytes.Compare(item.Address, act.FromAddress) != 0 {
 			return fmt.Errorf("Diamond <%s> not belong to address '%s'", string(diamond), act.FromAddress.ToReadable())
 		}
-		// 转移钻石
+		// Transfer diamond
 		item.Address = act.ToAddress
 		e5 := state.DiamondSet(diamond, item)
 		if e5 != nil {
 			return e5
 		}
 	}
-	// 转移钻石余额
+	// Transfer diamond balance
 	e9 := DoSimpleDiamondTransferFromChainState(state, act.FromAddress, act.ToAddress, fields.DiamondNumber(dianum))
 	if e9 != nil {
 		return e9
@@ -1210,7 +1210,7 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) RecoverChainState(state inter
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 批量回退钻石
+	// Batch return of diamonds
 	for i := 0; i < len(act.DiamondList.Diamonds); i++ {
 		diamond := act.DiamondList.Diamonds[i]
 		// get diamond
@@ -1222,14 +1222,14 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) RecoverChainState(state inter
 			return fmt.Errorf("Diamond <%s> not exist.", string(diamond))
 		}
 		item := diaitem
-		// 回退钻石
+		// Back off diamond
 		item.Address = act.FromAddress
 		err := state.DiamondSet(diamond, item)
 		if err != nil {
 			return err
 		}
 	}
-	// 回退钻石余额
+	// Return diamond balance
 	e9 := DoSimpleDiamondTransferFromChainState(state, act.ToAddress, act.FromAddress, fields.DiamondNumber(act.DiamondList.Count))
 	if e9 != nil {
 		return e9
@@ -1250,7 +1250,7 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) IsBurning90PersentTxFees() bo
 	return false
 }
 
-// 获取区块钻石的名称列表
+// Get the name list of block diamonds
 func (elm *Action_6_OutfeeQuantityDiamondTransfer) GetDiamondNamesSplitByComma() string {
 	return elm.DiamondList.SerializeHACDlistToCommaSplitString()
 }

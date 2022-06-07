@@ -10,35 +10,35 @@ import (
 
 const (
 	typeSizeMax   int = 32
-	typeSizeValid int = 19 // 当前可用的
-	// 钻石
-	TotalSupplyStoreTypeOfDiamond uint8 = 0 // 已挖掘出的钻石数量
+	typeSizeValid int = 19 // Currently available
+	// Diamonds
+	TotalSupplyStoreTypeOfDiamond uint8 = 0 // Number of diamonds excavated
 	// BTC
-	TotalSupplyStoreTypeOfTransferBitcoin uint8 = 1 // 已成功转移过来的 BTC 枚数
-	// 流通数量
-	TotalSupplyStoreTypeOfBlockReward                    uint8 = 2 // 区块奖励HAC累计
-	TotalSupplyStoreTypeOfChannelInterest                uint8 = 3 // 通道利息HAC累计
-	TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed uint8 = 4 // 比特币转移增发成功解锁的HAC累计
-	// 数据统计
-	TotalSupplyStoreTypeOfLocatedHACInChannel uint8 = 5 // 当前有效锁定在通道内的HAC数量
-	TotalSupplyStoreTypeOfLocatedSATInChannel uint8 = 6 // 当前有效锁定在通道内的HAC数量
-	TotalSupplyStoreTypeOfChannelOfOpening    uint8 = 7 // 当前处于开启状态的通道数量
-	// 销毁手续费
-	TotalSupplyStoreTypeOfBurningFee uint8 = 8 // 手续费燃烧销毁HAC累计
-	// 钻石借贷
-	TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount      uint8 = 9  // 钻石系统借贷抵押数量实时统计
-	TotalSupplyStoreTypeOfSystemLendingDiamondCumulationLoanHacAmount   uint8 = 10 // 钻石系统抵押累计借出HAC流水数量
-	TotalSupplyStoreTypeOfSystemLendingDiamondCumulationRansomHacAmount uint8 = 11 // 钻石系统抵押累计赎回（销毁）HAC流水数量
-	// 比特币借贷（每一份为 0.01 BTC）
-	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount      uint8 = 12 // 比特币系统借贷抵押份数实时统计
-	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionBurningInterestHacAmount  uint8 = 13 // 比特币系统借贷预销毁利息统计
-	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCumulationLoanHacAmount   uint8 = 14 // 比特币系统借贷累计借出HAC流水数量
-	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCumulationRansomHacAmount uint8 = 15 // 比特币系统借贷累计赎回HAC流水数量
-	// 用户间借贷
-	TotalSupplyStoreTypeOfUsersLendingCumulationDiamond                  uint8 = 16 // 用户间借贷钻石数量流水累计
-	TotalSupplyStoreTypeOfUsersLendingCumulationBitcoin                  uint8 = 17 // 用户间借贷比特币数量流水累计（单位：枚）
+	TotalSupplyStoreTypeOfTransferBitcoin uint8 = 1 // Number of BTCs transferred successfully
+	// Circulation quantity
+	TotalSupplyStoreTypeOfBlockReward                    uint8 = 2 // Block reward HAC accumulation
+	TotalSupplyStoreTypeOfChannelInterest                uint8 = 3 // Channel interest HAC accumulation
+	TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed uint8 = 4 // HAC accumulation successfully unlocked by bitcoin transfer and issuance
+	// data statistics
+	TotalSupplyStoreTypeOfLocatedHACInChannel uint8 = 5 // Number of HACs currently effectively locked in the channel
+	TotalSupplyStoreTypeOfLocatedSATInChannel uint8 = 6 // Number of HACs currently effectively locked in the channel
+	TotalSupplyStoreTypeOfChannelOfOpening    uint8 = 7 // Number of channels currently on
+	// Destruction fee
+	TotalSupplyStoreTypeOfBurningFee uint8 = 8 // Handling charge combustion destruction HAC accumulation
+	// Diamond lending
+	TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount      uint8 = 9  // Real time statistics of loan and mortgage amount of diamond system
+	TotalSupplyStoreTypeOfSystemLendingDiamondCumulationLoanHacAmount   uint8 = 10 // HAC daily flow quantity of diamond system mortgage cumulative lending
+	TotalSupplyStoreTypeOfSystemLendingDiamondCumulationRansomHacAmount uint8 = 11 // Cumulative redemption (destruction) HAC flow of diamond system mortgage
+	// Bitcoin lending (0.01 BTC per share)
+	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount      uint8 = 12 // Real time statistics of loan mortgage shares in bitcoin system
+	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionBurningInterestHacAmount  uint8 = 13 // Statistics of pre destruction interest of debit and credit in bitcoin system
+	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCumulationLoanHacAmount   uint8 = 14 // Cumulative lending HAC daily flow quantity of debit and credit in bitcoin system
+	TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCumulationRansomHacAmount uint8 = 15 // HAC daily flow quantity of debit and credit cumulative redemption in bitcoin system
+	// Inter user credit
+	TotalSupplyStoreTypeOfUsersLendingCumulationDiamond                  uint8 = 16 // Daily accumulation of inter user loan diamond quantity
+	TotalSupplyStoreTypeOfUsersLendingCumulationBitcoin                  uint8 = 17 // Daily accumulation of inter user debit and credit bitcoin quantity (unit: piece)
 	TotalSupplyStoreTypeOfUsersLendingCumulationHacAmount                uint8 = 18 // 用户间借贷HAC借出额流水累计（借出累计而非归还累计）
-	TotalSupplyStoreTypeOfUsersLendingBurningOnePercentInterestHacAmount uint8 = 19 // 用户间借贷系统销毁的1%利息统计
+	TotalSupplyStoreTypeOfUsersLendingBurningOnePercentInterestHacAmount uint8 = 19 // 1% interest statistics of inter user loan system destruction
 	// TotalSupplyStoreTypeOfUsersLendingLendersInterestHacAmountCumulation uint8 = ... // 用户间借贷贷出方赚取的利息流水累计
 
 )
@@ -67,18 +67,18 @@ func (t *TotalSupply) Get(ty uint8) float64 {
 	return 0
 }
 
-// 设置
+// set up
 func (t *TotalSupply) Set(ty uint8, value float64) {
 	if ty > uint8(typeSizeValid) {
 		panic("type error")
 	}
 	// check mark
 	t.changeMark[ty] = true
-	// 保存
+	// preservation
 	t.dataBytes[ty] = value
 }
 
-// 增加
+// increase
 func (t *TotalSupply) DoAdd(ty uint8, value float64) float64 {
 	if ty > uint8(typeSizeValid) {
 		panic("type error")
@@ -91,7 +91,7 @@ func (t *TotalSupply) DoAdd(ty uint8, value float64) float64 {
 	return newv
 }
 
-// 减少
+// reduce
 func (t *TotalSupply) DoSub(ty uint8, value float64) float64 {
 	if ty > uint8(typeSizeValid) {
 		panic("type error")
@@ -104,7 +104,7 @@ func (t *TotalSupply) DoSub(ty uint8, value float64) float64 {
 	return newv
 }
 
-// 覆盖保存
+// Overwrite save
 func (t *TotalSupply) CoverCopySave(src *TotalSupply) {
 	for i := 0; i < typeSizeMax; i++ {
 		if src.changeMark[i] {
@@ -114,7 +114,7 @@ func (t *TotalSupply) CoverCopySave(src *TotalSupply) {
 	}
 }
 
-// 拷贝复制
+// Copy replication
 func (t *TotalSupply) Clone() *TotalSupply {
 	changeMark := []bool{}
 	dataBytes := []float64{}
@@ -126,7 +126,7 @@ func (t *TotalSupply) Clone() *TotalSupply {
 	}
 }
 
-// 序列化
+// serialize
 func (t *TotalSupply) Serialize() ([]byte, error) {
 	buf := bytes.NewBuffer([]byte{uint8(typeSizeMax)}) // 长度
 	for i := 0; i < typeSizeMax; i++ {
@@ -138,7 +138,7 @@ func (t *TotalSupply) Serialize() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// 反序列化
+// Deserialization
 func (t *TotalSupply) Parse(buf []byte, seek uint32) (uint32, error) {
 	if int(seek)+1 > len(buf) {
 		return 0, fmt.Errorf("TotalSupply Parse: buf too short")

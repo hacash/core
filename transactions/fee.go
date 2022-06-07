@@ -6,28 +6,28 @@ import (
 )
 
 const (
-	FeePurityUnit = 232                          // = 手续费含量单位 0.00000001铢 = 1烁
-	MaxFeePurity  = uint64(18446744073709550000) // = uint64的最大值 约1844枚
+	FeePurityUnit = 232                          // =Handling charge content unit: 0.00000001 baht = 1 yuan
+	MaxFeePurity  = uint64(18446744073709550000) // =The maximum value of Uint64 is about 1844
 
 )
 
-// 手续费含量 每 8 byte 的含有多少烁代币
-// 为何要按 8 个 byte 计算？
-// 因为可以避免手续费更多，但是由于手续费字段占用更多空间的问题，导致结构相同的交易
-// （比如创建钻石的交易）手续费更高但却排在了后面
+// How many tokens does the handling charge contain per 8 bytes
+// Why should I calculate by 8 bytes?
+// Because more handling fees can be avoided, but the handling fee field takes up more space, resulting in transactions with the same structure
+// (for example, the transaction of creating diamonds) the handling fee is higher, but it ranks behind
 func CalculateFeePurity(trsFee *fields.Amount, txsize uint32) uint64 {
 	if trsFee.IsPositive() != true {
 		return 0
 	}
 	if int(trsFee.Unit) < FeePurityUnit {
-		return 0 // 低于最小单位
+		return 0 // Below minimum unit
 	}
 	feeobj := trsFee.Copy()
 	feeobj.Unit -= FeePurityUnit
 	bigfee := feeobj.GetValue()
 	calsize := uint64(txsize) / 8 // 每 8 个 byte 的手续费含量
 	if calsize == 0 {
-		calsize = 1 // 避免除0
+		calsize = 1 // Avoid division by 0
 	}
 	bigfee = bigfee.Div(bigfee, new(big.Int).SetUint64(calsize))
 	if bigfee.Cmp(new(big.Int).SetUint64(MaxFeePurity)) == 1 {

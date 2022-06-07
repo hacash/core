@@ -6,9 +6,9 @@ type BlockChain interface {
 
 	InsertBlock(interfacev2.Block, string) error
 
-	StateImmutable() ChainStateImmutable // 已确认区块状态
+	StateImmutable() ChainStateImmutable // Block status confirmed
 
-	StateRead() interfaces.ChainStateOperationRead // 只读状态
+	StateRead() interfaces.ChainStateOperationRead // Read-only status 
 
 	ValidateTransactionForTxPool(interfacev2.Transaction) error
 	ValidateDiamondCreateAction(interfacev2.Action) error

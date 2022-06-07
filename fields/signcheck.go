@@ -6,7 +6,7 @@ import (
 	"github.com/hacash/core/account"
 )
 
-// 签名验证数据
+// Signature verification data
 type SignCheckData struct {
 	Signdata Sign
 	Stuffstr StringMax65535
@@ -23,7 +23,7 @@ func CreateSignCheckData(str string) SignCheckData {
 	}
 }
 
-// 填充签名
+// Fill in signature
 func (elm *SignCheckData) FillSign(acc *account.Account) error {
 	hash := CalculateHash([]byte(elm.Stuffstr.Value()))
 	signature, e := acc.Private.Sign(hash)

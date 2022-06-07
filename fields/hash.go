@@ -15,7 +15,7 @@ const (
 	HashNonceCheckerSize = 8
 )
 
-// sha3 计算32位哈希值
+// Sha3 calculate 32-bit hash value
 func CalculateHash(stuff []byte) Hash {
 	hx := sha3.Sum256(stuff)
 	return hx[:]

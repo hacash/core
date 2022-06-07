@@ -22,9 +22,9 @@ type Block_v1 struct {
 	MrklRoot         fields.Hash
 	TransactionCount fields.VarUint4
 	// meta
-	Nonce        fields.VarUint4 // 挖矿随机值
-	Difficulty   fields.VarUint4 // 目标难度值
-	WitnessStage fields.VarUint2 // 见证数量级别
+	Nonce        fields.VarUint4 // Mining random value
+	Difficulty   fields.VarUint4 // Target difficulty value
+	WitnessStage fields.VarUint2 // Witness quantity level
 	// body
 	Transactions []interfaces.Transaction
 
@@ -34,7 +34,7 @@ type Block_v1 struct {
 	hash fields.Hash
 
 	// mark data
-	originMark string // 原产地标志: "", "miner", "discover"
+	originMark string // Mark of origin: "", "miner", "discover"
 
 	insertLock sync.RWMutex
 }
@@ -161,7 +161,7 @@ func (block *Block_v1) SerializeMeta() ([]byte, error) {
 func (block *Block_v1) SerializeTransactions(itr interfacev2.SerializeTransactionsIterator) ([]byte, error) {
 	var buffer = new(bytes.Buffer)
 	var trslen = uint32(len(block.Transactions))
-	if itr != nil { // 迭代器
+	if itr != nil { // iterator 
 		itr.Init(trslen)
 	}
 	for i := uint32(0); i < trslen; i++ {
@@ -171,7 +171,7 @@ func (block *Block_v1) SerializeTransactions(itr interfacev2.SerializeTransactio
 			return nil, e
 		}
 		buffer.Write(bi)
-		if itr != nil { // 迭代器
+		if itr != nil { // iterator 
 			itr.FinishOneTrs(i, trs.(interfacev2.Transaction), bi)
 		}
 	}
@@ -190,7 +190,7 @@ func (block *Block_v1) SerializeExcludeTransactions() ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-// 序列化 与 反序列化
+// Serialization and deserialization
 func (block *Block_v1) Serialize() ([]byte, error) {
 
 	var buffer = new(bytes.Buffer)
@@ -348,7 +348,7 @@ func (block *Block_v1) hashFreshUnsafe() fields.Hash {
 	return block.hash
 }
 
-// 刷新所有缓存数据
+// Refresh all cached data
 func (block *Block_v1) Fresh() {
 	block.hash = nil
 }
@@ -431,12 +431,12 @@ func (block *Block_v1) AddTrs(trs interfaces.Transaction) {
 	block.TransactionCount += 1
 }
 
-// 验证需要的签名
+// Verify required signatures
 func (block *Block_v1) VerifyNeedSigns() (bool, error) {
 	for _, tx := range block.Transactions {
 		ok, e := tx.VerifyAllNeedSigns()
 		if !ok || e != nil {
-			return ok, e // 验证失败
+			return ok, e // Validation failed
 		}
 	}
 	return true, nil
@@ -447,39 +447,39 @@ func (block *Block_v1) WriteInChainState(blockstate interfaces.ChainStateOperati
 	txlen := len(block.Transactions)
 	totalfeeuserpay := fields.NewEmptyAmount()
 	totalfeeminergot := fields.NewEmptyAmount()
-	// 第一条交易为coinbase交易，客户交易从第二条开始
+	// The first transaction is a coinbase transaction, and the customer transaction starts from the second one
 	for i := 1; i < txlen; i++ {
 		tx := block.Transactions[i]
 		txhx := tx.Hash()
-		// 检查交易是否已经上链
+		// Check whether the transaction has been linked
 		ishav, e := blockstate.CheckTxHash(txhx)
 		if e != nil {
-			return e // 验证失败
+			return e // Validation failed
 		}
-		// 问题修复： 63448 区块将同一笔交易包含了两次
+		// Problem repair: block 63448 contains the same transaction twice
 		if ishav && blkhei != 63448 {
-			// 交易已经上链
+			// The transaction has been linked
 			return fmt.Errorf("Tx <%s> is exist, block %d.", txhx.ToHex())
 		}
-		// 执行上链
+		// Execute uplink
 		e = blockstate.ContainTxHash(txhx, fields.BlockHeight(blkhei))
 		if e != nil {
 			return e
 		}
-		// 执行交易
+		// Execute transaction
 		e = tx.(interfaces.Transaction).WriteInChainState(blockstate)
 		if e != nil {
-			return e // 验证失败
+			return e // Validation failed
 		}
 		var feepay = tx.GetFee()
 		var feegot = tx.GetFeeOfMinerRealReceived()
 		totalfeeuserpay, e = totalfeeuserpay.Add(feepay)
 		if e != nil {
-			return e // 验证失败
+			return e // Validation failed
 		}
 		totalfeeminergot, e = totalfeeminergot.Add(feegot)
 		if e != nil {
-			return e // 验证失败
+			return e // Validation failed
 		}
 	}
 	// coinbase
@@ -494,8 +494,8 @@ func (block *Block_v1) WriteInChainState(blockstate interfaces.ChainStateOperati
 	if !ok {
 		return fmt.Errorf("transaction[0] not coinbase tx")
 	}
-	coinbase.TotalFeeUserPayed = *totalfeeuserpay      // 支付总手续费
-	coinbase.TotalFeeMinerReceived = *totalfeeminergot // 收到总手续费
+	coinbase.TotalFeeUserPayed = *totalfeeuserpay      // Payment of total service charge
+	coinbase.TotalFeeMinerReceived = *totalfeeminergot // Total service charge received
 	// coinbase change state
 	e3 := coinbase.WriteInChainState(blockstate)
 	if e3 != nil {
@@ -512,39 +512,39 @@ func (block *Block_v1) WriteinChainState(blockstate interfacev2.ChainStateOperat
 	txlen := len(block.Transactions)
 	totalfeeuserpay := fields.NewEmptyAmount()
 	totalfeeminergot := fields.NewEmptyAmount()
-	// 第一条交易为coinbase交易，客户交易从第二条开始
+	// The first transaction is a coinbase transaction, and the customer transaction starts from the second one
 	for i := 1; i < txlen; i++ {
 		tx := block.Transactions[i]
 		txhx := tx.Hash()
-		// 检查交易是否已经上链
+		// Check whether the transaction has been linked
 		ishav, e := blockstate.CheckTxHash(txhx)
 		if e != nil {
-			return e // 验证失败
+			return e // Validation failed
 		}
-		// 问题修复： 63448 区块将同一笔交易包含了两次
+		// Problem repair: block 63448 contains the same transaction twice
 		if ishav && blkhei != 63448 {
-			// 交易已经上链
+			// The transaction has been linked
 			return fmt.Errorf("Tx <%s> is exist, block %d.", txhx.ToHex())
 		}
-		// 执行上链
+		// Execute uplink
 		e = blockstate.ContainTxHash(txhx, fields.BlockHeight(blkhei))
 		if e != nil {
 			return e
 		}
-		// 执行交易
+		// Execute transaction
 		e = tx.(interfacev2.Transaction).WriteinChainState(blockstate)
 		if e != nil {
-			return e // 验证失败
+			return e // Validation failed
 		}
 		var feepay = tx.GetFee()
 		var feegot = tx.GetFeeOfMinerRealReceived()
 		totalfeeuserpay, e = totalfeeuserpay.Add(feepay)
 		if e != nil {
-			return e // 验证失败
+			return e // Validation failed
 		}
 		totalfeeminergot, e = totalfeeminergot.Add(feegot)
 		if e != nil {
-			return e // 验证失败
+			return e // Validation failed
 		}
 	}
 	// coinbase
@@ -559,8 +559,8 @@ func (block *Block_v1) WriteinChainState(blockstate interfacev2.ChainStateOperat
 	if !ok {
 		return fmt.Errorf("transaction[0] not coinbase tx")
 	}
-	coinbase.TotalFeeUserPayed = *totalfeeuserpay      // 支付总手续费
-	coinbase.TotalFeeMinerReceived = *totalfeeminergot // 收到总手续费
+	coinbase.TotalFeeUserPayed = *totalfeeuserpay      // Payment of total service charge
+	coinbase.TotalFeeMinerReceived = *totalfeeminergot // Total service charge received
 	// coinbase change state
 	e3 := coinbase.WriteinChainState(blockstate)
 	if e3 != nil {
@@ -580,22 +580,22 @@ func (block *Block_v1) RecoverChainState(blockstate interfacev2.ChainStateOperat
 	totalfeeuserpay := fields.NewEmptyAmount()
 	totalfeeminergot := fields.NewEmptyAmount()
 	store := blockstate.BlockStore()
-	// 倒序从最后一笔交易开始 Recover
+	// Recover from the last transaction in reverse order
 	for i := txlen - 1; i > 0; i-- {
 		tx := block.Transactions[i]
 		e := tx.(interfacev2.Transaction).RecoverChainState(blockstate)
 		if e != nil {
-			return e // 失败
+			return e // fail
 		}
 		var feepay = tx.GetFee()
 		var feegot = tx.GetFeeOfMinerRealReceived()
 		totalfeeuserpay, e = totalfeeuserpay.Add(feepay)
 		if e != nil {
-			return e // 验证失败
+			return e // Validation failed
 		}
 		totalfeeminergot, e = totalfeeminergot.Add(feegot)
 		if e != nil {
-			return e // 验证失败
+			return e // Validation failed
 		}
 		// delete tx from db
 		delerr := store.DeleteTransactionByHash(tx.Hash())
@@ -604,8 +604,8 @@ func (block *Block_v1) RecoverChainState(blockstate interfacev2.ChainStateOperat
 		}
 	}
 	coinbase, _ := block.Transactions[0].(*transactions.Transaction_0_Coinbase)
-	coinbase.TotalFeeUserPayed = *totalfeeuserpay      // 支付总手续费
-	coinbase.TotalFeeMinerReceived = *totalfeeminergot // 收到总手续费
+	coinbase.TotalFeeUserPayed = *totalfeeuserpay      // Payment of total service charge
+	coinbase.TotalFeeMinerReceived = *totalfeeminergot // Total service charge received
 	// coinbase change state
 	e3 := coinbase.RecoverChainState(blockstate)
 	if e3 != nil {

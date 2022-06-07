@@ -5,11 +5,11 @@ import (
 	"github.com/hacash/core/fields"
 )
 
-// 通道与链上原子互换交易，保存凭据
+// Exchange transactions between channels and atoms on the chain, and save credentials
 type Chaswap struct {
-	IsBeUsed fields.Bool // 是否已经使用过，不可重复使用
-	// 签名地址
-	AddressCount                            fields.VarUint1 // 签名数量，只能取值 2 或 3
+	IsBeUsed fields.Bool // Whether it has been used and cannot be reused
+	// Signature address
+	AddressCount                            fields.VarUint1 // Signature quantity, can only be 2 or 3
 	OnchainTransferFromAndMustSignAddresses []fields.Address
 }
 
@@ -21,8 +21,8 @@ func (this *Chaswap) Size() uint32 {
 
 func (elm *Chaswap) Serialize() ([]byte, error) {
 	var buffer bytes.Buffer
-	var bt1, _ = elm.IsBeUsed.Serialize()     // 数据体
-	var bt2, _ = elm.AddressCount.Serialize() // 数据体
+	var bt1, _ = elm.IsBeUsed.Serialize()     // Data body
+	var bt2, _ = elm.AddressCount.Serialize() // Data body
 	buffer.Write(bt1)
 	buffer.Write(bt2)
 	for _, addr := range elm.OnchainTransferFromAndMustSignAddresses {
@@ -34,7 +34,7 @@ func (elm *Chaswap) Serialize() ([]byte, error) {
 
 func (elm *Chaswap) Parse(buf []byte, seek uint32) (uint32, error) {
 	var e error
-	// 地址
+	// address
 	seek, e = elm.IsBeUsed.Parse(buf, seek)
 	if e != nil {
 		return 0, e
@@ -51,6 +51,6 @@ func (elm *Chaswap) Parse(buf []byte, seek uint32) (uint32, error) {
 			return 0, e
 		}
 	}
-	// 完成
+	// complete
 	return seek, nil
 }

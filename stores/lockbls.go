@@ -10,12 +10,12 @@ const (
 )
 
 type Lockbls struct {
-	MasterAddress       fields.Address     // 主地址（领取权）
-	EffectBlockHeight   fields.BlockHeight // 生效（开始）区块
-	LinearBlockNumber   fields.VarUint3    // 步进区块数 < 17000000 约 160年
-	TotalLockAmount     fields.Amount      // 总共存入额度
-	LinearReleaseAmount fields.Amount      // 每次释放额度
-	BalanceAmount       fields.Amount      // 有效余额（每次可以取出可取额度之内的任意数额）
+	MasterAddress       fields.Address     // Main address (claim)
+	EffectBlockHeight   fields.BlockHeight // Effective (start) block
+	LinearBlockNumber   fields.VarUint3    // Number of stepping blocks < 17000000 about 160 years
+	TotalLockAmount     fields.Amount      // Total deposit limit
+	LinearReleaseAmount fields.Amount      // Limit released each time
+	BalanceAmount       fields.Amount      // Effective balance (any amount within the available limit can be withdrawn each time)
 }
 
 func NewEmptyLockbls(addr fields.Address) *Lockbls {

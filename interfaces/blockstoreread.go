@@ -15,7 +15,7 @@ type BlockStoreRead interface {
 	ReadDiamondByNumber(uint32) (*stores.DiamondSmelt, error)
 	ReadDiamondNameByNumber(uint32) (fields.DiamondName, error)
 
-	GetBTCMoveLogTotalPage() (int, error)                        // 数据页数，每页100条数据
-	GetBTCMoveLogPageData(int) ([]*stores.SatoshiGenesis, error) // 获取数据页
+	GetBTCMoveLogTotalPage() (int, error)                        // Number of data pages, 100 pieces of data per page
+	GetBTCMoveLogPageData(int) ([]*stores.SatoshiGenesis, error) // Get data page
 
 }

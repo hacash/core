@@ -105,7 +105,7 @@ func CalculateMrklRootByHashWithFee(hashsWithFee []fields.Hash) fields.Hash {
 		if len(hashsWithFee) == 1 {
 			return hashsWithFee[0]
 		}
-		hashsWithFee = hashMerge(hashsWithFee) // 两两归并
+		hashsWithFee = hashMerge(hashsWithFee) // Merge two
 	}
 	return nil
 }
@@ -123,7 +123,7 @@ func CalculateMrklRoot(transactions []interfaces.Transaction) fields.Hash {
 		if len(hashs) == 1 {
 			return hashs[0]
 		}
-		hashs = hashMerge(hashs) // 两两归并
+		hashs = hashMerge(hashs) // Merge two
 	}
 	return nil
 }
@@ -151,7 +151,7 @@ func hashMerge(hashs []fields.Hash) []fields.Hash {
 	return mergehashs
 }
 
-// 通过修改 coinbase tx 哈希 来重新计算默克尔根
+// Recalculate Merkel root by modifying the coinbase TX hash
 func CalculateMrklRootByCoinbaseTxModify(coinbasetxhx fields.Hash, mdftree []fields.Hash) fields.Hash {
 	mrklroot := append([]byte{}, coinbasetxhx...)
 	for i := 0; i < len(mdftree); i++ {
@@ -161,12 +161,12 @@ func CalculateMrklRootByCoinbaseTxModify(coinbasetxhx fields.Hash, mdftree []fie
 	return mrklroot
 }
 
-// 计算并获得与 coinbase tx 修改有关的默克尔相关哈希列表
+// Calculate and obtain the Merkel related Hash list related to the coinbase TX modification
 func PickMrklListForCoinbaseTxModify(transactions []interfaces.Transaction) []fields.Hash {
 	hxlist := make([]fields.Hash, 0)
 	trslen := len(transactions)
 	if trslen == 0 {
-		panic("len(transactions) must not be empty") // 不能为空
+		panic("len(transactions) must not be empty") // Cannot be empty
 	}
 	if trslen == 1 {
 		return hxlist
@@ -175,7 +175,7 @@ func PickMrklListForCoinbaseTxModify(transactions []interfaces.Transaction) []fi
 		hxlist = append(hxlist, transactions[1].HashWithFee())
 		return hxlist
 	}
-	// 计算哈希关系树
+	// Compute hash relation tree
 	hashs := make([]fields.Hash, trslen)
 	for i := 0; i < trslen; i++ {
 		hashs[i] = transactions[i].HashWithFee()
@@ -186,9 +186,9 @@ func PickMrklListForCoinbaseTxModify(transactions []interfaces.Transaction) []fi
 			break
 		}
 		if lhx >= 2 {
-			hxlist = append(hxlist, hashs[1]) // 获取关系哈希
+			hxlist = append(hxlist, hashs[1]) // Get relationship hash
 		}
-		hashs = hashMerge(hashs) // 两两归并
+		hashs = hashMerge(hashs) // Merge two
 	}
 	// ok
 	return hxlist

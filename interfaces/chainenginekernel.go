@@ -12,11 +12,11 @@ type ChainEngine interface {
 
 	InsertBlock(Block, string) error
 
-	StateRead() ChainStateOperationRead // 只读状态
-	CurrentState() ChainState           // 最新的状态
+	StateRead() ChainStateOperationRead // Read-only status 
+	CurrentState() ChainState           // Latest status
 
-	LatestBlock() (BlockHeadMetaRead, BlockHeadMetaRead, error) // 最新的区块（已确认的，和未成熟的）
-	LatestDiamond() (*stores.DiamondSmelt, error)               // 最新的区块钻石
+	LatestBlock() (BlockHeadMetaRead, BlockHeadMetaRead, error) // Latest blocks (confirmed and immature)
+	LatestDiamond() (*stores.DiamondSmelt, error)               // Latest block diamonds
 
 	SubscribeValidatedBlockOnInsert(chan Block)
 	SubscribeDiamondOnCreate(chan *stores.DiamondSmelt)

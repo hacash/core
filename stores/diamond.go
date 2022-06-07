@@ -16,7 +16,7 @@ const (
 )
 
 type Diamond struct {
-	Status  fields.VarUint1 // 状态 0. 正常可用可转账  1. 抵押给系统  2. 抵押给其他用户
+	Status  fields.VarUint1 // Status 0 Normally available and transferable 1 Mortgage to system 2 Mortgage to other users
 	Address fields.Address
 }
 

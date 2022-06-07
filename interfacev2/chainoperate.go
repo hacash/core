@@ -5,15 +5,15 @@ import (
 	"github.com/hacash/core/stores"
 )
 
-// chain state 操作
+// Chain state operation
 
 type ChainStateOperation interface {
-	// 数据库升级模式
+	// Database upgrade mode
 	IsDatabaseVersionRebuildMode() bool
 	SetDatabaseVersionRebuildMode(bool)
 
 	// status
-	IsInTxPool() bool // 否在交易池
+	IsInTxPool() bool // No in the trading pool
 	SetInTxPool(bool)
 
 	// status
@@ -39,9 +39,9 @@ type ChainStateOperation interface {
 	SetBlockStore(BlockStore) error
 
 	// tx hash
-	ContainTxHash(fields.Hash, fields.BlockHeight) error // 写入包含交易哈希
-	RemoveTxHash(fields.Hash) error                      // 移除交易
-	CheckTxHash(fields.Hash) (bool, error)               // 检查交易是否已经上链
+	ContainTxHash(fields.Hash, fields.BlockHeight) error // Write include transaction hash
+	RemoveTxHash(fields.Hash) error                      // Remove transaction
+	CheckTxHash(fields.Hash) (bool, error)               // Check whether the transaction has been linked
 
 	// query
 
@@ -63,9 +63,9 @@ type ChainStateOperation interface {
 	//SatoshiSet(fields.Address, *stores.Satoshi) error
 	//SatoshiDel(fields.Address) error
 
-	LockblsCreate(fields.LockblsId, *stores.Lockbls) error // 创建线性锁仓
-	LockblsUpdate(fields.LockblsId, *stores.Lockbls) error // 更新：释放（取出部分任意可取额度）
-	LockblsDelete(fields.LockblsId) error                  // 释放完毕后自动删除
+	LockblsCreate(fields.LockblsId, *stores.Lockbls) error // Create linear lock
+	LockblsUpdate(fields.LockblsId, *stores.Lockbls) error // Update: release (take out any available quota)
+	LockblsDelete(fields.LockblsId) error                  // Automatically delete after release
 
 	ChannelCreate(fields.ChannelId, *stores.Channel) error
 	ChannelUpdate(fields.ChannelId, *stores.Channel) error
@@ -93,6 +93,6 @@ type ChainStateOperation interface {
 	// movebtc
 	SaveMoveBTCBelongTxHash(trsno uint32, txhash []byte) error
 	ReadMoveBTCTxHashByNumber(trsno uint32) ([]byte, error)
-	LoadValidatedSatoshiGenesis(int64) (*stores.SatoshiGenesis, bool) // 获取已验证的BTC转移日志 & 是否需要验证
+	LoadValidatedSatoshiGenesis(int64) (*stores.SatoshiGenesis, bool) // Get verified BTC transfer logs  获取已验证的BTC转移日志 & 是否需要验证 whether verification is required
 
 }

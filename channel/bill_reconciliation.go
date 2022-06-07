@@ -11,31 +11,31 @@ import (
  * 通道实时对账（链下签署）
  */
 type OffChainFormPaymentChannelRealtimeReconciliation struct {
-	// 签名哈希计算数据部分
-	ChannelId fields.ChannelId // 通道id
+	// Signature hash calculation data part
+	ChannelId fields.ChannelId // Channel ID
 
-	ReuseVersion   fields.VarUint4 // 通道重用序号
-	BillAutoNumber fields.VarUint8 // 通道账单流水序号
+	ReuseVersion   fields.VarUint4 // Channel reuse sequence number
+	BillAutoNumber fields.VarUint8 // Serial number of channel bill
 
-	LeftBalance  fields.Amount // 左侧实时金额
-	RightBalance fields.Amount // 右侧实时金额
+	LeftBalance  fields.Amount // Real time amount on the left
+	RightBalance fields.Amount // Right real time amount
 
-	LeftSatoshi  fields.SatoshiVariation // 左侧比特币sat数量
-	RightSatoshi fields.SatoshiVariation // 右侧比特币sat数量
+	LeftSatoshi  fields.SatoshiVariation // Number of bitcoin sat on the left
+	RightSatoshi fields.SatoshiVariation // Number of bitcoin sat on the right
 
-	// 非签名哈希计算数据部分
-	LeftAddress  fields.Address // 左侧地址
-	RightAddress fields.Address // 右侧地址
+	// Unsigned hash calculation data part
+	LeftAddress  fields.Address // Left address
+	RightAddress fields.Address // Right address
 
-	Timestamp fields.BlockTxTimestamp // 对账时间戳
+	Timestamp fields.BlockTxTimestamp // Reconciliation timestamp
 
-	// 两侧签名
-	LeftSign  fields.Sign // 左侧地址对账签名
-	RightSign fields.Sign // 右侧地址对账签名
+	// Signature on both sides
+	LeftSign  fields.Sign // Left address reconciliation signature
+	RightSign fields.Sign // Right address reconciliation signature
 }
 
 // interface
-// 类型
+// type
 func (e *OffChainFormPaymentChannelRealtimeReconciliation) TypeCode() uint8 {
 	return BillTypeCodeReconciliation
 }
@@ -112,7 +112,7 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) SerializeForSign() 
 func (elm *OffChainFormPaymentChannelRealtimeReconciliation) Serialize() ([]byte, error) {
 	var buffer bytes.Buffer
 	var bt []byte
-	bt, _ = elm.SerializeForSign() // 签名部分数据体
+	bt, _ = elm.SerializeForSign() // Signature part data body
 	buffer.Write(bt)
 	bt, _ = elm.LeftAddress.Serialize()
 	buffer.Write(bt)
@@ -127,7 +127,7 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) Serialize() ([]byte
 	return buffer.Bytes(), nil
 }
 
-// 序列化
+// serialize
 func (e *OffChainFormPaymentChannelRealtimeReconciliation) SerializeWithTypeCode() ([]byte, error) {
 	buf := bytes.NewBuffer([]byte{e.TypeCode()})
 	b1, err := e.Serialize()
@@ -139,7 +139,7 @@ func (e *OffChainFormPaymentChannelRealtimeReconciliation) SerializeWithTypeCode
 }
 
 func (elm *OffChainFormPaymentChannelRealtimeReconciliation) SignStuffHash() fields.Hash {
-	var conbt, _ = elm.SerializeForSign() // 数据体
+	var conbt, _ = elm.SerializeForSign() // Data body
 	return fields.CalculateHash(conbt)
 }
 
@@ -196,10 +196,10 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) Parse(buf []byte, s
 	return seek, nil
 }
 
-// 检查签名
+// Check signature
 func (elm *OffChainFormPaymentChannelRealtimeReconciliation) CheckAddressAndSign() error {
-	// 验证哈希
-	var conhx = elm.SignStuffHash() // 数据体hx
+	// Verify hash
+	var conhx = elm.SignStuffHash() // Data body HX
 	ok1, _ := account.CheckSignByHash32(conhx, elm.LeftSign.PublicKey, elm.LeftSign.Signature)
 	if !ok1 {
 		return fmt.Errorf("Left account %s verify signature fail.", elm.LeftAddress.ToReadable())
@@ -208,16 +208,16 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) CheckAddressAndSign
 	if !ok2 {
 		return fmt.Errorf("Right account %s verify signature fail.", elm.RightAddress.ToReadable())
 	}
-	// 全部检查成功
+	// All checked successfully
 	return nil
 }
 
-// 检查数据可用性
+// Check data availability
 func (elm *OffChainFormPaymentChannelRealtimeReconciliation) CheckValidity() error {
 	return nil
 }
 
-// 验证对票据的签名
+// Verify signature on ticket
 func (elm *OffChainFormPaymentChannelRealtimeReconciliation) VerifySignature() error {
 	return elm.CheckAddressAndSign()
 }
@@ -226,10 +226,10 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) VerifySignature() e
 func (elm *OffChainFormPaymentChannelRealtimeReconciliation) FillTargetSignature(acc *account.Account) (*fields.Sign, bool, error) {
 	hx := elm.SignStuffHash()
 	addrIsLeft := elm.LeftAddress.Equal(acc.Address)
-	// 计算签名
+	// Calculate signature
 	signdata, e := acc.Private.Sign(hx)
 	if e != nil {
-		return nil, addrIsLeft, e // 签名错误
+		return nil, addrIsLeft, e // Signature error
 	}
 	signobj := fields.Sign{
 		PublicKey: acc.PublicKey,
@@ -250,21 +250,21 @@ func (elm *OffChainFormPaymentChannelRealtimeReconciliation) FillTargetSignature
  */
 
 type OnChainArbitrationBasisReconciliation struct {
-	// 签名哈希计算数据部分
-	ChannelId fields.ChannelId // 通道id
+	// Signature hash calculation data part
+	ChannelId fields.ChannelId // Channel ID
 
-	ReuseVersion   fields.VarUint4 // 通道重用序号
-	BillAutoNumber fields.VarUint8 // 通道账单流水序号
+	ReuseVersion   fields.VarUint4 // Channel reuse sequence number
+	BillAutoNumber fields.VarUint8 // Serial number of channel bill
 
-	LeftBalance  fields.Amount // 左侧实时金额
-	RightBalance fields.Amount // 右侧实时金额
+	LeftBalance  fields.Amount // Real time amount on the left
+	RightBalance fields.Amount // Right real time amount
 
-	LeftSatoshi  fields.SatoshiVariation // 左侧比特币sat数量
-	RightSatoshi fields.SatoshiVariation // 右侧比特币sat数量
+	LeftSatoshi  fields.SatoshiVariation // Number of bitcoin sat on the left
+	RightSatoshi fields.SatoshiVariation // Number of bitcoin sat on the right
 
-	// 两侧签名
-	LeftSign  fields.Sign // 左侧地址对账签名
-	RightSign fields.Sign // 右侧地址对账签名
+	// Signature on both sides
+	LeftSign  fields.Sign // Left address reconciliation signature
+	RightSign fields.Sign // Right address reconciliation signature
 }
 
 func (e *OnChainArbitrationBasisReconciliation) GetChannelId() fields.ChannelId {
@@ -324,7 +324,7 @@ func (elm *OnChainArbitrationBasisReconciliation) SerializeForSign() ([]byte, er
 func (elm *OnChainArbitrationBasisReconciliation) Serialize() ([]byte, error) {
 	var buffer bytes.Buffer
 	var bt []byte
-	bt, _ = elm.SerializeForSign() // 签名部分数据体
+	bt, _ = elm.SerializeForSign() // Signature part data body
 	buffer.Write(bt)
 	bt, _ = elm.LeftSign.Serialize()
 	buffer.Write(bt)
@@ -334,7 +334,7 @@ func (elm *OnChainArbitrationBasisReconciliation) Serialize() ([]byte, error) {
 }
 
 func (elm *OnChainArbitrationBasisReconciliation) SignStuffHash() fields.Hash {
-	var conbt, _ = elm.SerializeForSign() // 数据体
+	var conbt, _ = elm.SerializeForSign() // Data body
 	return fields.CalculateHash(conbt)
 }
 
@@ -379,7 +379,7 @@ func (elm *OnChainArbitrationBasisReconciliation) Parse(buf []byte, seek uint32)
 	return seek, nil
 }
 
-// 填充签名
+// Fill in signature
 func (elm *OnChainArbitrationBasisReconciliation) FillSigns(lacc, racc *account.Account) error {
 
 	txhx := elm.SignStuffHash()
@@ -404,10 +404,10 @@ func (elm *OnChainArbitrationBasisReconciliation) FillSigns(lacc, racc *account.
 	return nil
 }
 
-// 检查签名
+// Check signature
 func (elm *OnChainArbitrationBasisReconciliation) CheckAddressAndSign(laddr, raddr fields.Address) error {
-	// 验证哈希
-	var conhx = elm.SignStuffHash() // 数据体hx
+	// Verify hash
+	var conhx = elm.SignStuffHash() // Data body HX
 	ok1, _ := account.CheckSignByHash32(conhx, elm.LeftSign.PublicKey, elm.LeftSign.Signature)
 	if !ok1 {
 		return fmt.Errorf("Left account %s verify signature fail.", laddr.ToReadable())
@@ -416,6 +416,6 @@ func (elm *OnChainArbitrationBasisReconciliation) CheckAddressAndSign(laddr, rad
 	if !ok2 {
 		return fmt.Errorf("Right account %s verify signature fail.", raddr.ToReadable())
 	}
-	// 全部检查成功
+	// All checked successfully
 	return nil
 }

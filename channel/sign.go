@@ -9,7 +9,7 @@ import (
  * 签名相关
  */
 
-// 排序单元
+// Sorting unit
 type SortAddresses []fields.Address
 
 func (n SortAddresses) Len() int {
@@ -19,7 +19,7 @@ func (n SortAddresses) Less(i, j int) bool {
 	a, b := n[i], n[j]
 	for k := 0; k < fields.AddressSize; k++ {
 		if a[k] < b[k] {
-			return true // 字符排序
+			return true // Character sorting
 		}
 	}
 	return false
@@ -28,9 +28,9 @@ func (n SortAddresses) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
 }
 
-// 去重并排序地址列表
+// De duplication and sorting address list
 func CleanSortMustSignAddresses(addrs []fields.Address) (fields.VarUint1, []fields.Address) {
-	// 去重
+	// duplicate removal
 	addrsclear := make([]fields.Address, 0)
 	repeats := map[string]bool{}
 	for _, v := range addrs {
@@ -39,7 +39,7 @@ func CleanSortMustSignAddresses(addrs []fields.Address) (fields.VarUint1, []fiel
 		}
 		repeats[string(v)] = true
 	}
-	// 排序
+	// sort
 	sort.Sort(SortAddresses(addrsclear))
 	return fields.VarUint1(len(addrsclear)), addrsclear
 }

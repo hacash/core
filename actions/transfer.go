@@ -77,7 +77,7 @@ func (act *Action_1_SimpleToTransfer) WriteInChainState(state interfaces.ChainSt
 	if !act.Amount.IsPositive() {
 		return fmt.Errorf("Amount is not positive.")
 	}
-	// 转移
+	// transfer
 	return DoSimpleTransferFromChainStateV3(state, act.belong_trs_v3.GetAddress(), act.ToAddress, act.Amount)
 }
 
@@ -90,7 +90,7 @@ func (act *Action_1_SimpleToTransfer) WriteinChainState(state interfacev2.ChainS
 	if !act.Amount.IsPositive() {
 		return fmt.Errorf("Amount is not positive.")
 	}
-	// 转移
+	// transfer
 	return DoSimpleTransferFromChainState(state, act.belong_trs.GetAddress(), act.ToAddress, act.Amount)
 }
 
@@ -101,11 +101,11 @@ func (act *Action_1_SimpleToTransfer) RecoverChainState(state interfacev2.ChainS
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 回退
+	// Fallback
 	return DoSimpleTransferFromChainState(state, act.ToAddress, act.belong_trs.GetAddress(), act.Amount)
 }
 
-// 设置所属 belong_trs
+// Set belongs to long_ trs
 func (act *Action_1_SimpleToTransfer) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }
@@ -189,7 +189,7 @@ func (elm *Action_13_FromTransfer) RequestSignAddresses() []fields.Address {
 func (act *Action_13_FromTransfer) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+		return fmt.Errorf("mainnet not yet") // Waiting for review is not enabled yet
 	}
 
 	if act.belong_trs_v3 == nil {
@@ -200,14 +200,14 @@ func (act *Action_13_FromTransfer) WriteInChainState(state interfaces.ChainState
 	if !act.Amount.IsPositive() {
 		return fmt.Errorf("Amount is not positive.")
 	}
-	// 转移
+	// transfer
 	return DoSimpleTransferFromChainStateV3(state, act.FromAddress, act.belong_trs_v3.GetAddress(), act.Amount)
 }
 
 func (act *Action_13_FromTransfer) WriteinChainState(state interfacev2.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+		return fmt.Errorf("mainnet not yet") // Waiting for review is not enabled yet
 	}
 
 	if act.belong_trs == nil {
@@ -218,7 +218,7 @@ func (act *Action_13_FromTransfer) WriteinChainState(state interfacev2.ChainStat
 	if !act.Amount.IsPositive() {
 		return fmt.Errorf("Amount is not positive.")
 	}
-	// 转移
+	// transfer
 	return DoSimpleTransferFromChainState(state, act.FromAddress, act.belong_trs.GetAddress(), act.Amount)
 }
 
@@ -226,11 +226,11 @@ func (act *Action_13_FromTransfer) RecoverChainState(state interfacev2.ChainStat
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 回退
+	// Fallback
 	return DoSimpleTransferFromChainState(state, act.belong_trs.GetAddress(), act.FromAddress, act.Amount)
 }
 
-// 设置所属 belong_trs
+// Set belongs to long_ trs
 func (act *Action_13_FromTransfer) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }
@@ -318,7 +318,7 @@ func (elm *Action_14_FromToTransfer) RequestSignAddresses() []fields.Address {
 func (act *Action_14_FromToTransfer) WriteInChainState(state interfaces.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+		return fmt.Errorf("mainnet not yet") // Waiting for review is not enabled yet
 	}
 
 	if act.belong_trs_v3 == nil {
@@ -329,14 +329,14 @@ func (act *Action_14_FromToTransfer) WriteInChainState(state interfaces.ChainSta
 	if !act.Amount.IsPositive() {
 		return fmt.Errorf("Amount is not positive.")
 	}
-	// 转移
+	// transfer
 	return DoSimpleTransferFromChainStateV3(state, act.FromAddress, act.ToAddress, act.Amount)
 }
 
 func (act *Action_14_FromToTransfer) WriteinChainState(state interfacev2.ChainStateOperation) error {
 
 	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+		return fmt.Errorf("mainnet not yet") // Waiting for review is not enabled yet
 	}
 
 	if act.belong_trs == nil {
@@ -347,7 +347,7 @@ func (act *Action_14_FromToTransfer) WriteinChainState(state interfacev2.ChainSt
 	if !act.Amount.IsPositive() {
 		return fmt.Errorf("Amount is not positive.")
 	}
-	// 转移
+	// transfer
 	return DoSimpleTransferFromChainState(state, act.FromAddress, act.ToAddress, act.Amount)
 }
 
@@ -355,11 +355,11 @@ func (act *Action_14_FromToTransfer) RecoverChainState(state interfacev2.ChainSt
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
-	// 回退
+	// Fallback
 	return DoSimpleTransferFromChainState(state, act.ToAddress, act.FromAddress, act.Amount)
 }
 
-// 设置所属 belong_trs
+// Set belongs to long_ trs
 func (act *Action_14_FromToTransfer) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }

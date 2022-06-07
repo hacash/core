@@ -47,7 +47,7 @@ func (elm *DiamondListMaxLen200) Parse(buf []byte, seek uint32) (uint32, error) 
 		return 0, e
 	}
 	if elm.Count == 0 {
-		return seek, nil // 列表为空
+		return seek, nil // List is empty
 	}
 	elm.Diamonds = make([]DiamondName, int(elm.Count))
 	for i := 0; i < int(elm.Count); i++ {
@@ -60,7 +60,7 @@ func (elm *DiamondListMaxLen200) Parse(buf []byte, seek uint32) (uint32, error) 
 	return seek, nil
 }
 
-// 获取区块钻石的名称列表
+// Get the name list of block diamonds
 func (elm *DiamondListMaxLen200) SerializeHACDlistToCommaSplitString() string {
 	var names = make([]string, len(elm.Diamonds))
 	for i, v := range elm.Diamonds {
@@ -69,13 +69,13 @@ func (elm *DiamondListMaxLen200) SerializeHACDlistToCommaSplitString() string {
 	return strings.Join(names, ",")
 }
 
-// 创建钻石
+// Create diamond
 func (elm *DiamondListMaxLen200) ParseHACDlistBySplitCommaFromString(hacdlistsplitcomma string) error {
-	// 去除空格和换行符
+	// Remove spaces and line breaks
 	hacdlistsplitcomma = strings.Replace(hacdlistsplitcomma, " ", "", -1)
 	hacdlistsplitcomma = strings.Replace(hacdlistsplitcomma, "\n", "", -1)
 	hacdlistsplitcomma = strings.Trim(hacdlistsplitcomma, ",")
-	// 分割
+	// division
 	diamonds := strings.Split(hacdlistsplitcomma, ",")
 	dianum := len(diamonds)
 	if dianum > 200 {
@@ -96,6 +96,6 @@ func (elm *DiamondListMaxLen200) ParseHACDlistBySplitCommaFromString(hacdlistspl
 	}
 	elm.Count = VarUint1(dianum)
 	elm.Diamonds = diamondsbytes
-	// 成功返回
+	// Successful return
 	return nil
 }

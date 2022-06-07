@@ -10,28 +10,28 @@ const (
 )
 
 type UserLending struct {
-	IsRansomed           fields.Bool // 是否已经赎回(已经被赎回)
-	IsRedemptionOvertime fields.Bool // 是否超期仍可赎回（自动展期）
-	IsPublicRedeemable   fields.Bool // 到期后是否公共可赎回
+	IsRansomed           fields.Bool // Whether it has been redeemed (redeemed)
+	IsRedemptionOvertime fields.Bool // Whether it can be redeemed after expiration (automatic extension)
+	IsPublicRedeemable   fields.Bool // Public redeemable after maturity
 
 	CreateBlockHeight fields.BlockHeight // 借贷开启时的区块高度
-	ExpireBlockHeight fields.BlockHeight // 约定到期的区块高度
+	ExpireBlockHeight fields.BlockHeight // Agreed expiration block height
 
-	MortgagorAddress fields.Address // 抵押人地址
-	LenderAddress    fields.Address // 放款人地址
+	MortgagorAddress fields.Address // Address of mortgagor
+	LenderAddress    fields.Address // Lender address
 
-	MortgageBitcoin     fields.SatoshiVariation     // 抵押比特币数量 单位：SAT
-	MortgageDiamondList fields.DiamondListMaxLen200 // 抵押钻石表
+	MortgageBitcoin     fields.SatoshiVariation     // Mortgage bitcoin quantity unit: SAT
+	MortgageDiamondList fields.DiamondListMaxLen200 // Mortgage diamond table
 
-	LoanTotalAmount        fields.Amount // 总共借出HAC数量，必须小于等于可借数
-	AgreedRedemptionAmount fields.Amount // 约定的赎回金额
+	LoanTotalAmount        fields.Amount // The total lending HAC quantity must be less than or equal to the lendable quantity
+	AgreedRedemptionAmount fields.Amount // Agreed redemption amount
 
-	PreBurningInterestAmount fields.Amount // 预先销毁的利息，必须大于等于 借出金额的 1%
+	PreBurningInterestAmount fields.Amount // Interest for pre destruction must be greater than or equal to 1% of the lending amount
 
-	// 如已经赎回则写入数据
-	RansomBlockHeight fields.BlockHeight // 赎回时的区块高度
-	RansomAmount      fields.Amount      // 赎回金额
-	RansomAddress     fields.Address     // 赎回人地址
+	// Write data if redeemed
+	RansomBlockHeight fields.BlockHeight // Block height at redemption
+	RansomAmount      fields.Amount      // Redemption amount
+	RansomAddress     fields.Address     // Address of the Redeemer
 }
 
 func (elm *UserLending) Size() uint32 {
@@ -47,7 +47,7 @@ func (elm *UserLending) Size() uint32 {
 		elm.LoanTotalAmount.Size() +
 		elm.AgreedRedemptionAmount.Size() +
 		elm.PreBurningInterestAmount.Size()
-	// 已经赎回状态
+	// Redeemed status
 	if elm.IsRansomed.Check() {
 		sz += elm.RansomBlockHeight.Size() +
 			elm.RansomAmount.Size() +
@@ -82,7 +82,7 @@ func (elm *UserLending) Serialize() ([]byte, error) {
 	buffer.Write(b10)
 	buffer.Write(b11)
 	buffer.Write(b12)
-	// 已赎回状态
+	// Redeemed status
 	if elm.IsRansomed.Check() {
 		var b0, _ = elm.RansomBlockHeight.Serialize()
 		var b1, _ = elm.RansomAmount.Serialize()
@@ -144,7 +144,7 @@ func (elm *UserLending) Parse(buf []byte, seek uint32) (uint32, error) {
 	if e != nil {
 		return 0, e
 	}
-	// 已赎回状态
+	// Redeemed status
 	if elm.IsRansomed.Check() {
 		seek, e = elm.RansomBlockHeight.Parse(buf, seek)
 		if e != nil {
@@ -162,18 +162,18 @@ func (elm *UserLending) Parse(buf []byte, seek uint32) (uint32, error) {
 	return seek, nil
 }
 
-// 修改、回退赎回状态
+// Modify and return redemption status
 
 func (elm *UserLending) SetRansomedStatus(height uint64, amount *fields.Amount, address fields.Address) error {
-	elm.IsRansomed.Set(true) // 设置赎回状态
+	elm.IsRansomed.Set(true) // Set redemption status
 	elm.RansomBlockHeight = fields.BlockHeight(height)
 	elm.RansomAmount = *amount
 	elm.RansomAddress = address
 	return nil
 }
 
-// 移除赎回状态
+// Remove redemption status
 func (elm *UserLending) DropRansomedStatus() error {
-	elm.IsRansomed.Set(false) // 回退赎回状态
+	elm.IsRansomed.Set(false) // Return redemption status
 	return nil
 }

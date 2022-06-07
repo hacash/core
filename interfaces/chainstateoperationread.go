@@ -5,14 +5,14 @@ import (
 	"github.com/hacash/core/stores"
 )
 
-// chain state 操作
+// Chain state operation
 
 type ChainStateOperationRead interface {
-	// 数据库升级模式
+	// Database upgrade mode
 	IsDatabaseVersionRebuildMode() bool
 
 	// status
-	IsInTxPool() bool // 否在交易池
+	IsInTxPool() bool // No in the trading pool
 
 	//GetPending() (PendingStatus)
 	GetPendingBlockHeight() uint64
@@ -28,9 +28,9 @@ type ChainStateOperationRead interface {
 	BlockStoreRead() BlockStoreRead
 
 	// tx hash
-	CheckTxHash(fields.Hash) (bool, error)                                      // 检查交易是否已经上链
-	ReadTxBelongHeightByHash(fields.Hash) (fields.BlockHeight, error)           // 检查交易所属区块ID
-	ReadTransactionBytesByHash(fields.Hash) (fields.BlockHeight, []byte, error) // 读取交易内容
+	CheckTxHash(fields.Hash) (bool, error)                                      // Check whether the transaction has been linked
+	ReadTxBelongHeightByHash(fields.Hash) (fields.BlockHeight, error)           // Check the block ID of the exchange
+	ReadTransactionBytesByHash(fields.Hash) (fields.BlockHeight, []byte, error) // Read transaction content
 
 	// query
 	Balance(fields.Address) (*stores.Balance, error)

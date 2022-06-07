@@ -8,11 +8,11 @@ import (
  * 通道支付完整单据
  */
 
-// 通道链支付票据
+// Channel chain payment bill
 type ChannelPayCompleteDocuments struct {
-	// 对账票据表
+	// Reconciliation bill table
 	ProveBodys *ChannelPayProveBodyList
-	// 支付签名票据
+	// Payment of signed bills
 	ChainPayment *OffChainFormPaymentChannelTransfer
 }
 
@@ -31,7 +31,7 @@ func (c ChannelPayCompleteDocuments) Serialize() ([]byte, error) {
 
 func (c *ChannelPayCompleteDocuments) Parse(buf []byte, seek uint32) (uint32, error) {
 	var e error
-	// 通道
+	// passageway
 	c.ProveBodys = &ChannelPayProveBodyList{}
 	seek, e = c.ProveBodys.Parse(buf, seek)
 	if e != nil {

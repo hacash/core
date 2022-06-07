@@ -20,9 +20,9 @@ type DiamondSmelt struct {
 	Nonce                fields.Bytes8  // nonce
 	CustomMessage        fields.Bytes32 // msg
 	// data statistics
-	AverageBidBurnPrice fields.VarUint2 // 平均竞价销毁的HAC枚数，向下取整，最低一枚，最高65535枚
+	AverageBidBurnPrice fields.VarUint2 // Average number of HAc destroyed by bidding, rounded down, the lowest one, the highest 65535
 	// other data
-	VisualGene fields.Bytes10 // 可视化外观基因
+	VisualGene fields.Bytes10 // Visual appearance gene
 }
 
 func (this *DiamondSmelt) Size() uint32 {
@@ -44,7 +44,7 @@ func (this *DiamondSmelt) GetApproxFeeOffer() *fields.Amount {
 }
 
 func (this *DiamondSmelt) ParseApproxFeeOffer(amt *fields.Amount) error {
-	// 压缩存储空间
+	// Compress storage space
 	approxfeeoffer, _, e11 := amt.CompressForMainNumLen(4, true)
 	if e11 != nil {
 		return e11

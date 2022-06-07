@@ -18,20 +18,20 @@ type Transaction_0_Coinbase struct {
 	Address fields.Address
 	Reward  fields.Amount
 	Message fields.TrimString16
-	// 版本号
-	ExtendDataVersion fields.VarUint1 // 220000高度之前都等于 0
+	// Version number
+	ExtendDataVersion fields.VarUint1 // Equal to 0 before 220000 height
 
-	// 当 ExtendDataVersion >= 1 时 具有以下字段：
+	// When extenddataversion > = 1, it has the following fields:
 	MinerNonce   fields.Bytes32
-	WitnessCount fields.VarUint1 // 投票见证人数量
-	WitnessSigs  []uint8         // 见证人指定哈希尾数
-	Witnesses    []fields.Sign   // 对prev区块hash的签名，投票分叉
+	WitnessCount fields.VarUint1 // Number of voting witnesses
+	WitnessSigs  []uint8         // Witness specified hash mantissa
+	Witnesses    []fields.Sign   // Signature of prev block hash, voting fork
 
 	/* -------- -------- */
 
 	// cache data
-	TotalFeeUserPayed     fields.Amount // 区块总交易手续费
-	TotalFeeMinerReceived fields.Amount // 区块总交易手续费
+	TotalFeeUserPayed     fields.Amount // Total transaction fee of the block
+	TotalFeeMinerReceived fields.Amount // Total transaction fee of the block
 }
 
 func NewTransaction_0_CoinbaseV0() *Transaction_0_Coinbase {
@@ -61,7 +61,7 @@ func (trs *Transaction_0_Coinbase) Describe(isUnitMei, isForMining bool) map[str
 	cbinfo["extend_data_version"] = extendDataVersion
 	if extendDataVersion >= 1 {
 		if !isForMining {
-			cbinfo["miner_nonce"] = trs.MinerNonce.ToHex() // 不需要
+			cbinfo["miner_nonce"] = trs.MinerNonce.ToHex() // unwanted
 		}
 		wcnum := int(trs.WitnessCount)
 		cbinfo["witness_count"] = wcnum
@@ -135,16 +135,16 @@ func (trs *Transaction_0_Coinbase) Serialize() ([]byte, error) {
 	buffer.Write(b2)
 	buffer.Write(b3)
 	buffer.Write(b4)
-	// 版本号
+	// Version number
 	version := uint8(trs.ExtendDataVersion)
 	// ----------- 按版本区分 ----------- //
 	if version == 0 {
-		// 没有后续字段
+		// No subsequent fields
 	}
 	if version >= 1 {
-		// 附加的 nonce 值
+		// Additional nonce values
 		buffer.Write(trs.MinerNonce)
-		// 见证人
+		// witness
 		witnessCount := uint8(trs.WitnessCount)
 		buffer.Write([]byte{witnessCount})
 		for i := uint8(0); i < witnessCount; i++ {
@@ -174,18 +174,18 @@ func (trs *Transaction_0_Coinbase) Parse(buf []byte, seek uint32) (uint32, error
 		return 0, e
 	}
 	// ----------- 按版本区分 ----------- //
-	// 判断版本号
+	// Judge version number
 	version := uint8(trs.ExtendDataVersion)
 	if version == 0 {
-		// 没有后续字段
+		// No subsequent fields
 	}
 	if version >= 1 {
-		// nonce值
+		// Nonce value
 		seek, e = trs.MinerNonce.Parse(buf, seek)
 		if e != nil {
 			return 0, e
 		}
-		// 见证人
+		// witness
 		seek, e = trs.WitnessCount.Parse(buf, seek)
 		if e != nil {
 			return 0, e
@@ -241,10 +241,10 @@ func (trs *Transaction_0_Coinbase) Size() uint32 {
 		trs.Message.Size() +
 		trs.ExtendDataVersion.Size()
 	// ----------- 按版本区分 ----------- //
-	// 判断版本号
+	// Judge version number
 	version := uint8(trs.ExtendDataVersion)
 	if version == 0 {
-		// 没有后续字段
+		// No subsequent fields
 	}
 	if version >= 1 {
 		base += 32                      // nonce
@@ -258,7 +258,7 @@ func (trs *Transaction_0_Coinbase) Size() uint32 {
 	return base
 }
 
-// 交易唯一哈希值
+// Transaction unique hash value
 func (trs *Transaction_0_Coinbase) HashWithFee() fields.Hash {
 	stuff, _ := trs.Serialize()
 	digest := fields.CalculateHash(stuff)
@@ -269,12 +269,12 @@ func (trs *Transaction_0_Coinbase) Hash() fields.Hash {
 	return trs.HashWithFee()
 }
 
-// 需要的余额检查
+// Balance check required
 func (trs *Transaction_0_Coinbase) RequestAddressBalance() ([][]byte, []big.Int, error) {
 	panic("cannot RequestAddressBalance for Transaction_0_Coinbase")
 }
 
-// 从 actions 拿出需要签名的地址
+// Get the address to be signed from actions
 func (trs *Transaction_0_Coinbase) RequestSignAddresses([]fields.Address, bool) ([]fields.Address, error) {
 	panic("never call Transaction_0_Coinbase.RequestSignAddresses")
 	return []fields.Address{}, nil
@@ -284,39 +284,39 @@ func (trs *Transaction_0_Coinbase) VerifyTargetSigns([]fields.Address) (bool, er
 	return true, nil
 }
 
-// 清除所有签名
+// Clear all signatures
 func (trs *Transaction_0_Coinbase) CleanSigns() {
 	panic("cannot CleanSigns for Transaction_0_Coinbase")
 }
 
-// 返回所有签名
+// Return all signatures
 func (trs *Transaction_0_Coinbase) GetSigns() []fields.Sign {
 	panic("cannot GetSigns for Transaction_0_Coinbase")
 }
 
-// 设置签名
+// Set signature
 func (trs *Transaction_0_Coinbase) SetSigns([]fields.Sign) {
 	panic("cannot SetSigns for Transaction_0_Coinbase")
 }
 
-// 填充全部需要的签名
+// Fill in all required signatures
 func (trs *Transaction_0_Coinbase) FillTargetSign(*account.Account) error {
 	panic("cannot FillTargetSign for Transaction_0_Coinbase")
 }
 
-// 填充签名
+// Fill in signature
 func (trs *Transaction_0_Coinbase) FillNeedSigns(map[string][]byte, []fields.Address) error {
 	panic("cannot FillNeedSigns for Transaction_0_Coinbase")
 }
 
-// 验证需要的签名
+// Verify required signatures
 func (trs *Transaction_0_Coinbase) VerifyAllNeedSigns() (bool, error) {
 	return true, nil
 }
 
 func (trs *Transaction_0_Coinbase) WriteInChainState(state interfaces.ChainStateOperation) error {
 
-	// total supply 统计
+	// Total supply statistics
 	// reward
 	totalsupply, e2 := state.ReadTotalSupply()
 	if e2 != nil {
@@ -325,7 +325,7 @@ func (trs *Transaction_0_Coinbase) WriteInChainState(state interfaces.ChainState
 	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBlockReward, trs.Reward.ToMei())
 	// feeBurning
 	if trs.TotalFeeMinerReceived.NotEqual(&trs.TotalFeeUserPayed) {
-		// 有销毁
+		// With destruction
 		burnamt, e := trs.TotalFeeUserPayed.Sub(&trs.TotalFeeMinerReceived)
 		if e != nil {
 			return e
@@ -347,7 +347,7 @@ func (trs *Transaction_0_Coinbase) WriteInChainState(state interfaces.ChainState
 // 修改 / 恢复 状态数据库
 func (trs *Transaction_0_Coinbase) WriteinChainState(state interfacev2.ChainStateOperation) error {
 
-	// total supply 统计
+	// Total supply statistics
 	// reward
 	totalsupply, e2 := state.ReadTotalSupply()
 	if e2 != nil {
@@ -356,7 +356,7 @@ func (trs *Transaction_0_Coinbase) WriteinChainState(state interfacev2.ChainStat
 	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBlockReward, trs.Reward.ToMei())
 	// feeBurning
 	if trs.TotalFeeMinerReceived.NotEqual(&trs.TotalFeeUserPayed) {
-		// 有销毁
+		// With destruction
 		burnamt, e := trs.TotalFeeUserPayed.Sub(&trs.TotalFeeMinerReceived)
 		if e != nil {
 			return e
@@ -379,7 +379,7 @@ func (trs *Transaction_0_Coinbase) RecoverChainState(state interfacev2.ChainStat
 
 	panic("RecoverChainState be deprecated")
 
-	// total supply 统计
+	// Total supply statistics
 	// reward
 	totalsupply, e2 := state.ReadTotalSupply()
 	if e2 != nil {
@@ -388,7 +388,7 @@ func (trs *Transaction_0_Coinbase) RecoverChainState(state interfacev2.ChainStat
 	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBlockReward, trs.Reward.ToMei())
 	// feeBurning
 	if trs.TotalFeeMinerReceived.NotEqual(&trs.TotalFeeUserPayed) {
-		// 有销毁
+		// With destruction
 		burnamt, e := trs.TotalFeeUserPayed.Sub(&trs.TotalFeeMinerReceived)
 		if e != nil {
 			return e
@@ -400,7 +400,7 @@ func (trs *Transaction_0_Coinbase) RecoverChainState(state interfacev2.ChainStat
 	if e3 != nil {
 		return e3
 	}
-	// 地址余额
+	// Address balance
 	rwd_and_txfee, _ := trs.Reward.Add(&trs.TotalFeeMinerReceived)
 	return actions.DoSubBalanceFromChainState(state, trs.Address, *rwd_and_txfee)
 }
@@ -409,7 +409,7 @@ func (trs *Transaction_0_Coinbase) FeePurity() uint64 {
 	panic("cannot GetFeePurity for Transaction_0_Coinbase")
 }
 
-// 查询
+// query
 func (trs *Transaction_0_Coinbase) GetAddress() fields.Address {
 	return trs.Address
 }
@@ -437,7 +437,7 @@ func (trs *Transaction_0_Coinbase) GetActionList() []interfaces.Action {
 	return nil
 }
 
-func (trs *Transaction_0_Coinbase) GetTimestamp() uint64 { // 时间戳
+func (trs *Transaction_0_Coinbase) GetTimestamp() uint64 { // time stamp
 	panic("cannot GetTimestamp for Transaction_0_Coinbase")
 }
 

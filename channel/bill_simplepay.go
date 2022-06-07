@@ -14,15 +14,15 @@ import (
 
 type OffChainCrossNodeSimplePaymentReconciliationBill struct {
 
-	// 本通道对账单
+	// Statement of this channel
 	ChannelChainTransferTargetProveBody ChannelChainTransferProveBodyInfo
 
-	// 通道链支付数据
+	// Channel chain payment data
 	ChannelChainTransferData OffChainFormPaymentChannelTransfer
 }
 
 func (c OffChainCrossNodeSimplePaymentReconciliationBill) TypeCode() uint8 {
-	return BillTypeCodeSimplePay // 类型
+	return BillTypeCodeSimplePay // type
 }
 
 func (c OffChainCrossNodeSimplePaymentReconciliationBill) Size() uint32 {
@@ -110,7 +110,7 @@ func (c OffChainCrossNodeSimplePaymentReconciliationBill) GetAutoNumber() uint64
 	return uint64(c.ChannelChainTransferTargetProveBody.BillAutoNumber)
 }
 
-// 检查数据可用性
+// Check data availability
 func (c OffChainCrossNodeSimplePaymentReconciliationBill) CheckValidity() error {
 	var checkIsOk bool = false
 	hxchecker := c.ChannelChainTransferTargetProveBody.GetSignStuffHashHalfChecker()
@@ -121,16 +121,16 @@ func (c OffChainCrossNodeSimplePaymentReconciliationBill) CheckValidity() error 
 			break
 		}
 	}
-	// 是否包含
+	// Include or not
 	if checkIsOk == false {
 		return fmt.Errorf("ProveBody's HashHalfChecker <%s> not included in ChannelTransferProveHashHalfCheckers.",
 			hxchecker.ToHex())
 	}
-	// 检查成功
+	// Check successful
 	return nil
 }
 
-// 验证对票据的签名
+// Verify signature on ticket
 func (c OffChainCrossNodeSimplePaymentReconciliationBill) VerifySignature() error {
 
 	return c.ChannelChainTransferData.CheckMustAddressAndSigns()

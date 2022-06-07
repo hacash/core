@@ -14,7 +14,7 @@ type BlockStore interface {
 	// save
 	SaveBlock(Block) error
 
-	// 设置区块高度指向的区块哈希
+	// Set the block hash that the block height points to
 	UpdateSetBlockHashReferToHeight(uint64, fields.Hash) error
 
 	// tx
@@ -23,13 +23,13 @@ type BlockStore interface {
 	// diamond
 	SaveDiamond(*stores.DiamondSmelt) error
 
-	// 设置钻石数字指向的钻石名称
+	// Set the diamond name pointed by the diamond number
 	UpdateSetDiamondNameReferToNumber(uint32, fields.DiamondName) error
 
 	// btc move log
 	RunDownLoadBTCMoveLog()
-	SaveBTCMoveLogPageData(int, []*stores.SatoshiGenesis) error // 保存数据页
+	SaveBTCMoveLogPageData(int, []*stores.SatoshiGenesis) error // Save data page
 
-	LoadValidatedSatoshiGenesis(int64) (*stores.SatoshiGenesis, bool) // 获取已验证的BTC转移日志 & 是否需要验证
+	LoadValidatedSatoshiGenesis(int64) (*stores.SatoshiGenesis, bool) // Get verified BTC transfer logs  获取已验证的BTC转移日志 & 是否需要验证 whether verification is required
 
 }

@@ -64,7 +64,7 @@ func (this Address) Copy() Address {
 
 ////////////////////////////////////////////////////////////
 
-// 字母顺序排序
+// Alphabetical sort
 type AddressListByCharacterSort []Address
 
 func (n AddressListByCharacterSort) Len() int {
@@ -74,7 +74,7 @@ func (n AddressListByCharacterSort) Less(i, j int) bool {
 	a, b := n[i], n[j]
 	for k := 0; k < AddressSize; k++ {
 		if a[k] < b[k] {
-			return true // 字符排序
+			return true // Character sorting
 		}
 	}
 	return false
@@ -83,9 +83,9 @@ func (n AddressListByCharacterSort) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
 }
 
-// 去重并排序地址列表
+// De duplication and sorting address list
 func CleanAddressListByCharacterSort(addrs []Address, addradds []Address) (VarUint1, []Address) {
-	// 去重
+	// duplicate removal
 	addrsclear := make([]Address, 0)
 	repeats := map[string]bool{}
 	if addrs != nil {
@@ -96,7 +96,7 @@ func CleanAddressListByCharacterSort(addrs []Address, addradds []Address) (VarUi
 			repeats[string(v)] = true
 		}
 	}
-	// 添加
+	// add to
 	if addradds != nil {
 		for _, v := range addradds {
 			if _, hav := repeats[string(v)]; hav == false {
@@ -105,7 +105,7 @@ func CleanAddressListByCharacterSort(addrs []Address, addradds []Address) (VarUi
 			repeats[string(v)] = true
 		}
 	}
-	// 排序
+	// sort
 	sort.Sort(AddressListByCharacterSort(addrsclear))
 	return VarUint1(len(addrsclear)), addrsclear
 }

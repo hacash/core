@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// 可选地址
+// Optional address
 
 type OptionalAddress struct {
 	Exist Bool
@@ -56,7 +56,7 @@ func (elm *OptionalAddress) Parse(buf []byte, seek uint32) (uint32, error) {
 	return seek, nil
 }
 
-// 显示地址
+// display address
 func (elm OptionalAddress) ShowReadableOrEmpty() string {
 	if elm.Exist.Check() {
 		return elm.Addr.ToReadable()

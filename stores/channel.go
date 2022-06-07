@@ -10,38 +10,38 @@ const (
 )
 
 const (
-	ChannelStatusOpening                fields.VarUint1 = 0 // 正常开启
-	ChannelStatusChallenging            fields.VarUint1 = 1 // 挑战期
-	ChannelStatusAgreementClosed        fields.VarUint1 = 2 // 协商关闭，可再次开启重用
-	ChannelStatusFinalArbitrationClosed fields.VarUint1 = 3 // 最终仲裁关闭，永不可重用
+	ChannelStatusOpening                fields.VarUint1 = 0 // Normal opening
+	ChannelStatusChallenging            fields.VarUint1 = 1 // Challenging period
+	ChannelStatusAgreementClosed        fields.VarUint1 = 2 // After negotiation is closed, reuse can be enabled again
+	ChannelStatusFinalArbitrationClosed fields.VarUint1 = 3 // Final arbitration closed, never reusable
 
 )
 
 //
 type Channel struct {
-	BelongHeight         fields.BlockHeight // 通道开启时的区块高度
-	ArbitrationLockBlock fields.VarUint2    // 单方面结束通道要锁定的区块数量
-	InterestAttribution  fields.VarUint1    // 年化 1% 的利息归属： 0.按结束分配 1.全给left 2.全给right
+	BelongHeight         fields.BlockHeight // Block height when channel is opened
+	ArbitrationLockBlock fields.VarUint2    // Number of blocks to be locked for unilateral end channel
+	InterestAttribution  fields.VarUint1    // Interest attribution of 1% annualized: 0 Press end to assign 1 All to left 2 Give it all right
 	LeftAddress          fields.Address
 	LeftAmount           fields.Amount           // HAC
 	LeftSatoshi          fields.SatoshiVariation // SAT
 	RightAddress         fields.Address
-	RightAmount          fields.Amount           // 抵押数额2
+	RightAmount          fields.Amount           // Mortgage amount 2
 	RightSatoshi         fields.SatoshiVariation // SAT
-	ReuseVersion         fields.VarUint4         // 重用版本号 从 1 开始
-	Status               fields.VarUint1         // 已经关闭并结算等状态
+	ReuseVersion         fields.VarUint4         // Reuse version number from 1
+	Status               fields.VarUint1         // Closed and settled
 
-	// Status = 1 挑战期保存数据
-	IsHaveChallengeLog         fields.Bool             // 记录挑战期数据日志
-	ChallengeLaunchHeight      fields.BlockHeight      // 挑战开始的区块高度
-	AssertBillAutoNumber       fields.VarUint8         // 主张者提供的账单流水编号
-	AssertAddressIsLeftOrRight fields.Bool             // 主张者是左侧地址还是右侧 true-左  false-右
-	AssertAmount               fields.Amount           // 主张者主张自己应该分配的金额
-	AssertSatoshi              fields.SatoshiVariation // 主张者主张自己应该分配的SAT
+	// Status = 1 challenge period save data
+	IsHaveChallengeLog         fields.Bool             // Record challenge data log
+	ChallengeLaunchHeight      fields.BlockHeight      // Block height at the beginning of the challenge
+	AssertBillAutoNumber       fields.VarUint8         // Statement serial number provided by the proposer
+	AssertAddressIsLeftOrRight fields.Bool             // Whether the proposer is the left address or the right true left false right
+	AssertAmount               fields.Amount           // The amount claimed by the proponent
+	AssertSatoshi              fields.SatoshiVariation // The sat that proponents claim they should be assigned
 
-	// Status = 2 or Status = 3 已经关闭资金分配
-	LeftFinalDistributionAmount  fields.Amount           // 左侧最终分配金额
-	LeftFinalDistributionSatoshi fields.SatoshiVariation // 左侧最终分配金额
+	// Status = 2 or status = 3 fund allocation has been closed
+	LeftFinalDistributionAmount  fields.Amount           // Final allocation amount on the left
+	LeftFinalDistributionSatoshi fields.SatoshiVariation // Final allocation amount on the left
 
 	// cache data
 }
@@ -62,7 +62,7 @@ func CreateEmptyChannel() *Channel {
 	}
 }
 
-// 状态判断
+// State judgment
 func (this *Channel) IsOpening() bool {
 	return this.Status == ChannelStatusOpening
 }
@@ -80,7 +80,7 @@ func (this *Channel) IsClosed() bool {
 		this.Status == ChannelStatusFinalArbitrationClosed
 }
 
-// 状态操作
+// Status operation
 func (this *Channel) SetAgreementClosed(leftEndAmt *fields.Amount, satoshi fields.Satoshi) {
 	this.Status = ChannelStatusAgreementClosed
 	this.LeftFinalDistributionAmount = *leftEndAmt

@@ -5,12 +5,12 @@ import (
 	"github.com/hacash/core/stores"
 )
 
-// chain state 操作
+// Chain state operation
 
 type ChainStateOperation interface {
 	ChainStateOperationRead
 
-	// 数据库升级模式
+	// Database upgrade mode
 	SetDatabaseVersionRebuildMode(bool)
 
 	// status
@@ -28,17 +28,17 @@ type ChainStateOperation interface {
 	BlockStore() BlockStore
 
 	// tx hash
-	ContainTxHash(fields.Hash, fields.BlockHeight) error // 写入包含交易哈希
-	RemoveTxHash(fields.Hash) error                      // 移除交易
+	ContainTxHash(fields.Hash, fields.BlockHeight) error // Write include transaction hash
+	RemoveTxHash(fields.Hash) error                      // Remove transaction
 
 	// operate
 
 	BalanceSet(fields.Address, *stores.Balance) error
 	BalanceDel(fields.Address) error
 
-	LockblsCreate(fields.LockblsId, *stores.Lockbls) error // 创建线性锁仓
-	LockblsUpdate(fields.LockblsId, *stores.Lockbls) error // 更新：释放（取出部分任意可取额度）
-	LockblsDelete(fields.LockblsId) error                  // 释放完毕后自动删除
+	LockblsCreate(fields.LockblsId, *stores.Lockbls) error // Create linear lock
+	LockblsUpdate(fields.LockblsId, *stores.Lockbls) error // Update: release (take out any available quota)
+	LockblsDelete(fields.LockblsId) error                  // Automatically delete after release
 
 	ChannelCreate(fields.ChannelId, *stores.Channel) error
 	ChannelUpdate(fields.ChannelId, *stores.Channel) error
