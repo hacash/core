@@ -15,7 +15,7 @@ import (
 )
 
 /**
- * 钻石交易类型
+ * diamond tx type
  */
 
 // Start with the 20001st diamond and enable the 32-bit MSG byte
@@ -242,8 +242,8 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 	// Deposit diamonds
 	//fmt.Println(act.Address.ToReadable())
 	var diastore = stores.NewDiamond(act.Address)
-	diastore.Address = act.Address                // Diamond address
-	e3 := state.DiamondSet(act.Diamond, diastore) // 保存
+	diastore.Address = act.Address // Diamond address
+	e3 := state.DiamondSet(act.Diamond, diastore)
 	if e3 != nil {
 		return e3
 	}
@@ -291,7 +291,7 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 	} else {
 		bsnum := uint32(act.Number) - DiamondCreateBurning90PercentTxFeesAboveNumber
 		burnhac := totalsupply.Get(stores.TotalSupplyStoreTypeOfBurningFee)
-		bidprice := uint64(burnhac/float64(bsnum) + 0.99999999) // 向上取整
+		bidprice := uint64(burnhac/float64(bsnum) + 0.99999999) // up 1
 		setprice := fields.VarUint2(bidprice)
 		if setprice < 1 {
 			setprice = 1 // Minimum 1
@@ -446,8 +446,8 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 	// Deposit diamonds
 	//fmt.Println(act.Address.ToReadable())
 	var diastore = stores.NewDiamond(act.Address)
-	diastore.Address = act.Address                // Diamond address
-	e3 := state.DiamondSet(act.Diamond, diastore) // 保存
+	diastore.Address = act.Address // Diamond address
+	e3 := state.DiamondSet(act.Diamond, diastore)
 	if e3 != nil {
 		return e3
 	}
@@ -495,7 +495,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 	} else {
 		bsnum := uint32(act.Number) - DiamondCreateBurning90PercentTxFeesAboveNumber
 		burnhac := totalsupply.Get(stores.TotalSupplyStoreTypeOfBurningFee)
-		bidprice := uint64(burnhac/float64(bsnum) + 0.99999999) // 向上取整
+		bidprice := uint64(burnhac/float64(bsnum) + 0.99999999) // up 1
 		setprice := fields.VarUint2(bidprice)
 		if setprice < 1 {
 			setprice = 1 // Minimum 1
@@ -584,7 +584,7 @@ func (elm *Action_4_DiamondCreate) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 
-// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+// burning fees  // IsBurning 90 PersentTxFees
 func (act *Action_4_DiamondCreate) IsBurning90PersentTxFees() bool {
 	if uint32(act.Number) > DiamondCreateBurning90PercentTxFeesAboveNumber {
 		// 90% of the cost of destroying this transaction from the 30001 diamond
@@ -610,7 +610,7 @@ func calculateVisualGeneByDiamondStuffHash(belong_trs interfacev2.Transaction, n
 		vgenestuff := bytes.NewBuffer(stuffhx)
 		vgenestuff.Write(peddingblkhash)
 		if number > DiamondResourceAppendBiddingFeeDecideVisualGeneAboveNumber {
-			bidfeebts, e := belong_trs.GetFee().Serialize() // 竞价手续费
+			bidfeebts, e := belong_trs.GetFee().Serialize() // bid fee
 			if e != nil {
 				return nil, e // Return error
 			}
@@ -734,7 +734,7 @@ func calculateVisualGeneByDiamondStuffHashV3(belong_trs interfaces.Transaction, 
 		vgenestuff := bytes.NewBuffer(stuffhx)
 		vgenestuff.Write(peddingblkhash)
 		if number > DiamondResourceAppendBiddingFeeDecideVisualGeneAboveNumber {
-			bidfeebts, e := belong_trs.GetFee().Serialize() // 竞价手续费
+			bidfeebts, e := belong_trs.GetFee().Serialize() // bid fee
 			if e != nil {
 				return nil, e // Return error
 			}
@@ -848,7 +848,7 @@ func calculateVisualGeneByDiamondStuffHashV3(belong_trs interfaces.Transaction, 
 // Transfer diamond
 type Action_5_DiamondTransfer struct {
 	Diamond   fields.DiamondName // Diamond literal wtyuiahxvmekbszn
-	ToAddress fields.Address     // 收钻方账户
+	ToAddress fields.Address     // receive address
 
 	// Data pointer
 	// Transaction
@@ -902,7 +902,7 @@ func (act *Action_5_DiamondTransfer) WriteInChainState(state interfaces.ChainSta
 
 	//fmt.Println("Action_5_DiamondTransfer:", trsMainAddress.ToReadable(), act.Address.ToReadable(), string(act.Diamond))
 
-	// 自己不能转给自己
+	// cannot trs to self
 	if bytes.Compare(act.ToAddress, trsMainAddress) == 0 {
 		return fmt.Errorf("Cannot transfer to self.")
 	}
@@ -947,7 +947,7 @@ func (act *Action_5_DiamondTransfer) WriteinChainState(state interfacev2.ChainSt
 
 	//fmt.Println("Action_5_DiamondTransfer:", trsMainAddress.ToReadable(), act.Address.ToReadable(), string(act.Diamond))
 
-	// 自己不能转给自己
+	// cannot trs to self
 	if bytes.Compare(act.ToAddress, trsMainAddress) == 0 {
 		return fmt.Errorf("Cannot transfer to self.")
 	}
@@ -1018,7 +1018,7 @@ func (elm *Action_5_DiamondTransfer) SetBelongTrs(t interfaces.Transaction) {
 	elm.belong_trs_v3 = t
 }
 
-// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+// burning fees  // IsBurning 90 PersentTxFees
 func (act *Action_5_DiamondTransfer) IsBurning90PersentTxFees() bool {
 	return false
 }
@@ -1028,7 +1028,7 @@ func (act *Action_5_DiamondTransfer) IsBurning90PersentTxFees() bool {
 // Bulk transfer of diamonds
 type Action_6_OutfeeQuantityDiamondTransfer struct {
 	FromAddress fields.Address              // Accounts with diamonds
-	ToAddress   fields.Address              // 收钻方账户
+	ToAddress   fields.Address              // receive address
 	DiamondList fields.DiamondListMaxLen200 // Diamond list
 
 	// Data pointer
@@ -1089,7 +1089,7 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) Parse(buf []byte, seek uint32
 }
 
 func (elm *Action_6_OutfeeQuantityDiamondTransfer) RequestSignAddresses() []fields.Address {
-	reqs := make([]fields.Address, 1) // 需from签名
+	reqs := make([]fields.Address, 1) // ed from address sign
 	reqs[0] = elm.FromAddress
 	return reqs
 }
@@ -1106,7 +1106,7 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteInChainState(state inter
 	if dianum > 200 {
 		return fmt.Errorf("Diamonds quantity cannot over 200")
 	}
-	// 自己不能转给自己
+	// annot trs to self
 	if bytes.Compare(act.FromAddress, act.ToAddress) == 0 {
 		return fmt.Errorf("Cannot transfer to self.")
 	}
@@ -1162,7 +1162,7 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteinChainState(state inter
 	if dianum > 200 {
 		return fmt.Errorf("Diamonds quantity cannot over 200")
 	}
-	// 自己不能转给自己
+	// cannot trs to self
 	if bytes.Compare(act.FromAddress, act.ToAddress) == 0 {
 		return fmt.Errorf("Cannot transfer to self.")
 	}
@@ -1245,7 +1245,7 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) SetBelongTrs(t interfaces.Tra
 	elm.belong_trs_v3 = t
 }
 
-// burning fees  // 是否销毁本笔交易的 90% 的交易费用
+// burning fees  // IsBurning 90 PersentTxFees
 func (act *Action_6_OutfeeQuantityDiamondTransfer) IsBurning90PersentTxFees() bool {
 	return false
 }
