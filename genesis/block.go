@@ -52,8 +52,14 @@ func GetGenesisBlock() *blocks.Block_v1 {
 	genesis.Transactions = make([]interfaces.Transaction, 1)
 	genesis.Transactions[0] = coinbase
 	root := blocks.CalculateMrklRoot(genesis.GetTrsList())
-	//fmt.Println( hex.EncodeToString(root) )
 	genesis.SetMrklRoot(root)
+	////////////////////
+	//fmt.Println( hex.EncodeToString(root) )
+	//bbbt1, _ := coinbase.Serialize();
+	//fmt.Println( hex.EncodeToString(bbbt1) )
+	//bbbt2, _ := genesis.Serialize();
+	//fmt.Println( hex.EncodeToString(bbbt2) )
+	////////////////////
 	hash := genesis.HashFresh()
 	check_hash := "000000077790ba2fcdeaef4a4299d9b667135bac577ce204dee8388f1b97f7e6"
 	check, _ := hex.DecodeString(check_hash)

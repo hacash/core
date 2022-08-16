@@ -3,10 +3,19 @@ package test
 import (
 	"fmt"
 	"github.com/hacash/core/account"
+	"github.com/hacash/core/genesis"
 	"github.com/hacash/core/sys/inicnf"
 	"os"
 	"testing"
 )
+
+func Test_t187362873(t *testing.T) {
+	genesis.GetGenesisBlock()
+
+	//hx := x16rs.CalculateBlockHash(12, []byte{0,0,0,0})
+	//fmt.Println(hex.EncodeToString(hx))
+
+}
 
 func Test_t1(t *testing.T) {
 

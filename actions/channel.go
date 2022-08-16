@@ -739,9 +739,9 @@ func (elm *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) RequestSignAddres
 
 func (act *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) WriteInChainState(state interfaces.ChainStateOperation) error {
 
-	//if !sys.TestDebugLocalDevelopmentMark {
-	//	return fmt.Errorf("mainnet not yet") // 暂未启用等待review
-	//}
+	if !sys.TestDebugLocalDevelopmentMark {
+		return fmt.Errorf("mainnet not yet") // 暂未启用等待review
+	}
 
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
