@@ -227,9 +227,30 @@ func (bill Amount) ToMeiOrFinString(usemei bool) string {
 }
 
 // Convert the unit to pieces, keep 8 decimal places, and round off the excess
-func (bill Amount) ToMeiString() string {
-	bigmei := bill.ToMeiBigFloat()
-	meistr := bigmei.Text('f', 9)
+func (bill Amount) ToUnitString(unit_name string) string {
+	unit_name = strings.ToLower(unit_name)
+	setunit := -1
+	if unit_name == "mei" {
+		setunit = 248
+	}
+	if unit_name == "zhu" {
+		setunit = 240
+	}
+	if unit_name == "shuo" {
+		setunit = 232
+	}
+	if unit_name == "ai" {
+		setunit = 224
+	}
+	if unit_name == "miao" {
+		setunit = 216
+	}
+	if setunit == -1 {
+		// fin string
+		return bill.ToFinString()
+	}
+	bigunit := bill.ToUnitBigFloat(setunit)
+	meistr := bigunit.Text('f', 9)
 	spx := strings.Split(meistr, ".")
 	if len(spx) == 2 {
 		if len(spx[1]) == 9 {
@@ -238,10 +259,20 @@ func (bill Amount) ToMeiString() string {
 		}
 	}
 	return strings.TrimRight(strings.TrimRight(meistr, "0"), ".")
+
+}
+
+// Convert the unit to pieces, keep 8 decimal places, and round off the excess
+func (bill Amount) ToMeiString() string {
+	return bill.ToUnitString("mei")
 }
 
 // Conversion unit: piece
 func (bill Amount) ToMeiBigFloat() *big.Float {
+	return bill.ToUnitBigFloat(248)
+}
+
+func (bill Amount) ToUnitBigFloat(unit int) *big.Float {
 	// handle
 	bigmei := new(big.Float).SetInt(new(big.Int).SetBytes(bill.Numeral))
 	//fmt.Println(bigmei.String(), int(bill.Unit), int(bill.Unit) - 248)
@@ -251,7 +282,7 @@ func (bill Amount) ToMeiBigFloat() *big.Float {
 	bigf10 := new(big.Float).SetFloat64(10.0)
 	bigf10div := new(big.Float).SetFloat64(0.1)
 	if bill.Unit > 0 {
-		pz := int(bill.Unit) - 248
+		pz := int(bill.Unit) - unit
 		if pz > 0 {
 			for i := 0; i < pz; i++ {
 				bigmei = bigmei.Mul(bigmei, bigf10)
