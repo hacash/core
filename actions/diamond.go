@@ -256,7 +256,7 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 	// Set miner status
 	// Mark that this block already contains diamonds
 	// Storing objects, computing visual genes
-	visualGene, e15 := calculateVisualGeneByDiamondStuffHashV3(act.belong_trs_v3, uint32(act.Number), diamondResHash, diamondStr, diamondVisualUseContainBlockHash)
+	lifeGene, e15 := calculateLifeGeneByDiamondStuffHashV3(act.belong_trs_v3, uint32(act.Number), diamondResHash, diamondStr, diamondVisualUseContainBlockHash)
 	if e15 != nil {
 		return e15
 	}
@@ -270,7 +270,7 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 		MinerAddress:         act.Address,
 		Nonce:                act.Nonce,
 		CustomMessage:        act.GetRealCustomMessage(),
-		VisualGene:           visualGene,
+		LifeGene:             lifeGene,
 	}
 
 	// Write service charge quotation
@@ -460,7 +460,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 	// Set miner status
 	// Mark that this block already contains diamonds
 	// Storing objects, computing visual genes
-	visualGene, e15 := calculateVisualGeneByDiamondStuffHash(act.belong_trs, uint32(act.Number), diamondResHash, diamondStr, diamondVisualUseContainBlockHash)
+	lifeGene, e15 := calculateLifeGeneByDiamondStuffHash(act.belong_trs, uint32(act.Number), diamondResHash, diamondStr, diamondVisualUseContainBlockHash)
 	if e15 != nil {
 		return e15
 	}
@@ -474,7 +474,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 		MinerAddress:         act.Address,
 		Nonce:                act.Nonce,
 		CustomMessage:        act.GetRealCustomMessage(),
-		VisualGene:           visualGene,
+		LifeGene:             lifeGene,
 	}
 
 	// Write service charge quotation
@@ -596,7 +596,7 @@ func (act *Action_4_DiamondCreate) IsBurning90PersentTxFees() bool {
 ///////////////////////////////////////////////////////////////
 
 // Calculate the visual gene of diamond
-func calculateVisualGeneByDiamondStuffHash(belong_trs interfacev2.Transaction, number uint32, stuffhx []byte, diamondstr string, peddingblkhash []byte) (fields.Bytes10, error) {
+func calculateLifeGeneByDiamondStuffHash(belong_trs interfacev2.Transaction, number uint32, stuffhx []byte, diamondstr string, peddingblkhash []byte) (fields.Hash, error) {
 	if len(stuffhx) != 32 || len(peddingblkhash) != 32 {
 		return nil, fmt.Errorf("stuffhx and peddingblkhash length must 32")
 	}
@@ -622,105 +622,109 @@ func calculateVisualGeneByDiamondStuffHash(belong_trs interfacev2.Transaction, n
 	}
 	// fmt.Printf("Calculate Visual Gene #%d, vgenehash: %s, stuffhx: %s, peddingblkhash: %s\n", number, hex.EncodeToString(vgenehash), hex.EncodeToString(stuffhx), hex.EncodeToString(peddingblkhash))
 
-	genehexstr := make([]string, 18)
-	// Top 6
-	k := 0
-	for i := 10; i < 16; i++ {
-		s := diamondstr[i]
-		e := "0"
-		switch s {
-		case 'W': // WTYUIAHXVMEKBSZN
-			e = "0"
-		case 'T':
-			e = "1"
-		case 'Y':
-			e = "2"
-		case 'U':
-			e = "3"
-		case 'I':
-			e = "4"
-		case 'A':
-			e = "5"
-		case 'H':
-			e = "6"
-		case 'X':
-			e = "7"
-		case 'V':
-			e = "8"
-		case 'M':
-			e = "9"
-		case 'E':
-			e = "A"
-		case 'K':
-			e = "B"
-		case 'B':
-			e = "C"
-		case 'S':
-			e = "D"
-		case 'Z':
-			e = "E"
-		case 'N':
-			e = "F"
+	return vgenehash, nil
+
+	/*
+		genehexstr := make([]string, 18)
+		// Top 6
+		k := 0
+		for i := 10; i < 16; i++ {
+			s := diamondstr[i]
+			e := "0"
+			switch s {
+			case 'W': // WTYUIAHXVMEKBSZN
+				e = "0"
+			case 'T':
+				e = "1"
+			case 'Y':
+				e = "2"
+			case 'U':
+				e = "3"
+			case 'I':
+				e = "4"
+			case 'A':
+				e = "5"
+			case 'H':
+				e = "6"
+			case 'X':
+				e = "7"
+			case 'V':
+				e = "8"
+			case 'M':
+				e = "9"
+			case 'E':
+				e = "A"
+			case 'K':
+				e = "B"
+			case 'B':
+				e = "C"
+			case 'S':
+				e = "D"
+			case 'Z':
+				e = "E"
+			case 'N':
+				e = "F"
+			}
+			genehexstr[k] = e
+			k++
 		}
-		genehexstr[k] = e
-		k++
-	}
-	// Last 11 digits
-	for i := 20; i < 31; i++ {
-		x := vgenehash[i]
-		x = x % 16
-		e := "0"
-		switch x {
-		case 0:
-			e = "0"
-		case 1:
-			e = "1"
-		case 2:
-			e = "2"
-		case 3:
-			e = "3"
-		case 4:
-			e = "4"
-		case 5:
-			e = "5"
-		case 6:
-			e = "6"
-		case 7:
-			e = "7"
-		case 8:
-			e = "8"
-		case 9:
-			e = "9"
-		case 10:
-			e = "A"
-		case 11:
-			e = "B"
-		case 12:
-			e = "C"
-		case 13:
-			e = "D"
-		case 14:
-			e = "E"
-		case 15:
-			e = "F"
+		// Last 11 digits
+		for i := 20; i < 31; i++ {
+			x := vgenehash[i]
+			x = x % 16
+			e := "0"
+			switch x {
+			case 0:
+				e = "0"
+			case 1:
+				e = "1"
+			case 2:
+				e = "2"
+			case 3:
+				e = "3"
+			case 4:
+				e = "4"
+			case 5:
+				e = "5"
+			case 6:
+				e = "6"
+			case 7:
+				e = "7"
+			case 8:
+				e = "8"
+			case 9:
+				e = "9"
+			case 10:
+				e = "A"
+			case 11:
+				e = "B"
+			case 12:
+				e = "C"
+			case 13:
+				e = "D"
+			case 14:
+				e = "E"
+			case 15:
+				e = "F"
+			}
+			genehexstr[k] = e
+			k++
 		}
-		genehexstr[k] = e
-		k++
-	}
-	// Make up the last digit
-	genehexstr[17] = "0"
-	resbts, e1 := hex.DecodeString(strings.Join(genehexstr, ""))
-	if e1 != nil {
-		return nil, e1
-	}
-	// Last bit of hash as shape selection
-	resbuf := bytes.NewBuffer([]byte{vgenehash[31]})
-	resbuf.Write(resbts) // Color selector
-	return resbuf.Bytes(), nil
+		// Make up the last digit
+		genehexstr[17] = "0"
+		resbts, e1 := hex.DecodeString(strings.Join(genehexstr, ""))
+		if e1 != nil {
+			return nil, e1
+		}
+		// Last bit of hash as shape selection
+		resbuf := bytes.NewBuffer([]byte{vgenehash[31]})
+		resbuf.Write(resbts) // Color selector
+		return resbuf.Bytes(), nil
+	*/
 }
 
 // Calculate the visual gene of diamond
-func calculateVisualGeneByDiamondStuffHashV3(belong_trs interfaces.Transaction, number uint32, stuffhx []byte, diamondstr string, peddingblkhash []byte) (fields.Bytes10, error) {
+func calculateLifeGeneByDiamondStuffHashV3(belong_trs interfaces.Transaction, number uint32, stuffhx []byte, diamondstr string, peddingblkhash []byte) (fields.Hash, error) {
 	if len(stuffhx) != 32 || len(peddingblkhash) != 32 {
 		return nil, fmt.Errorf("stuffhx and peddingblkhash length must 32")
 	}
@@ -744,103 +748,108 @@ func calculateVisualGeneByDiamondStuffHashV3(belong_trs interfaces.Transaction, 
 		// Like block hash, it is random, and the shape and color matching can only be known when the diamond is confirmed
 		// fmt.Println(hex.EncodeToString(vgenestuff.Bytes()))
 	}
-	// fmt.Printf("Calculate Visual Gene #%d, vgenehash: %s, stuffhx: %s, peddingblkhash: %s\n", number, hex.EncodeToString(vgenehash), hex.EncodeToString(stuffhx), hex.EncodeToString(peddingblkhash))
 
-	genehexstr := make([]string, 18)
-	// Top 6
-	k := 0
-	for i := 10; i < 16; i++ {
-		s := diamondstr[i]
-		e := "0"
-		switch s {
-		case 'W': // WTYUIAHXVMEKBSZN
-			e = "0"
-		case 'T':
-			e = "1"
-		case 'Y':
-			e = "2"
-		case 'U':
-			e = "3"
-		case 'I':
-			e = "4"
-		case 'A':
-			e = "5"
-		case 'H':
-			e = "6"
-		case 'X':
-			e = "7"
-		case 'V':
-			e = "8"
-		case 'M':
-			e = "9"
-		case 'E':
-			e = "A"
-		case 'K':
-			e = "B"
-		case 'B':
-			e = "C"
-		case 'S':
-			e = "D"
-		case 'Z':
-			e = "E"
-		case 'N':
-			e = "F"
+	return vgenehash, nil
+
+	/*
+		// fmt.Printf("Calculate Visual Gene #%d, vgenehash: %s, stuffhx: %s, peddingblkhash: %s\n", number, hex.EncodeToString(vgenehash), hex.EncodeToString(stuffhx), hex.EncodeToString(peddingblkhash))
+
+		genehexstr := make([]string, 18)
+		// Top 6
+		k := 0
+		for i := 10; i < 16; i++ {
+			s := diamondstr[i]
+			e := "0"
+			switch s {
+			case 'W': // WTYUIAHXVMEKBSZN
+				e = "0"
+			case 'T':
+				e = "1"
+			case 'Y':
+				e = "2"
+			case 'U':
+				e = "3"
+			case 'I':
+				e = "4"
+			case 'A':
+				e = "5"
+			case 'H':
+				e = "6"
+			case 'X':
+				e = "7"
+			case 'V':
+				e = "8"
+			case 'M':
+				e = "9"
+			case 'E':
+				e = "A"
+			case 'K':
+				e = "B"
+			case 'B':
+				e = "C"
+			case 'S':
+				e = "D"
+			case 'Z':
+				e = "E"
+			case 'N':
+				e = "F"
+			}
+			genehexstr[k] = e
+			k++
 		}
-		genehexstr[k] = e
-		k++
-	}
-	// Last 11 digits
-	for i := 20; i < 31; i++ {
-		x := vgenehash[i]
-		x = x % 16
-		e := "0"
-		switch x {
-		case 0:
-			e = "0"
-		case 1:
-			e = "1"
-		case 2:
-			e = "2"
-		case 3:
-			e = "3"
-		case 4:
-			e = "4"
-		case 5:
-			e = "5"
-		case 6:
-			e = "6"
-		case 7:
-			e = "7"
-		case 8:
-			e = "8"
-		case 9:
-			e = "9"
-		case 10:
-			e = "A"
-		case 11:
-			e = "B"
-		case 12:
-			e = "C"
-		case 13:
-			e = "D"
-		case 14:
-			e = "E"
-		case 15:
-			e = "F"
+		// Last 11 digits
+		for i := 20; i < 31; i++ {
+			x := vgenehash[i]
+			x = x % 16
+			e := "0"
+			switch x {
+			case 0:
+				e = "0"
+			case 1:
+				e = "1"
+			case 2:
+				e = "2"
+			case 3:
+				e = "3"
+			case 4:
+				e = "4"
+			case 5:
+				e = "5"
+			case 6:
+				e = "6"
+			case 7:
+				e = "7"
+			case 8:
+				e = "8"
+			case 9:
+				e = "9"
+			case 10:
+				e = "A"
+			case 11:
+				e = "B"
+			case 12:
+				e = "C"
+			case 13:
+				e = "D"
+			case 14:
+				e = "E"
+			case 15:
+				e = "F"
+			}
+			genehexstr[k] = e
+			k++
 		}
-		genehexstr[k] = e
-		k++
-	}
-	// Make up the last digit
-	genehexstr[17] = "0"
-	resbts, e1 := hex.DecodeString(strings.Join(genehexstr, ""))
-	if e1 != nil {
-		return nil, e1
-	}
-	// Last bit of hash as shape selection
-	resbuf := bytes.NewBuffer([]byte{vgenehash[31]})
-	resbuf.Write(resbts) // Color selector
-	return resbuf.Bytes(), nil
+		// Make up the last digit
+		genehexstr[17] = "0"
+		resbts, e1 := hex.DecodeString(strings.Join(genehexstr, ""))
+		if e1 != nil {
+			return nil, e1
+		}
+		// Last bit of hash as shape selection
+		resbuf := bytes.NewBuffer([]byte{vgenehash[31]})
+		resbuf.Write(resbts) // Color selector
+		return resbuf.Bytes(), nil
+	*/
 }
 
 ///////////////////////////////////////////////////////////////
