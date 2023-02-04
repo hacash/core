@@ -221,7 +221,7 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 		// Check diamond difficulty value
 		difok := x16rs.CheckDiamondDifficulty(uint32(act.Number), sha3hash, diamondResHash)
 		if !difok {
-			return fmt.Errorf("Diamond difficulty not meet the requirements.")
+			return fmt.Errorf("block %d Diamond difficulty not meet the requirements.", blkhei)
 		}
 		// Query whether the diamond already exists
 		hasaddr, e := state.Diamond(act.Diamond)
