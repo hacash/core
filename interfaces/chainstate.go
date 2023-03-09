@@ -27,6 +27,8 @@ type ChainState interface {
 
 	// Save on disk
 	ImmutableWriteToDisk() (ChainStateImmutable, error)
+
+	GetTotalNonEmptyAccountStatistics() []int64
 }
 
 // Immutable, non fallback lock status data
