@@ -53,7 +53,12 @@ func (i *Inicnf) StringValueList(section string, name string) []string {
 
 func AbsDir(dir string) string {
 	if path.IsAbs(dir) == false {
-		ppp, err := filepath.Abs(os.Args[0])
+		dir = strings.ReplaceAll(dir, "\\\\", "/") // FIX WINDOWS PATH
+		dir = strings.ReplaceAll(dir, "\\", "/")   // FIX WINDOWS PATH
+		exep := os.Args[0]
+		exep = strings.ReplaceAll(exep, "\\\\", "/") // FIX WINDOWS PATH
+		exep = strings.ReplaceAll(exep, "\\", "/")   // FIX WINDOWS PATH
+		ppp, err := filepath.Abs(exep)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(0)
