@@ -5,7 +5,6 @@ import (
 	"github.com/hacash/core/sys/inicnf"
 	"math/rand"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -52,18 +51,14 @@ func (i *Inicnf) StringValueList(section string, name string) []string {
 }
 
 func AbsDir(dir string) string {
-	if path.IsAbs(dir) == false {
-		dir = strings.ReplaceAll(dir, "\\\\", "/") // FIX WINDOWS PATH
-		dir = strings.ReplaceAll(dir, "\\", "/")   // FIX WINDOWS PATH
+	if filepath.IsAbs(dir) == false {
 		exep := os.Args[0]
-		exep = strings.ReplaceAll(exep, "\\\\", "/") // FIX WINDOWS PATH
-		exep = strings.ReplaceAll(exep, "\\", "/")   // FIX WINDOWS PATH
 		ppp, err := filepath.Abs(exep)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(0)
 		}
-		dir = path.Join(path.Dir(ppp), dir)
+		dir = filepath.Join(filepath.Dir(ppp), dir)
 	}
 	return dir
 }
@@ -76,7 +71,7 @@ func (i *Inicnf) MustDataDirWithVersion() string {
 		return i.mustDataDirVersion
 	}
 	dir := i.mustDataDirUnsafe()
-	dir = path.Join(dir, fmt.Sprintf("v%d", i.blockChainStateDatabaseCurrentUseVersion))
+	dir = filepath.Join(dir, fmt.Sprintf("v%d", i.blockChainStateDatabaseCurrentUseVersion))
 	i.mustDataDirVersion = dir
 	return dir
 }
@@ -111,7 +106,7 @@ func (i *Inicnf) MustDataDirCheckVersion(version int) (string, bool) {
 		dir = os.Getenv("HOME") + string([]byte(dir)[1:])
 	}
 	dir = AbsDir(dir)
-	dir = path.Join(dir, fmt.Sprintf("v%d", version))
+	dir = filepath.Join(dir, fmt.Sprintf("v%d", version))
 	// Check for presence
 	_, nte := os.Stat(dir)
 	if nte != nil {
