@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/sys"
 	"math/big"
 	"time"
 
@@ -515,6 +516,20 @@ func (trs *Transaction_2_Simple) WriteInChainState(state interfaces.ChainStateOp
 			return e
 		}
 	}
+	// check trs must has ChainID action
+	if sys.TransactionSystemCheckChainID > 0 {
+		var isHaveCheckChainIDAction = false
+		for i := 0; i < len(trs.Actions); i++ {
+			_, has := trs.Actions[i].(*actions.Action_30_SupportDistinguishForkChainID)
+			if has {
+				isHaveCheckChainIDAction = true
+				break
+			}
+		}
+		if !isHaveCheckChainIDAction {
+			return fmt.Errorf("TransactionSystemCheckChainID set <%d> but not find <SupportDistinguishForkChainID> action in transaction")
+		}
+	}
 	// Deduct handling charges
 	return actions.DoSubBalanceFromChainStateV3(state, trs.MainAddress, trs.Fee)
 }
@@ -533,6 +548,20 @@ func (trs *Transaction_2_Simple) WriteinChainState(state interfacev2.ChainStateO
 		e := trs.Actions[i].(interfacev2.Action).WriteinChainState(state)
 		if e != nil {
 			return e
+		}
+	}
+	// check trs must has ChainID action
+	if sys.TransactionSystemCheckChainID > 0 {
+		var isHaveCheckChainIDAction = false
+		for i := 0; i < len(trs.Actions); i++ {
+			_, has := trs.Actions[i].(*actions.Action_30_SupportDistinguishForkChainID)
+			if has {
+				isHaveCheckChainIDAction = true
+				break
+			}
+		}
+		if !isHaveCheckChainIDAction {
+			return fmt.Errorf("TransactionSystemCheckChainID set <%d> but not find <SupportDistinguishForkChainID> action in transaction")
 		}
 	}
 	// Deduct handling charges
