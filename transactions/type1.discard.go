@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/hacash/core/interfaces"
+	"github.com/hacash/core/sys"
 	"math/big"
 	"time"
 
@@ -464,6 +465,9 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteInChainState(state interfaces
 	/******* 在区块37000 以上不能接受 trs_type==1 的交易 ********/
 	/******* 从而解决第一种交易类型的签名验证的BUG问题     ********/
 	/*********************************************************/
+	if sys.TransactionSystemCheckChainID > 0 {
+		return fmt.Errorf("Test or Fork chain cannot use transaction Type <!>")
+	}
 	if state.GetPendingBlockHeight() > 37000 {
 		return fmt.Errorf("Transaction type<1> be discard DO_NOT_USE_WITH_BUG")
 	}
@@ -485,6 +489,9 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteinChainState(state interfacev
 	/******* 在区块37000 以上不能接受 trs_type==1 的交易 ********/
 	/******* 从而解决第一种交易类型的签名验证的BUG问题     ********/
 	/*********************************************************/
+	if sys.TransactionSystemCheckChainID > 0 {
+		return fmt.Errorf("Test or Fork chain cannot use transaction Type <!>")
+	}
 	if state.GetPendingBlockHeight() > 37000 {
 		return fmt.Errorf("Transaction type<1> be discard DO_NOT_USE_WITH_BUG")
 	}

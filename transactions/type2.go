@@ -527,7 +527,7 @@ func (trs *Transaction_2_Simple) WriteInChainState(state interfaces.ChainStateOp
 			}
 		}
 		if !isHaveCheckChainIDAction {
-			return fmt.Errorf("TransactionSystemCheckChainID set <%d> but not find <SupportDistinguishForkChainID> action in transaction")
+			return fmt.Errorf("TransactionSystemCheckChainID set <%d> but not find <SupportDistinguishForkChainID> action in transaction", sys.TransactionSystemCheckChainID)
 		}
 	}
 	// Deduct handling charges
@@ -561,7 +561,7 @@ func (trs *Transaction_2_Simple) WriteinChainState(state interfacev2.ChainStateO
 			}
 		}
 		if !isHaveCheckChainIDAction {
-			return fmt.Errorf("TransactionSystemCheckChainID set <%d> but not find <SupportDistinguishForkChainID> action in transaction")
+			return fmt.Errorf("TransactionSystemCheckChainID set <%d> but not find <SupportDistinguishForkChainID> action in transaction", sys.TransactionSystemCheckChainID)
 		}
 	}
 	// Deduct handling charges
