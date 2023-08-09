@@ -21,7 +21,7 @@ const (
 	TotalSupplyStoreTypeOfBitcoinTransferUnlockSuccessed uint8 = 4 // HAC accumulation successfully unlocked by bitcoin transfer and issuance
 	// data statistics
 	TotalSupplyStoreTypeOfLocatedHACInChannel uint8 = 5 // Number of HACs currently effectively locked in the channel
-	TotalSupplyStoreTypeOfLocatedSATInChannel uint8 = 6 // Number of HACs currently effectively locked in the channel
+	TotalSupplyStoreTypeOfLocatedSATInChannel uint8 = 6 // Number of SATs currently effectively locked in the channel
 	TotalSupplyStoreTypeOfChannelOfOpening    uint8 = 7 // Number of channels currently on
 	// Destruction fee
 	TotalSupplyStoreTypeOfBurningFee uint8 = 8 // Handling charge combustion destruction HAC accumulation
