@@ -29,6 +29,15 @@ func NewEmptySatoshiVariation() SatoshiVariation {
 		ValueSAT: 0,
 	}
 }
+func NewSatoshiVariation(sats uint64) SatoshiVariation {
+	if sats == 0 {
+		return NewEmptySatoshiVariation()
+	}
+	return SatoshiVariation{
+		NotEmpty: CreateBool(true),
+		ValueSAT: Satoshi(sats),
+	}
+}
 
 func (elm SatoshiVariation) Size() uint32 {
 	if elm.NotEmpty.Check() {

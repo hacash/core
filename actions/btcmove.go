@@ -124,64 +124,69 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 		panic("Action belong to transaction not be nil !")
 	}
 
-	// Transaction can only contain one and only one action
-	belongactionnum := len(act.belong_trs_v3.GetActionList())
-	if 1 != belongactionnum {
-		return fmt.Errorf("Satoshi Genesis tx need only one action but got %d actions.", belongactionnum)
-	}
-	// Check the additional issuance that has been recorded (to avoid repeated execution of the completed additional issuance)
-	belongtxhx, berr2 := state.ReadMoveBTCTxHashByTrsNo(uint32(act.TransferNo))
-	if berr2 != nil {
-		return berr2
-	}
-	if belongtxhx != nil {
-		// Additional issuance has been completed
-		return fmt.Errorf("Satoshi act TransferNo<%d> has been executed.", act.TransferNo)
+	if sys.TestDebugLocalDevelopmentMark == false || sys.TransactionSystemCheckChainID == 0 {
+
+		// Transaction can only contain one and only one action
+		belongactionnum := len(act.belong_trs_v3.GetActionList())
+		if 1 != belongactionnum {
+			return fmt.Errorf("Satoshi Genesis tx need only one action but got %d actions.", belongactionnum)
+		}
+		// Check the additional issuance that has been recorded (to avoid repeated execution of the completed additional issuance)
+		belongtxhx, berr2 := state.ReadMoveBTCTxHashByTrsNo(uint32(act.TransferNo))
+		if berr2 != nil {
+			return berr2
+		}
+		if belongtxhx != nil {
+			// Additional issuance has been completed
+			return fmt.Errorf("Satoshi act TransferNo<%d> has been executed.", act.TransferNo)
+		}
+
+		// Request validation data
+		checkact, mustcheck := state.BlockStore().LoadValidatedSatoshiGenesis(int64(act.TransferNo))
+		if false == mustcheck {
+			// Must be verified when adding to the transaction pool
+			// Prevent verified BTC transfer transactions from being packaged into blocks
+			mustcheck = state.IsInTxPool() == true
+		}
+		if mustcheck {
+			// When the transaction is in the transaction pool and the check URL is set, it must be verified
+			if checkact == nil {
+				// URL did not return data
+				return fmt.Errorf("SatoshiGenesis btc move logs url return invalid.")
+			}
+			// compare
+			if act.TransferNo != checkact.TransferNo ||
+				act.BitcoinBlockHeight != checkact.BitcoinBlockHeight ||
+				act.BitcoinBlockTimestamp != checkact.BitcoinBlockTimestamp ||
+				act.BitcoinEffectiveGenesis != checkact.BitcoinEffectiveGenesis ||
+				act.BitcoinQuantity != checkact.BitcoinQuantity ||
+				act.AdditionalTotalHacAmount != checkact.AdditionalTotalHacAmount ||
+				bytes.Compare(act.OriginAddress, checkact.OriginAddress) != 0 ||
+				bytes.Compare(act.BitcoinTransferHash, checkact.BitcoinTransferHash) != 0 {
+				return fmt.Errorf("Action_7_SatoshiGenesis act and check act is mismatch.")
+			}
+			// Verification data (transfer 10000 ~ 10000 bitcoins)
+			if act.BitcoinQuantity < 1 && act.BitcoinQuantity > 10000 {
+				return fmt.Errorf("SatoshiGenesis act BitcoinQuantity number is error (right is 1 ~ 10000).")
+			}
+			var ttHac int64 = 0
+			for i := act.BitcoinEffectiveGenesis + 1; i <= act.BitcoinEffectiveGenesis+act.BitcoinQuantity; i++ {
+				ttHac += moveBtcCoinRewardByIdx(int64(i)) // Cumulative total HAC Awards
+			}
+			if ttHac != int64(act.AdditionalTotalHacAmount) {
+				// Incorrect number of additional HACs
+				return fmt.Errorf("SatoshiGenesis act AdditionalTotalHacAmount need %d but got %d.", ttHac, act.AdditionalTotalHacAmount)
+			}
+			// Inspection time (28 days later)
+			targettime := time.Unix(int64(act.BitcoinBlockTimestamp), 0).AddDate(0, 0, 28)
+			if time.Now().Before(targettime) {
+				return fmt.Errorf("SatoshiGenesis submit tx time must over %s", targettime.Format("2006/01/02 15:04:05"))
+			}
+			// Check succeeded!!!
+		}
+
 	}
 
-	// Request validation data
-	checkact, mustcheck := state.BlockStore().LoadValidatedSatoshiGenesis(int64(act.TransferNo))
-	if false == mustcheck {
-		// Must be verified when adding to the transaction pool
-		// Prevent verified BTC transfer transactions from being packaged into blocks
-		mustcheck = state.IsInTxPool() == true
-	}
-	if mustcheck {
-		// When the transaction is in the transaction pool and the check URL is set, it must be verified
-		if checkact == nil {
-			// URL did not return data
-			return fmt.Errorf("SatoshiGenesis btc move logs url return invalid.")
-		}
-		// compare
-		if act.TransferNo != checkact.TransferNo ||
-			act.BitcoinBlockHeight != checkact.BitcoinBlockHeight ||
-			act.BitcoinBlockTimestamp != checkact.BitcoinBlockTimestamp ||
-			act.BitcoinEffectiveGenesis != checkact.BitcoinEffectiveGenesis ||
-			act.BitcoinQuantity != checkact.BitcoinQuantity ||
-			act.AdditionalTotalHacAmount != checkact.AdditionalTotalHacAmount ||
-			bytes.Compare(act.OriginAddress, checkact.OriginAddress) != 0 ||
-			bytes.Compare(act.BitcoinTransferHash, checkact.BitcoinTransferHash) != 0 {
-			return fmt.Errorf("Action_7_SatoshiGenesis act and check act is mismatch.")
-		}
-		// Verification data (transfer 10000 ~ 10000 bitcoins)
-		if act.BitcoinQuantity < 1 && act.BitcoinQuantity > 10000 {
-			return fmt.Errorf("SatoshiGenesis act BitcoinQuantity number is error (right is 1 ~ 10000).")
-		}
-		var ttHac int64 = 0
-		for i := act.BitcoinEffectiveGenesis + 1; i <= act.BitcoinEffectiveGenesis+act.BitcoinQuantity; i++ {
-			ttHac += moveBtcCoinRewardByIdx(int64(i)) // Cumulative total HAC Awards
-		}
-		if ttHac != int64(act.AdditionalTotalHacAmount) {
-			// Incorrect number of additional HACs
-			return fmt.Errorf("SatoshiGenesis act AdditionalTotalHacAmount need %d but got %d.", ttHac, act.AdditionalTotalHacAmount)
-		}
-		// Inspection time (28 days later)
-		targettime := time.Unix(int64(act.BitcoinBlockTimestamp), 0).AddDate(0, 0, 28)
-		if time.Now().Before(targettime) {
-			return fmt.Errorf("SatoshiGenesis submit tx time must over %s", targettime.Format("2006/01/02 15:04:05"))
-		}
-		// Check succeeded!!!
-	}
 	// Statistics directly added to unlock
 	totalsupply, e2 := state.ReadTotalSupply()
 	if e2 != nil {
@@ -198,13 +203,6 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 	}
 
 	// Additional issuance of HAC
-	/*
-		hacmeibig := (new(big.Int)).SetUint64(uint64(act.AdditionalTotalHacAmount))
-		totaladdhacamt, err := fields.NewAmountByBigIntWithUnit(hacmeibig, 248)
-		if err != nil {
-			return err
-		}
-	*/
 	totaladdhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount))
 	// The lock time shall be calculated according to the first one
 	// Judge whether to lock the warehouse to lockbls linearly
