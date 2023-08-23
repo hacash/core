@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	ChannelTransferDirectionHacashLeftToRight  uint8 = 1
-	ChannelTransferDirectionHacashRightToLeft  uint8 = 2
-	ChannelTransferDirectionSatoshiLeftToRight uint8 = 3
-	ChannelTransferDirectionSatoshiRightToLeft uint8 = 4
+	ChannelTransferDirectionLeftToRight uint8 = 1
+	ChannelTransferDirectionRightToLeft uint8 = 2
+	//ChannelTransferDirectionSatoshiLeftToRight uint8 = 3
+	//ChannelTransferDirectionSatoshiRightToLeft uint8 = 4
 )
 
 // Channel transfer, data body
