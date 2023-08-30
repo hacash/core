@@ -12,6 +12,8 @@ type Block interface {
 	// origin
 	OriginMark() string // "", "sync", "discover", "mining"
 	SetOriginMark(string)
+	ArrivedTime() int64 // timestamp
+	SetArrivedTime(int64)
 
 	// copy
 	CopyHeadMetaForMining() Block

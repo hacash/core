@@ -34,7 +34,8 @@ type Block_v1 struct {
 	hash fields.Hash
 
 	// mark data
-	originMark string // Mark of origin: "", "miner", "discover"
+	originMark  string // Mark of origin: "", "miner", "discover"
+	arrivedTime int64  // timestamp of arrived in this node
 
 	insertLock sync.RWMutex
 }
@@ -109,6 +110,13 @@ func (block *Block_v1) SetOriginMark(mark string) {
 	block.originMark = mark
 }
 
+func (block *Block_v1) ArrivedTime() int64 {
+	return block.arrivedTime
+}
+func (block *Block_v1) SetArrivedTime(ts int64) {
+	block.arrivedTime = ts
+}
+
 func (block *Block_v1) Version() uint8 {
 	return 1
 }
@@ -161,7 +169,7 @@ func (block *Block_v1) SerializeMeta() ([]byte, error) {
 func (block *Block_v1) SerializeTransactions(itr interfacev2.SerializeTransactionsIterator) ([]byte, error) {
 	var buffer = new(bytes.Buffer)
 	var trslen = uint32(len(block.Transactions))
-	if itr != nil { // iterator 
+	if itr != nil { // iterator
 		itr.Init(trslen)
 	}
 	for i := uint32(0); i < trslen; i++ {
@@ -171,7 +179,7 @@ func (block *Block_v1) SerializeTransactions(itr interfacev2.SerializeTransactio
 			return nil, e
 		}
 		buffer.Write(bi)
-		if itr != nil { // iterator 
+		if itr != nil { // iterator
 			itr.FinishOneTrs(i, trs.(interfacev2.Transaction), bi)
 		}
 	}

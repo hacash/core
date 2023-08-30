@@ -11,8 +11,9 @@ type ChainEngine interface {
 	ChainStateIinitializeCall(func(ChainStateOperation))
 
 	InsertBlock(Block, string) error
+	GetRecentArrivedBlocks() []Block
 
-	StateRead() ChainStateOperationRead // Read-only status 
+	StateRead() ChainStateOperationRead // Read-only status
 	CurrentState() ChainState           // Latest status
 
 	LatestBlock() (BlockHeadMetaRead, BlockHeadMetaRead, error) // Latest blocks (confirmed and immature)
