@@ -194,7 +194,7 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 	}
 
 	// Count the number of bitcoin transfers
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfTransferBitcoin, float64(act.BitcoinQuantity))
+	totalsupply.DoAddUint(stores.TotalSupplyStoreTypeOfTransferBitcoin, uint64(act.BitcoinQuantity))
 
 	// Record the transfer and additional issuance marked as completed
 	stoerr := state.SaveMoveBTCBelongTxHash(uint32(act.TransferNo), act.belong_trs_v3.Hash())
@@ -326,7 +326,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfacev2.ChainSta
 	}
 
 	// Count the number of bitcoin transfers
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfTransferBitcoin, float64(act.BitcoinQuantity))
+	totalsupply.DoAddUint(stores.TotalSupplyStoreTypeOfTransferBitcoin, uint64(act.BitcoinQuantity))
 
 	// Record the transfer and additional issuance marked as completed
 	stoerr := state.SaveMoveBTCBelongTxHash(uint32(act.TransferNo), act.belong_trs.Hash())
@@ -409,7 +409,7 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfacev2.ChainSta
 	}
 
 	// Back bitcoin transfer quantity
-	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfTransferBitcoin, float64(act.BitcoinQuantity))
+	totalsupply.DoSubUint(stores.TotalSupplyStoreTypeOfTransferBitcoin, uint64(act.BitcoinQuantity))
 
 	// Fallback HAC
 	// The lock time shall be calculated according to the first one

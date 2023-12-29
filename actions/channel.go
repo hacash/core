@@ -102,7 +102,7 @@ func (act *Action_2_OpenPaymentChannel) WriteInChainState(state interfaces.Chain
 	return openPaymentChannelWriteinChainState(state,
 		act.ChannelId,
 		fields.VarUint2(uint16(5000)), // The lock-in period unilaterally proposed is about 17 days
-		fields.VarUint1(0), // By default, interest distribution is shared by the two parties according to the close amount
+		fields.VarUint1(0),            // By default, interest distribution is shared by the two parties according to the close amount
 		act.LeftAddress,
 		act.LeftAmount,
 		fields.NewEmptySatoshiVariation(), // 0 SAT
@@ -111,117 +111,117 @@ func (act *Action_2_OpenPaymentChannel) WriteInChainState(state interfaces.Chain
 		fields.NewEmptySatoshiVariation(), // 0 SAT
 	)
 	/*
-	var e error
-	// Query whether the channel exists
-	sto, e := state.Channel(act.ChannelId)
-	if e != nil {
-		return e
-	}
-	// Channel IDS with the same left and right addresses and closed by consensus can be reused
-	var reuseVersion fields.VarUint4 = 1
-	var isIdCanUse = (sto == nil) ||
-		(sto.IsAgreementClosed() && sto.LeftAddress.Equal(act.LeftAddress) && sto.RightAddress.Equal(act.RightAddress))
-	if isIdCanUse == false {
-		if sto.IsFinalDistributionClosed() {
-			return fmt.Errorf("Payment Channel Id <%s> finally arbitration closed.", hex.EncodeToString(act.ChannelId))
-		} else if sto.IsOpening() {
-			return fmt.Errorf("Payment Channel Id <%s> is opening.", hex.EncodeToString(act.ChannelId))
+		var e error
+		// Query whether the channel exists
+		sto, e := state.Channel(act.ChannelId)
+		if e != nil {
+			return e
 		}
-		return fmt.Errorf("Payment Channel Id <%s> already exist.", hex.EncodeToString(act.ChannelId))
-	}
-	if sto != nil {
-		reuseVersion = sto.ReuseVersion + 1 // Reuse version number growth
-	}
-	// Channel ID validity
-	if len(act.ChannelId) != stores.ChannelIdLength || act.ChannelId[0] == 0 || act.ChannelId[stores.ChannelIdLength-1] == 0 {
-		return fmt.Errorf("Payment Channel Id <%s> format error.", hex.EncodeToString(act.ChannelId))
-	}
-	// Two addresses cannot be the same
-	if act.LeftAddress.Equal(act.RightAddress) {
-		return fmt.Errorf("Left address cannot equal with right address.")
-	}
-	// Check the number of digits stored in the amount
-	labt, _ := act.LeftAmount.Serialize()
-	rabt, _ := act.RightAmount.Serialize()
-	if len(labt) > 6 || len(rabt) > 6 {
-		// Avoid locking the storage digits of funds too long, resulting in the value storage digits after compound interest calculation exceeding the maximum range
-		return fmt.Errorf("Payment Channel create error: left or right Amount bytes too long.")
-	}
-	// Cannot be negative, or both channels are zero at the same time (one can be positive and the other zero)
-	if (!act.LeftAmount.IsPositive() || !act.RightAmount.IsPositive()) ||
-		(act.LeftAmount.IsEmpty() && act.RightAmount.IsEmpty()) {
-		return fmt.Errorf("Action_2_OpenPaymentChannel Payment Channel create error: left or right Amount is not positive.")
-	}
-	// Check whether the balance is sufficient
-	bls1, e := state.Balance(act.LeftAddress)
-	if e != nil {
-		return e
-	}
-	if bls1 == nil {
-		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance cannot empty.", act.LeftAddress.ToReadable())
-	}
-	amt1 := bls1.Hacash
-	if amt1.LessThan(&act.LeftAmount) {
-		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.LeftAddress.ToReadable(), act.LeftAmount.ToFinString(), amt1.ToFinString())
-	}
-	bls2, e := state.Balance(act.RightAddress)
-	if e != nil {
-		return e
-	}
-	if bls2 == nil {
-		return fmt.Errorf("Address %s Balance is not enough.", act.RightAddress.ToReadable())
-	}
-	amt2 := bls2.Hacash
-	if amt2.LessThan(&act.RightAmount) {
-		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.RightAddress.ToReadable(), act.RightAmount.ToFinString(), amt2.ToFinString())
-	}
+		// Channel IDS with the same left and right addresses and closed by consensus can be reused
+		var reuseVersion fields.VarUint4 = 1
+		var isIdCanUse = (sto == nil) ||
+			(sto.IsAgreementClosed() && sto.LeftAddress.Equal(act.LeftAddress) && sto.RightAddress.Equal(act.RightAddress))
+		if isIdCanUse == false {
+			if sto.IsFinalDistributionClosed() {
+				return fmt.Errorf("Payment Channel Id <%s> finally arbitration closed.", hex.EncodeToString(act.ChannelId))
+			} else if sto.IsOpening() {
+				return fmt.Errorf("Payment Channel Id <%s> is opening.", hex.EncodeToString(act.ChannelId))
+			}
+			return fmt.Errorf("Payment Channel Id <%s> already exist.", hex.EncodeToString(act.ChannelId))
+		}
+		if sto != nil {
+			reuseVersion = sto.ReuseVersion + 1 // Reuse version number growth
+		}
+		// Channel ID validity
+		if len(act.ChannelId) != stores.ChannelIdLength || act.ChannelId[0] == 0 || act.ChannelId[stores.ChannelIdLength-1] == 0 {
+			return fmt.Errorf("Payment Channel Id <%s> format error.", hex.EncodeToString(act.ChannelId))
+		}
+		// Two addresses cannot be the same
+		if act.LeftAddress.Equal(act.RightAddress) {
+			return fmt.Errorf("Left address cannot equal with right address.")
+		}
+		// Check the number of digits stored in the amount
+		labt, _ := act.LeftAmount.Serialize()
+		rabt, _ := act.RightAmount.Serialize()
+		if len(labt) > 6 || len(rabt) > 6 {
+			// Avoid locking the storage digits of funds too long, resulting in the value storage digits after compound interest calculation exceeding the maximum range
+			return fmt.Errorf("Payment Channel create error: left or right Amount bytes too long.")
+		}
+		// Cannot be negative, or both channels are zero at the same time (one can be positive and the other zero)
+		if (!act.LeftAmount.IsPositive() || !act.RightAmount.IsPositive()) ||
+			(act.LeftAmount.IsEmpty() && act.RightAmount.IsEmpty()) {
+			return fmt.Errorf("Action_2_OpenPaymentChannel Payment Channel create error: left or right Amount is not positive.")
+		}
+		// Check whether the balance is sufficient
+		bls1, e := state.Balance(act.LeftAddress)
+		if e != nil {
+			return e
+		}
+		if bls1 == nil {
+			return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance cannot empty.", act.LeftAddress.ToReadable())
+		}
+		amt1 := bls1.Hacash
+		if amt1.LessThan(&act.LeftAmount) {
+			return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.LeftAddress.ToReadable(), act.LeftAmount.ToFinString(), amt1.ToFinString())
+		}
+		bls2, e := state.Balance(act.RightAddress)
+		if e != nil {
+			return e
+		}
+		if bls2 == nil {
+			return fmt.Errorf("Address %s Balance is not enough.", act.RightAddress.ToReadable())
+		}
+		amt2 := bls2.Hacash
+		if amt2.LessThan(&act.RightAmount) {
+			return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.RightAddress.ToReadable(), act.RightAmount.ToFinString(), amt2.ToFinString())
+		}
 
-	curheight := state.GetPendingBlockHeight()
-	// Create channel
-	var storeItem = stores.CreateEmptyChannel()
-	storeItem.BelongHeight = fields.BlockHeight(curheight)
-	storeItem.ArbitrationLockBlock = fields.VarUint2(uint16(5000)) // The lock-in period unilaterally proposed is about 17 days
-	storeItem.InterestAttribution = fields.VarUint1(0)             // By default, interest distribution is shared by the two parties according to the close amount
-	storeItem.LeftAddress = act.LeftAddress
-	storeItem.LeftAmount = act.LeftAmount
-	storeItem.RightAddress = act.RightAddress
-	storeItem.RightAmount = act.RightAmount
-	storeItem.ReuseVersion = reuseVersion // Reuse version number
-	storeItem.SetOpening()                // Open status
-	// testing environment
-	if sys.TestDebugLocalDevelopmentMark {
-		storeItem.ArbitrationLockBlock = fields.VarUint2(uint16(20))
-	}
-	// Deduction balance
-	e = DoSubBalanceFromChainStateV3(state, act.LeftAddress, act.LeftAmount)
-	if e != nil {
-		return e
-	}
-	e = DoSubBalanceFromChainStateV3(state, act.RightAddress, act.RightAmount)
-	if e != nil {
-		return e
-	}
-	// Storage channel
-	e = state.ChannelCreate(act.ChannelId, storeItem)
-	if e != nil {
-		return e
-	}
-	// Total supply statistics
-	totalsupply, e := state.ReadTotalSupply()
-	if e != nil {
-		return e
-	}
-	// Cumulative locked HAC
-	addamt := act.LeftAmount.ToMei() + act.RightAmount.ToMei()
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedHACInChannel, addamt)
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1)
-	// update total supply
-	e3 := state.UpdateSetTotalSupply(totalsupply)
-	if e3 != nil {
-		return e3
-	}
-	//
-	return nil
+		curheight := state.GetPendingBlockHeight()
+		// Create channel
+		var storeItem = stores.CreateEmptyChannel()
+		storeItem.BelongHeight = fields.BlockHeight(curheight)
+		storeItem.ArbitrationLockBlock = fields.VarUint2(uint16(5000)) // The lock-in period unilaterally proposed is about 17 days
+		storeItem.InterestAttribution = fields.VarUint1(0)             // By default, interest distribution is shared by the two parties according to the close amount
+		storeItem.LeftAddress = act.LeftAddress
+		storeItem.LeftAmount = act.LeftAmount
+		storeItem.RightAddress = act.RightAddress
+		storeItem.RightAmount = act.RightAmount
+		storeItem.ReuseVersion = reuseVersion // Reuse version number
+		storeItem.SetOpening()                // Open status
+		// testing environment
+		if sys.TestDebugLocalDevelopmentMark {
+			storeItem.ArbitrationLockBlock = fields.VarUint2(uint16(20))
+		}
+		// Deduction balance
+		e = DoSubBalanceFromChainStateV3(state, act.LeftAddress, act.LeftAmount)
+		if e != nil {
+			return e
+		}
+		e = DoSubBalanceFromChainStateV3(state, act.RightAddress, act.RightAmount)
+		if e != nil {
+			return e
+		}
+		// Storage channel
+		e = state.ChannelCreate(act.ChannelId, storeItem)
+		if e != nil {
+			return e
+		}
+		// Total supply statistics
+		totalsupply, e := state.ReadTotalSupply()
+		if e != nil {
+			return e
+		}
+		// Cumulative locked HAC
+		addamt := act.LeftAmount.ToMei() + act.RightAmount.ToMei()
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedHACInChannel, addamt)
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1)
+		// update total supply
+		e3 := state.UpdateSetTotalSupply(totalsupply)
+		if e3 != nil {
+			return e3
+		}
+		//
+		return nil
 	*/
 }
 
@@ -328,7 +328,7 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfacev2.Chai
 	// Cumulative locked HAC
 	addamt := act.LeftAmount.ToMei() + act.RightAmount.ToMei()
 	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedHACInChannel, addamt)
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1)
+	totalsupply.DoAddUint(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1)
 	// update total supply
 	e3 := state.UpdateSetTotalSupply(totalsupply)
 	if e3 != nil {
@@ -896,18 +896,17 @@ func (act *Action_21_ClosePaymentChannelBySetupOnlyLeftAmount) IsBurning90Persen
 	return false
 }
 
-
 // Open payment channel
 type Action_31_OpenPaymentChannelWithSatoshi struct {
-	ChannelId    fields.ChannelId // Channel ID
-	ArbitrationLockBlock fields.VarUint2    // Number of blocks to be locked for unilateral end channel
-	InterestAttribution  fields.VarUint1    // Interest attribution of 1% annualized: 0 Press end to assign 1 All to left 2 Give it all right
-	LeftAddress  fields.Address   // Account 1
-	LeftAmount   fields.Amount    // Locked amount
-	LeftSatoshi  fields.SatoshiVariation
-	RightAddress fields.Address   // Account 2
-	RightAmount  fields.Amount    // Locked amount
-	RightSatoshi fields.SatoshiVariation
+	ChannelId            fields.ChannelId // Channel ID
+	ArbitrationLockBlock fields.VarUint2  // Number of blocks to be locked for unilateral end channel
+	InterestAttribution  fields.VarUint1  // Interest attribution of 1% annualized: 0 Press end to assign 1 All to left 2 Give it all right
+	LeftAddress          fields.Address   // Account 1
+	LeftAmount           fields.Amount    // Locked amount
+	LeftSatoshi          fields.SatoshiVariation
+	RightAddress         fields.Address // Account 2
+	RightAmount          fields.Amount  // Locked amount
+	RightSatoshi         fields.SatoshiVariation
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
@@ -1026,7 +1025,7 @@ func (act *Action_31_OpenPaymentChannelWithSatoshi) WriteInChainState(state inte
 		act.RightAddress,
 		act.RightAmount,
 		act.RightSatoshi,
-		)
+	)
 }
 
 func (act *Action_31_OpenPaymentChannelWithSatoshi) WriteinChainState(state interfacev2.ChainStateOperation) error {
@@ -1034,116 +1033,116 @@ func (act *Action_31_OpenPaymentChannelWithSatoshi) WriteinChainState(state inte
 	panic("WriteinChainState in Action_31_OpenPaymentChannelWithSatoshi be deprecated")
 
 	/*
-	var e error
-	// Query whether the channel exists
-	sto, e := state.Channel(act.ChannelId)
-	if e != nil {
-		return e
-	}
-	// Channel IDS with the same left and right addresses and closed by consensus can be reused
-	var reuseVersion fields.VarUint4 = 1
-	var isIdCanUse = (sto == nil) ||
-		(sto.IsAgreementClosed() && sto.LeftAddress.Equal(act.LeftAddress) && sto.RightAddress.Equal(act.RightAddress))
-	if isIdCanUse == false {
-		if sto.IsFinalDistributionClosed() {
-			return fmt.Errorf("Payment Channel Id <%s> finally arbitration closed.", hex.EncodeToString(act.ChannelId))
-		} else if sto.IsOpening() {
-			return fmt.Errorf("Payment Channel Id <%s> is opening.", hex.EncodeToString(act.ChannelId))
+		var e error
+		// Query whether the channel exists
+		sto, e := state.Channel(act.ChannelId)
+		if e != nil {
+			return e
 		}
-		return fmt.Errorf("Payment Channel Id <%s> already exist.", hex.EncodeToString(act.ChannelId))
-	}
-	if sto != nil {
-		reuseVersion = sto.ReuseVersion + 1 // Reuse version number growth
-	}
-	// Channel ID validity
-	if len(act.ChannelId) != stores.ChannelIdLength || act.ChannelId[0] == 0 || act.ChannelId[stores.ChannelIdLength-1] == 0 {
-		return fmt.Errorf("Payment Channel Id <%s> format error.", hex.EncodeToString(act.ChannelId))
-	}
-	// Two addresses cannot be the same
-	if act.LeftAddress.Equal(act.RightAddress) {
-		return fmt.Errorf("Left address cannot equal with right address.")
-	}
-	// Check the number of digits stored in the amount
-	labt, _ := act.LeftAmount.Serialize()
-	rabt, _ := act.RightAmount.Serialize()
-	if len(labt) > 6 || len(rabt) > 6 {
-		// Avoid locking the storage digits of funds too long, resulting in the value storage digits after compound interest calculation exceeding the maximum range
-		return fmt.Errorf("Payment Channel create error: left or right Amount bytes too long.")
-	}
-	// Cannot be negative, or both channels are zero at the same time (one can be positive and the other zero)
-	if (!act.LeftAmount.IsPositive() || !act.RightAmount.IsPositive()) ||
-		(act.LeftAmount.IsEmpty() && act.RightAmount.IsEmpty()) {
-		return fmt.Errorf("Action_2_OpenPaymentChannel Payment Channel create error: left or right Amount is not positive.")
-	}
-	// Check whether the balance is sufficient
-	bls1, e := state.Balance(act.LeftAddress)
-	if e != nil {
-		return e
-	}
-	if bls1 == nil {
-		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance cannot empty.", act.LeftAddress.ToReadable())
-	}
-	amt1 := bls1.Hacash
-	if amt1.LessThan(&act.LeftAmount) {
-		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.LeftAddress.ToReadable(), act.LeftAmount.ToFinString(), amt1.ToFinString())
-	}
-	bls2, e := state.Balance(act.RightAddress)
-	if e != nil {
-		return e
-	}
-	if bls2 == nil {
-		return fmt.Errorf("Address %s Balance is not enough.", act.RightAddress.ToReadable())
-	}
-	amt2 := bls2.Hacash
-	if amt2.LessThan(&act.RightAmount) {
-		return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.RightAddress.ToReadable(), act.RightAmount.ToFinString(), amt2.ToFinString())
-	}
-	curheight := state.GetPendingBlockHeight()
-	// Create channel
-	var storeItem = stores.CreateEmptyChannel()
-	storeItem.BelongHeight = fields.BlockHeight(curheight)
-	storeItem.ArbitrationLockBlock = fields.VarUint2(uint16(5000)) // The lock-in period unilaterally proposed is about 17 days
-	storeItem.InterestAttribution = fields.VarUint1(0)             // By default, interest distribution is shared by the two parties according to the close amount
-	storeItem.LeftAddress = act.LeftAddress
-	storeItem.LeftAmount = act.LeftAmount
-	storeItem.RightAddress = act.RightAddress
-	storeItem.RightAmount = act.RightAmount
-	storeItem.ReuseVersion = reuseVersion // Reuse version number
-	storeItem.SetOpening()                // Open status
-	// testing environment
-	if sys.TestDebugLocalDevelopmentMark {
-		storeItem.ArbitrationLockBlock = fields.VarUint2(uint16(20))
-	}
-	// Deduction balance
-	e = DoSubBalanceFromChainState(state, act.LeftAddress, act.LeftAmount)
-	if e != nil {
-		return e
-	}
-	e = DoSubBalanceFromChainState(state, act.RightAddress, act.RightAmount)
-	if e != nil {
-		return e
-	}
-	// Storage channel
-	e = state.ChannelCreate(act.ChannelId, storeItem)
-	if e != nil {
-		return e
-	}
-	// Total supply statistics
-	totalsupply, e := state.ReadTotalSupply()
-	if e != nil {
-		return e
-	}
-	// Cumulative locked HAC
-	addamt := act.LeftAmount.ToMei() + act.RightAmount.ToMei()
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedHACInChannel, addamt)
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1)
-	// update total supply
-	e3 := state.UpdateSetTotalSupply(totalsupply)
-	if e3 != nil {
-		return e3
-	}
-	//
-	return nil
+		// Channel IDS with the same left and right addresses and closed by consensus can be reused
+		var reuseVersion fields.VarUint4 = 1
+		var isIdCanUse = (sto == nil) ||
+			(sto.IsAgreementClosed() && sto.LeftAddress.Equal(act.LeftAddress) && sto.RightAddress.Equal(act.RightAddress))
+		if isIdCanUse == false {
+			if sto.IsFinalDistributionClosed() {
+				return fmt.Errorf("Payment Channel Id <%s> finally arbitration closed.", hex.EncodeToString(act.ChannelId))
+			} else if sto.IsOpening() {
+				return fmt.Errorf("Payment Channel Id <%s> is opening.", hex.EncodeToString(act.ChannelId))
+			}
+			return fmt.Errorf("Payment Channel Id <%s> already exist.", hex.EncodeToString(act.ChannelId))
+		}
+		if sto != nil {
+			reuseVersion = sto.ReuseVersion + 1 // Reuse version number growth
+		}
+		// Channel ID validity
+		if len(act.ChannelId) != stores.ChannelIdLength || act.ChannelId[0] == 0 || act.ChannelId[stores.ChannelIdLength-1] == 0 {
+			return fmt.Errorf("Payment Channel Id <%s> format error.", hex.EncodeToString(act.ChannelId))
+		}
+		// Two addresses cannot be the same
+		if act.LeftAddress.Equal(act.RightAddress) {
+			return fmt.Errorf("Left address cannot equal with right address.")
+		}
+		// Check the number of digits stored in the amount
+		labt, _ := act.LeftAmount.Serialize()
+		rabt, _ := act.RightAmount.Serialize()
+		if len(labt) > 6 || len(rabt) > 6 {
+			// Avoid locking the storage digits of funds too long, resulting in the value storage digits after compound interest calculation exceeding the maximum range
+			return fmt.Errorf("Payment Channel create error: left or right Amount bytes too long.")
+		}
+		// Cannot be negative, or both channels are zero at the same time (one can be positive and the other zero)
+		if (!act.LeftAmount.IsPositive() || !act.RightAmount.IsPositive()) ||
+			(act.LeftAmount.IsEmpty() && act.RightAmount.IsEmpty()) {
+			return fmt.Errorf("Action_2_OpenPaymentChannel Payment Channel create error: left or right Amount is not positive.")
+		}
+		// Check whether the balance is sufficient
+		bls1, e := state.Balance(act.LeftAddress)
+		if e != nil {
+			return e
+		}
+		if bls1 == nil {
+			return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance cannot empty.", act.LeftAddress.ToReadable())
+		}
+		amt1 := bls1.Hacash
+		if amt1.LessThan(&act.LeftAmount) {
+			return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.LeftAddress.ToReadable(), act.LeftAmount.ToFinString(), amt1.ToFinString())
+		}
+		bls2, e := state.Balance(act.RightAddress)
+		if e != nil {
+			return e
+		}
+		if bls2 == nil {
+			return fmt.Errorf("Address %s Balance is not enough.", act.RightAddress.ToReadable())
+		}
+		amt2 := bls2.Hacash
+		if amt2.LessThan(&act.RightAmount) {
+			return fmt.Errorf("Action_2_OpenPaymentChannel Address %s Balance is not enough. need %s but got %s", act.RightAddress.ToReadable(), act.RightAmount.ToFinString(), amt2.ToFinString())
+		}
+		curheight := state.GetPendingBlockHeight()
+		// Create channel
+		var storeItem = stores.CreateEmptyChannel()
+		storeItem.BelongHeight = fields.BlockHeight(curheight)
+		storeItem.ArbitrationLockBlock = fields.VarUint2(uint16(5000)) // The lock-in period unilaterally proposed is about 17 days
+		storeItem.InterestAttribution = fields.VarUint1(0)             // By default, interest distribution is shared by the two parties according to the close amount
+		storeItem.LeftAddress = act.LeftAddress
+		storeItem.LeftAmount = act.LeftAmount
+		storeItem.RightAddress = act.RightAddress
+		storeItem.RightAmount = act.RightAmount
+		storeItem.ReuseVersion = reuseVersion // Reuse version number
+		storeItem.SetOpening()                // Open status
+		// testing environment
+		if sys.TestDebugLocalDevelopmentMark {
+			storeItem.ArbitrationLockBlock = fields.VarUint2(uint16(20))
+		}
+		// Deduction balance
+		e = DoSubBalanceFromChainState(state, act.LeftAddress, act.LeftAmount)
+		if e != nil {
+			return e
+		}
+		e = DoSubBalanceFromChainState(state, act.RightAddress, act.RightAmount)
+		if e != nil {
+			return e
+		}
+		// Storage channel
+		e = state.ChannelCreate(act.ChannelId, storeItem)
+		if e != nil {
+			return e
+		}
+		// Total supply statistics
+		totalsupply, e := state.ReadTotalSupply()
+		if e != nil {
+			return e
+		}
+		// Cumulative locked HAC
+		addamt := act.LeftAmount.ToMei() + act.RightAmount.ToMei()
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedHACInChannel, addamt)
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1)
+		// update total supply
+		e3 := state.UpdateSetTotalSupply(totalsupply)
+		if e3 != nil {
+			return e3
+		}
+		//
+		return nil
 	*/
 }
 
@@ -1166,7 +1165,6 @@ func (elm *Action_31_OpenPaymentChannelWithSatoshi) SetBelongTrs(t interfaces.Tr
 func (act *Action_31_OpenPaymentChannelWithSatoshi) IsBurning90PersentTxFees() bool {
 	return false
 }
-
 
 //////////////////////////////////////////////////////////
 
@@ -1219,7 +1217,7 @@ func openPaymentChannelWriteinChainState(state interfaces.ChainStateOperation,
 	}
 	// Cannot be negative, or both channels are zero at the same time (one can be positive and the other zero)
 	if leftAmount.IsNegative() || leftAmount.IsNegative() ||
-		(leftAmount.IsEmpty() && rightAmount.IsEmpty() && realLeftSatoshi==0 && realRightSatoshi==0 ) {
+		(leftAmount.IsEmpty() && rightAmount.IsEmpty() && realLeftSatoshi == 0 && realRightSatoshi == 0) {
 		return fmt.Errorf("OpenPaymentChannel Payment Channel create error: left or right Amount is not positive.")
 	}
 	// Check the number of digits stored in the amount
@@ -1326,9 +1324,9 @@ func openPaymentChannelWriteinChainState(state interfaces.ChainStateOperation,
 		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedHACInChannel, addamt)
 	}
 	if addsat > 0 {
-		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfLocatedSATInChannel, float64(addsat))
+		totalsupply.DoAddUint(stores.TotalSupplyStoreTypeOfLocatedSATInChannel, uint64(addsat))
 	}
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1)
+	totalsupply.DoAddUint(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1)
 	// update total supply
 	e3 := state.UpdateSetTotalSupply(totalsupply)
 	if e3 != nil {
@@ -1434,9 +1432,9 @@ func closePaymentChannelWriteinChainState(state interfacev2.ChainStateOperation,
 	lockamt := paychan.LeftAmount.ToMei() + paychan.RightAmount.ToMei()
 	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfLocatedHACInChannel, lockamt) // Reduce locked HAC statistics
 	if totalNewSAT > 0 {
-		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfLocatedSATInChannel, float64(totalNewSAT)) // Reduce locked sat statistics
+		totalsupply.DoSubUint(stores.TotalSupplyStoreTypeOfLocatedSATInChannel, uint64(totalNewSAT)) // Reduce locked sat statistics
 	}
-	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1) // Reduce channel count
+	totalsupply.DoSubUint(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1) // Reduce channel count
 	// Add channel interest statistics
 	if haveinterest {
 		releaseamt := leftAmount.ToMei() + rightAmount.ToMei()
@@ -1655,9 +1653,9 @@ func closePaymentChannelWriteinChainStateV3(state interfaces.ChainStateOperation
 	lockamt := paychan.LeftAmount.ToMei() + paychan.RightAmount.ToMei()
 	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfLocatedHACInChannel, lockamt) // Reduce locked HAC statistics
 	if totalNewSAT > 0 {
-		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfLocatedSATInChannel, float64(totalNewSAT)) // Reduce locked sat statistics
+		totalsupply.DoSubUint(stores.TotalSupplyStoreTypeOfLocatedSATInChannel, uint64(totalNewSAT)) // Reduce locked sat statistics
 	}
-	totalsupply.DoSub(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1) // Reduce channel count
+	totalsupply.DoSubUint(stores.TotalSupplyStoreTypeOfChannelOfOpening, 1) // Reduce channel count
 	// Add channel interest statistics
 	if haveinterest {
 		releaseamt := leftAmount.ToMei() + rightAmount.ToMei()

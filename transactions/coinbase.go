@@ -317,7 +317,7 @@ func (trs *Transaction_0_Coinbase) WriteInChainState(state interfaces.ChainState
 		if e != nil {
 			return e
 		}
-		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningFee, burnamt.ToMei())
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningFeeTotal, burnamt.ToMei())
 	}
 	// update total supply
 	e3 := state.UpdateSetTotalSupply(totalsupply)
@@ -348,7 +348,7 @@ func (trs *Transaction_0_Coinbase) WriteinChainState(state interfacev2.ChainStat
 		if e != nil {
 			return e
 		}
-		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningFee, burnamt.ToMei())
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningFeeTotal, burnamt.ToMei())
 	}
 	// update total supply
 	e3 := state.UpdateSetTotalSupply(totalsupply)
@@ -380,7 +380,7 @@ func (trs *Transaction_0_Coinbase) RecoverChainState(state interfacev2.ChainStat
 		if e != nil {
 			return e
 		}
-		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBurningFee, burnamt.ToMei())
+		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBurningFeeTotal, burnamt.ToMei())
 	}
 	// update total supply
 	e3 := state.UpdateSetTotalSupply(totalsupply)

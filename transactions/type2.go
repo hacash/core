@@ -536,6 +536,9 @@ func (trs *Transaction_2_Simple) WriteInChainState(state interfaces.ChainStateOp
 
 // 修改 / 恢复 状态数据库
 func (trs *Transaction_2_Simple) WriteinChainState(state interfacev2.ChainStateOperation) error {
+
+	panic("WriteinChainState be deprecated")
+
 	// Check fee size
 	if state.GetPendingBlockHeight() > 200000 {
 		if trs.Fee.Size() > 2+4 {

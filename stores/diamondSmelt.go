@@ -8,7 +8,7 @@ import (
 )
 
 const (
-//DiamondSmeltSize = 6 + 3 + 5 + 32 + 32 + fields.AddressSize + 4 + 8 + 32 + 2
+// DiamondSmeltSize = 6 + 3 + 5 + 32 + 32 + fields.AddressSize + 4 + 8 + 32 + 2
 )
 
 type DiamondSmelt struct {
@@ -26,6 +26,8 @@ type DiamondSmelt struct {
 	// other data
 	//VisualGene fields.Bytes10 // Visual appearance gene
 	LifeGene fields.Hash
+	// engraved info
+	EngravedContents fields.StringMax255List255
 }
 
 func (this *DiamondSmelt) Size() uint32 {
@@ -39,7 +41,8 @@ func (this *DiamondSmelt) Size() uint32 {
 		this.Nonce.Size() +
 		this.CustomMessage.Size() +
 		this.AverageBidBurnPrice.Size() +
-		this.LifeGene.Size()
+		this.LifeGene.Size() +
+		this.EngravedContents.Size()
 }
 
 func (this *DiamondSmelt) GetApproxFeeOffer() *fields.Amount {
@@ -69,6 +72,7 @@ func (this *DiamondSmelt) Serialize() ([]byte, error) {
 	b9, _ := this.CustomMessage.Serialize()
 	b10, _ := this.AverageBidBurnPrice.Serialize()
 	b11, _ := this.LifeGene.Serialize()
+	b12, _ := this.EngravedContents.Serialize()
 	buffer.Write(b1)
 	buffer.Write(b2)
 	buffer.Write(b3)
@@ -80,6 +84,7 @@ func (this *DiamondSmelt) Serialize() ([]byte, error) {
 	buffer.Write(b9)
 	buffer.Write(b10)
 	buffer.Write(b11)
+	buffer.Write(b12)
 	return buffer.Bytes(), nil
 }
 
@@ -126,6 +131,10 @@ func (this *DiamondSmelt) Parse(buf []byte, seek uint32) (uint32, error) {
 		return 0, e
 	}
 	seek, e = this.LifeGene.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = this.EngravedContents.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}

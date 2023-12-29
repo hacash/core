@@ -158,15 +158,15 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteInChainState(state interf
 	if e0 != nil {
 		return e0 // Insufficient bitcoin balance
 	}
-	// statistical information 
+	// statistical information
 	totalsupply, e1 := state.ReadTotalSupply()
 	if e1 != nil {
 		return e1
 	}
 	// Current number of bitcoin copies lent in real time
-	btcpartcurnum := totalsupply.Get(stores.TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount)
+	btcpartcurnum := float64(totalsupply.GetUint(stores.TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount))
 	// Total bitcoin copies
-	totalbtcpart := totalsupply.Get(stores.TotalSupplyStoreTypeOfTransferBitcoin) * 100
+	totalbtcpart := float64(totalsupply.GetUint(stores.TotalSupplyStoreTypeOfTransferBitcoin) * 100)
 	// Loan ratio, which must include the BTC copies of this mortgage
 	alllendper := (btcpartcurnum + float64(act.MortgageBitcoinPortion)) / totalbtcpart * 100
 
@@ -234,9 +234,9 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteInChainState(state interf
 		return e20
 	}
 	// Increase the statistics of mortgage copies of real-time bitcoin system
-	totalsupply.DoAdd(
+	totalsupply.DoAddUint(
 		stores.TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount,
-		float64(act.MortgageBitcoinPortion),
+		uint64(act.MortgageBitcoinPortion),
 	)
 	// Accumulated pre destruction interest of bitcoin system mortgage
 	totalsupply.DoAdd(
@@ -300,15 +300,15 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteinChainState(state interf
 	if e0 != nil {
 		return e0 // Insufficient bitcoin balance
 	}
-	// statistical information 
+	// statistical information
 	totalsupply, e1 := state.ReadTotalSupply()
 	if e1 != nil {
 		return e1
 	}
 	// Current number of bitcoin copies lent in real time
-	btcpartcurnum := totalsupply.Get(stores.TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount)
+	btcpartcurnum := float64(totalsupply.GetUint(stores.TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount))
 	// Total bitcoin copies
-	totalbtcpart := totalsupply.Get(stores.TotalSupplyStoreTypeOfTransferBitcoin) * 100
+	totalbtcpart := float64(totalsupply.GetUint(stores.TotalSupplyStoreTypeOfTransferBitcoin) * 100)
 	// Loan ratio, which must include the BTC copies of this mortgage
 	alllendper := (btcpartcurnum + float64(act.MortgageBitcoinPortion)) / totalbtcpart * 100
 
@@ -376,9 +376,9 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteinChainState(state interf
 		return e20
 	}
 	// Increase the statistics of mortgage copies of real-time bitcoin system
-	totalsupply.DoAdd(
+	totalsupply.DoAddUint(
 		stores.TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount,
-		float64(act.MortgageBitcoinPortion),
+		uint64(act.MortgageBitcoinPortion),
 	)
 	// Accumulated pre destruction interest of bitcoin system mortgage
 	totalsupply.DoAdd(
@@ -430,7 +430,7 @@ func (act *Action_17_BitcoinsSystemLendingCreate) RecoverChainState(state interf
 		return e
 	}
 
-	// statistical information 
+	// statistical information
 	totalsupply, e := state.ReadTotalSupply()
 	if e != nil {
 		return e
@@ -460,9 +460,9 @@ func (act *Action_17_BitcoinsSystemLendingCreate) RecoverChainState(state interf
 		return e20
 	}
 	// Increase the statistics of mortgage copies of real-time bitcoin system and reduce the fallback
-	totalsupply.DoSub(
+	totalsupply.DoSubUint(
 		stores.TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount,
-		float64(act.MortgageBitcoinPortion),
+		uint64(act.MortgageBitcoinPortion),
 	)
 	// Bitcoin system mortgage cumulative pre destruction interest rebate decrease
 	totalsupply.DoSub(
@@ -659,9 +659,9 @@ func (act *Action_18_BitcoinsSystemLendingRansom) WriteInChainState(state interf
 		return e20
 	}
 	// Reduce the statistics of real-time bitcoin mortgage shares
-	totalsupply.DoSub(
+	totalsupply.DoSubUint(
 		stores.TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount,
-		float64(btclendObj.MortgageBitcoinPortion),
+		uint64(btclendObj.MortgageBitcoinPortion),
 	)
 	// Bitcoin system mortgage cumulative redemption destruction flow
 	totalsupply.DoAdd(
@@ -763,9 +763,9 @@ func (act *Action_18_BitcoinsSystemLendingRansom) WriteinChainState(state interf
 		return e20
 	}
 	// Reduce the statistics of real-time bitcoin mortgage shares
-	totalsupply.DoSub(
+	totalsupply.DoSubUint(
 		stores.TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount,
-		float64(btclendObj.MortgageBitcoinPortion),
+		uint64(btclendObj.MortgageBitcoinPortion),
 	)
 	// Bitcoin system mortgage cumulative redemption destruction flow
 	totalsupply.DoAdd(
@@ -832,9 +832,9 @@ func (act *Action_18_BitcoinsSystemLendingRansom) RecoverChainState(state interf
 		return e20
 	}
 	// Rollback to increase the statistics of real-time bitcoin mortgage copies
-	totalsupply.DoAdd(
+	totalsupply.DoAddUint(
 		stores.TotalSupplyStoreTypeOfSystemLendingBitcoinPortionCurrentMortgageCount,
-		float64(btclendObj.MortgageBitcoinPortion),
+		uint64(btclendObj.MortgageBitcoinPortion),
 	)
 	// Bitcoin system mortgage cumulative redemption destruction daily return decrease
 	totalsupply.DoSub(

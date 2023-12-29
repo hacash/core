@@ -272,6 +272,10 @@ func (bill Amount) ToMeiBigFloat() *big.Float {
 	return bill.ToUnitBigFloat(248)
 }
 
+func (bill Amount) ToZhuBigFloat() *big.Float {
+	return bill.ToUnitBigFloat(240)
+}
+
 func (bill Amount) ToUnitBigFloat(unit int) *big.Float {
 	// handle
 	bigmei := new(big.Float).SetInt(new(big.Int).SetBytes(bill.Numeral))
@@ -302,6 +306,18 @@ func (bill Amount) ToMei() float64 {
 	bigmei := bill.ToMeiBigFloat()
 	mei, _ := bigmei.Float64()
 	return mei
+}
+
+func (bill Amount) ToZhu() float64 {
+	bigzhu := bill.ToZhuBigFloat()
+	zhu, _ := bigzhu.Float64()
+	return zhu
+}
+
+func (bill Amount) ToZhuOmit() uint64 {
+	bigzhu := bill.ToZhuBigFloat()
+	zhu, _ := bigzhu.Uint64()
+	return zhu
 }
 
 // Create amount from string

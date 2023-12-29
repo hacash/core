@@ -271,6 +271,7 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 		Nonce:                act.Nonce,
 		CustomMessage:        act.GetRealCustomMessage(),
 		LifeGene:             lifeGene,
+		EngravedContents:     fields.CreateEmptyStringMax255List255(),
 	}
 
 	// Write service charge quotation
@@ -285,18 +286,30 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 		return e2
 	}
 
+	if uint32(act.Number) > DiamondCreateBurning90PercentTxFeesAboveNumber {
+		// 90% of the cost of destroying this transaction from the 30001 diamond
+		txfee := act.belong_trs_v3.GetFee().Copy()
+		if txfee.Unit < 2 {
+			return fmt.Errorf("Tx fee %s to low", txfee)
+		}
+		txf2 := act.belong_trs_v3.GetFee().Copy()
+		txf2.Unit -= 1
+		txfee, e = txfee.Sub(txf2)
+		if e != nil {
+			return fmt.Errorf("DiamondBidBurningZhu sub 90%% error: %s", e)
+		}
+		var txfeezhu = txfee.ToZhuOmit()
+		totalsupply.DoAddUint(stores.TotalSupplyStoreTypeOfDiamondBidBurningZhu, txfeezhu)
+	}
+
 	// Calculate the average number of HACs for bidding
 	if uint32(act.Number) <= DiamondStatisticsAverageBiddingBurningPriceAboveNumber {
 		diamondstore.AverageBidBurnPrice = 10 // Fixed to 10
 	} else {
 		bsnum := uint32(act.Number) - DiamondCreateBurning90PercentTxFeesAboveNumber
-		burnhac := totalsupply.Get(stores.TotalSupplyStoreTypeOfBurningFee)
-		bidprice := uint64(burnhac/float64(bsnum) + 0.99999999) // up 1
-		setprice := fields.VarUint2(bidprice)
-		if setprice < 1 {
-			setprice = 1 // Minimum 1
-		}
-		diamondstore.AverageBidBurnPrice = setprice
+		burnhaczhu := totalsupply.GetUint(stores.TotalSupplyStoreTypeOfDiamondBidBurningZhu)
+		bidprice := burnhaczhu/100000000/uint64(bsnum) + 1                   // up to 1
+		diamondstore.AverageBidBurnPrice = fields.VarUint2(uint16(bidprice)) // min 1
 	}
 
 	// Update block status
@@ -320,7 +333,7 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 		}
 	}
 
-	totalsupply.Set(stores.TotalSupplyStoreTypeOfDiamond, float64(act.Number))
+	totalsupply.SetUint(stores.TotalSupplyStoreTypeOfDiamond, uint64(act.Number))
 	// update total supply
 	e7 := state.UpdateSetTotalSupply(totalsupply)
 	if e7 != nil {
@@ -346,6 +359,9 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 }
 
 func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStateOperation) error {
+
+	panic("WriteinChainState be deprecated")
+
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -494,7 +510,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 		diamondstore.AverageBidBurnPrice = 10 // Fixed to 10
 	} else {
 		bsnum := uint32(act.Number) - DiamondCreateBurning90PercentTxFeesAboveNumber
-		burnhac := totalsupply.Get(stores.TotalSupplyStoreTypeOfBurningFee)
+		burnhac := totalsupply.Get(stores.TotalSupplyStoreTypeOfBurningFeeTotal)
 		bidprice := uint64(burnhac/float64(bsnum) + 0.99999999) // up 1
 		setprice := fields.VarUint2(bidprice)
 		if setprice < 1 {
@@ -513,7 +529,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 		return e5
 	}
 
-	totalsupply.Set(stores.TotalSupplyStoreTypeOfDiamond, float64(act.Number))
+	totalsupply.SetUint(stores.TotalSupplyStoreTypeOfDiamond, uint64(act.Number))
 	// update total supply
 	e7 := state.UpdateSetTotalSupply(totalsupply)
 	if e7 != nil {
@@ -566,7 +582,7 @@ func (act *Action_4_DiamondCreate) RecoverChainState(state interfacev2.ChainStat
 	if e2 != nil {
 		return e2
 	}
-	totalsupply.Set(stores.TotalSupplyStoreTypeOfDiamond, float64(uint32(act.Number)-1))
+	totalsupply.SetUint(stores.TotalSupplyStoreTypeOfDiamond, uint64(uint32(act.Number)-1))
 	// update total supply
 	e7 := state.UpdateSetTotalSupply(totalsupply)
 	if e7 != nil {
@@ -577,6 +593,7 @@ func (act *Action_4_DiamondCreate) RecoverChainState(state interfacev2.ChainStat
 }
 
 func (elm *Action_4_DiamondCreate) SetBelongTransaction(t interfacev2.Transaction) {
+	panic("SetBelongTransaction be deprecated")
 	elm.belong_trs = t
 }
 

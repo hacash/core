@@ -7,6 +7,9 @@ import (
 
 type BlockStoreRead interface {
 	// read
+
+	ReadLastBlockHeight() (uint64, error)
+
 	ReadBlockBytesByHash(fields.Hash) ([]byte, error)
 	ReadBlockBytesByHeight(uint64) (fields.Hash, []byte, error)
 	ReadBlockHashByHeight(uint64) (fields.Hash, error)

@@ -342,16 +342,16 @@ func (act *Action_19_UsersLendingCreate) WriteInChainState(state interfaces.Chai
 	}
 	// Increase diamond lending flow
 	if dianum > 0 {
-		totalsupply.DoAdd(
+		totalsupply.DoAddUint(
 			stores.TotalSupplyStoreTypeOfUsersLendingCumulationDiamond,
-			float64(dianum),
+			uint64(dianum),
 		)
 	}
 	// Increase bitcoin loan quantity flow
 	if act.MortgageBitcoin.NotEmpty.Check() {
-		totalsupply.DoAdd(
+		totalsupply.DoAddUint(
 			stores.TotalSupplyStoreTypeOfUsersLendingCumulationBitcoin,
-			float64(act.MortgageBitcoin.ValueSAT),
+			uint64(act.MortgageBitcoin.ValueSAT),
 		)
 
 	}
@@ -540,16 +540,16 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfacev2.Cha
 	}
 	// Increase diamond lending flow
 	if dianum > 0 {
-		totalsupply.DoAdd(
+		totalsupply.DoAddUint(
 			stores.TotalSupplyStoreTypeOfUsersLendingCumulationDiamond,
-			float64(dianum),
+			uint64(dianum),
 		)
 	}
 	// Increase bitcoin loan quantity flow
 	if act.MortgageBitcoin.NotEmpty.Check() {
-		totalsupply.DoAdd(
+		totalsupply.DoAddUint(
 			stores.TotalSupplyStoreTypeOfUsersLendingCumulationBitcoin,
-			float64(act.MortgageBitcoin.ValueSAT),
+			uint64(act.MortgageBitcoin.ValueSAT),
 		)
 
 	}
@@ -634,16 +634,16 @@ func (act *Action_19_UsersLendingCreate) RecoverChainState(state interfacev2.Cha
 	}
 	// Rebate deduction increase diamond lending amount daily deduction
 	if dianum > 0 {
-		totalsupply.DoSub(
+		totalsupply.DoSubUint(
 			stores.TotalSupplyStoreTypeOfUsersLendingCumulationDiamond,
-			float64(dianum),
+			uint64(dianum),
 		)
 	}
 	// Fallback deduction to increase bitcoin loan quantity flow
 	if act.MortgageBitcoin.NotEmpty.Check() {
-		totalsupply.DoSub(
+		totalsupply.DoSubUint(
 			stores.TotalSupplyStoreTypeOfUsersLendingCumulationBitcoin,
-			float64(act.MortgageBitcoin.ValueSAT),
+			uint64(act.MortgageBitcoin.ValueSAT),
 		)
 
 	}

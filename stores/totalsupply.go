@@ -10,7 +10,7 @@ import (
 
 const (
 	typeSizeMax   int = 32
-	typeSizeValid int = 19 // Currently available
+	typeSizeValid int = 21 // Currently available
 	// Diamonds
 	TotalSupplyStoreTypeOfDiamond uint8 = 0 // Number of diamonds excavated
 	// BTC
@@ -24,7 +24,7 @@ const (
 	TotalSupplyStoreTypeOfLocatedSATInChannel uint8 = 6 // Number of SATs currently effectively locked in the channel
 	TotalSupplyStoreTypeOfChannelOfOpening    uint8 = 7 // Number of channels currently on
 	// Destruction fee
-	TotalSupplyStoreTypeOfBurningFee uint8 = 8 // Handling charge combustion destruction HAC accumulation
+	TotalSupplyStoreTypeOfBurningFeeTotal uint8 = 8 // Handling charge combustion destruction HAC accumulation
 	// Diamond lending
 	TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount      uint8 = 9  // Real time statistics of loan and mortgage amount of diamond system
 	TotalSupplyStoreTypeOfSystemLendingDiamondCumulationLoanHacAmount   uint8 = 10 // HAC daily flow quantity of diamond system mortgage cumulative lending
@@ -39,23 +39,26 @@ const (
 	TotalSupplyStoreTypeOfUsersLendingCumulationBitcoin                  uint8 = 17 // Daily accumulation of inter user debit and credit bitcoin quantity (unit: piece)
 	TotalSupplyStoreTypeOfUsersLendingCumulationHacAmount                uint8 = 18 // 用户间借贷HAC借出额流水累计（借出累计而非归还累计）
 	TotalSupplyStoreTypeOfUsersLendingBurningOnePercentInterestHacAmount uint8 = 19 // 1% interest statistics of inter user loan system destruction
+	TotalSupplyStoreTypeOfDiamondBidBurningZhu                           uint8 = 20 // Diamond bidding fee burning part (unit:zhu)
+	TotalSupplyStoreTypeOfDiamondEngravedBurning                         uint8 = 21 // Diamond Engraved burning
+
 	// TotalSupplyStoreTypeOfUsersLendingLendersInterestHacAmountCumulation uint8 = ... // 用户间借贷贷出方赚取的利息流水累计
 
 )
 
 type TotalSupply struct {
 	changeMark []bool
-	dataBytes  []float64 //fields.Bytes8
+	dataBytes  []uint64 //fields.Bytes8
 }
 
 func NewTotalSupplyStoreData() *TotalSupply {
 	return &TotalSupply{
 		changeMark: make([]bool, typeSizeMax),
-		dataBytes:  make([]float64, typeSizeMax), // fields.Bytes8
+		dataBytes:  make([]uint64, typeSizeMax), // fields.Bytes8
 	}
 }
 
-func (t *TotalSupply) Get(ty uint8) float64 {
+func (t *TotalSupply) GetUint(ty uint8) uint64 {
 	if ty > uint8(typeSizeValid) {
 		panic("type error")
 	}
@@ -67,8 +70,15 @@ func (t *TotalSupply) Get(ty uint8) float64 {
 	return 0
 }
 
+func (t *TotalSupply) Get(ty uint8) float64 {
+	var intn = t.GetUint(ty)
+	//var intbts = make([]byte, 8)
+	//binary.BigEndian.PutUint64(intbts, intn)
+	return math.Float64frombits(intn)
+}
+
 // set up
-func (t *TotalSupply) Set(ty uint8, value float64) {
+func (t *TotalSupply) SetUint(ty uint8, value uint64) {
 	if ty > uint8(typeSizeValid) {
 		panic("type error")
 	}
@@ -78,7 +88,25 @@ func (t *TotalSupply) Set(ty uint8, value float64) {
 	t.dataBytes[ty] = value
 }
 
+func (t *TotalSupply) Set(ty uint8, value float64) {
+	intbits := math.Float64bits(value)
+	t.SetUint(ty, intbits)
+}
+
 // increase
+
+func (t *TotalSupply) DoAddUint(ty uint8, value uint64) uint64 {
+	if ty > uint8(typeSizeValid) {
+		panic("type error")
+	}
+	// check mark
+	t.changeMark[ty] = true
+	vbase := t.GetUint(ty)
+	newv := vbase + value
+	t.SetUint(ty, newv)
+	return newv
+}
+
 func (t *TotalSupply) DoAdd(ty uint8, value float64) float64 {
 	if ty > uint8(typeSizeValid) {
 		panic("type error")
@@ -92,6 +120,19 @@ func (t *TotalSupply) DoAdd(ty uint8, value float64) float64 {
 }
 
 // reduce
+
+func (t *TotalSupply) DoSubUint(ty uint8, value uint64) uint64 {
+	if ty > uint8(typeSizeValid) {
+		panic("type error")
+	}
+	// check mark
+	t.changeMark[ty] = true
+	vbase := t.GetUint(ty)
+	newv := vbase - value
+	t.SetUint(ty, newv)
+	return newv
+}
+
 func (t *TotalSupply) DoSub(ty uint8, value float64) float64 {
 	if ty > uint8(typeSizeValid) {
 		panic("type error")
@@ -117,7 +158,7 @@ func (t *TotalSupply) CoverCopySave(src *TotalSupply) {
 // Copy replication
 func (t *TotalSupply) Clone() *TotalSupply {
 	changeMark := []bool{}
-	dataBytes := []float64{}
+	dataBytes := []uint64{}
 	changeMark = append(changeMark, t.changeMark...)
 	dataBytes = append(dataBytes, t.dataBytes...)
 	return &TotalSupply{
@@ -130,9 +171,9 @@ func (t *TotalSupply) Clone() *TotalSupply {
 func (t *TotalSupply) Serialize() ([]byte, error) {
 	buf := bytes.NewBuffer([]byte{uint8(typeSizeMax)}) // 长度
 	for i := 0; i < typeSizeMax; i++ {
-		intbits := math.Float64bits(t.dataBytes[i])
+		//intbits := math.Float64bits(t.dataBytes[i])
 		var btstore = fields.Bytes8{0, 0, 0, 0, 0, 0, 0, 0}
-		binary.BigEndian.PutUint64(btstore, intbits)
+		binary.BigEndian.PutUint64(btstore, t.dataBytes[i])
 		buf.Write(btstore)
 	}
 	return buf.Bytes(), nil
@@ -149,7 +190,7 @@ func (t *TotalSupply) Parse(buf []byte, seek uint32) (uint32, error) {
 	for i := 0; i < tysize; i++ {
 		t.changeMark[i] = true
 		intbts := binary.BigEndian.Uint64(buf[seek : seek+8])
-		t.dataBytes[i] = math.Float64frombits(intbts)
+		t.dataBytes[i] = intbts
 		seek += 8
 	}
 	return seek, nil

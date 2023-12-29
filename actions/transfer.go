@@ -82,6 +82,9 @@ func (act *Action_1_SimpleToTransfer) WriteInChainState(state interfaces.ChainSt
 }
 
 func (act *Action_1_SimpleToTransfer) WriteinChainState(state interfacev2.ChainStateOperation) error {
+
+	panic("WriteinChainState be deprecated")
+
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}

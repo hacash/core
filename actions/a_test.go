@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+func Test9834759374(t *testing.T) {
+	var data = "{p:HACD20,op:mint,tick:meme,amt:120k}"
+	// b0cc883502556a4466e9aac0bdeed5ff880acf77d6deed2636a2f94d3d426ee5
+
+	fmt.Println(len(data), 64*256/1024)
+
+}
+
 func Test1(t *testing.T) {
 
 	amt1, _ := fields.NewAmountFromFinString("ㄜ1:248")

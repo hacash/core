@@ -73,6 +73,10 @@ func NewActionByKind(kind uint16) (interfaces.Action, error) {
 		return new(Action_30_SupportDistinguishForkChainID), nil
 	case 31:
 		return new(Action_31_OpenPaymentChannelWithSatoshi), nil
+	case 32:
+		return new(Action_32_DiamondsEngraved), nil
+	case 33:
+		return new(Action_33_DiamondsEngravedRecovery), nil
 
 	}
 	////////////////////    END      ////////////////////

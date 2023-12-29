@@ -516,6 +516,9 @@ func (block *Block_v1) WriteInChainState(blockstate interfaces.ChainStateOperati
 
 // 修改 / 恢复 状态数据库
 func (block *Block_v1) WriteinChainState(blockstate interfacev2.ChainStateOperation) error {
+
+	panic("WriteinChainState be deprecated")
+
 	blkhei := block.GetHeight()
 	txlen := len(block.Transactions)
 	totalfeeuserpay := fields.NewEmptyAmount()

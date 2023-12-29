@@ -245,9 +245,9 @@ func (act *Action_15_DiamondsSystemLendingCreate) WriteInChainState(state interf
 		return e20
 	}
 	// Increase mortgage statistics of real-time diamond system
-	totalsupply.DoAdd(
+	totalsupply.DoAddUint(
 		stores.TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount,
-		float64(dianum),
+		uint64(dianum),
 	)
 	// Diamond system mortgage quantity statistics cumulative lending flow
 	totalsupply.DoAdd(
@@ -386,9 +386,9 @@ func (act *Action_15_DiamondsSystemLendingCreate) WriteinChainState(state interf
 		return e20
 	}
 	// Increase mortgage statistics of real-time diamond system
-	totalsupply.DoAdd(
+	totalsupply.DoAddUint(
 		stores.TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount,
-		float64(dianum),
+		uint64(dianum),
 	)
 	// Diamond system mortgage quantity statistics cumulative lending flow
 	totalsupply.DoAdd(
@@ -453,9 +453,9 @@ func (act *Action_15_DiamondsSystemLendingCreate) RecoverChainState(state interf
 		return e20
 	}
 	// Reduce the statistical fallback of mortgage amount of real-time diamond system
-	totalsupply.DoSub(
+	totalsupply.DoSubUint(
 		stores.TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount,
-		float64(dianum),
+		uint64(dianum),
 	)
 	// Diamond system mortgage quantity statistics cumulative lending daily return
 	totalsupply.DoSub(
@@ -675,9 +675,9 @@ func (act *Action_16_DiamondsSystemLendingRansom) WriteInChainState(state interf
 		return e20
 	}
 	// Reduce real-time diamond system mortgage quantity statistics and real-time deduction
-	totalsupply.DoSub(
+	totalsupply.DoSubUint(
 		stores.TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount,
-		float64(dianum),
+		uint64(dianum),
 	)
 	// Diamond system mortgage quantity statistics cumulative redemption flow
 	totalsupply.DoAdd(
@@ -807,9 +807,9 @@ func (act *Action_16_DiamondsSystemLendingRansom) WriteinChainState(state interf
 		return e20
 	}
 	// Reduce real-time diamond system mortgage quantity statistics and real-time deduction
-	totalsupply.DoSub(
+	totalsupply.DoSubUint(
 		stores.TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount,
-		float64(dianum),
+		uint64(dianum),
 	)
 	// Diamond system mortgage quantity statistics cumulative redemption flow
 	totalsupply.DoAdd(
@@ -889,9 +889,9 @@ func (act *Action_16_DiamondsSystemLendingRansom) RecoverChainState(state interf
 		return e20
 	}
 	// Increase the mortgage quantity statistics of real-time diamond system, increase and restore
-	totalsupply.DoAdd(
+	totalsupply.DoAddUint(
 		stores.TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount,
-		float64(dianum),
+		uint64(dianum),
 	)
 	// Statistics of mortgage quantity of diamond system, cumulative redemption flow, decrease and refund
 	totalsupply.DoSub(

@@ -16,6 +16,8 @@ type BlockStore interface {
 	CancelUniteTransactions(Block) error
 
 	// block
+	ReadLastBlockHeight() (uint64, error)
+
 	ReadBlockHeadBytesByHeight(uint64) ([]byte, error)
 	ReadBlockHeadBytesByHash(fields.Hash) ([]byte, error)
 	ReadBlockBytesLengthByHeight(uint64, uint32) (fields.Hash, []byte, error)
