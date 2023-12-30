@@ -52,12 +52,16 @@ func NewAmountNumOneByUnit(unit uint8) *Amount {
 	}
 }
 
-func NewAmountByUnit248(num int64) *Amount {
-	amt, err := NewAmountByBigIntWithUnit(big.NewInt(num), 248)
+func NewAmountByUnit(num int64, unit int) *Amount {
+	amt, err := NewAmountByBigIntWithUnit(big.NewInt(num), unit)
 	if err != nil {
 		panic(err)
 	}
 	return amt
+}
+
+func NewAmountByUnitMei(num int64) *Amount {
+	return NewAmountByUnit(num, 248)
 }
 
 func NewAmountByBigIntWithUnit(bignum *big.Int, unit int) (*Amount, error) {

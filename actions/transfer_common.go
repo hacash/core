@@ -11,7 +11,7 @@ import (
 //////////////////////////////////////////////////////////
 
 // HAC transfer
-func DoSimpleTransferFromChainState(state interfacev2.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, amt fields.Amount) error {
+func DoSimpleTransferFromChainStateV2(state interfacev2.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, amt fields.Amount) error {
 
 	isTrsToMySelf := addr1.Equal(addr2)
 
@@ -126,7 +126,7 @@ func DoSimpleTransferFromChainState(state interfacev2.ChainStateOperation, addr1
 }
 
 // Simply increase balance
-func DoAddBalanceFromChainState(state interfacev2.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
+func DoAddBalanceFromChainStateV2(state interfacev2.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
 	blssto, e := state.Balance(addr)
 	if e != nil {
 		return e
@@ -148,7 +148,7 @@ func DoAddBalanceFromChainState(state interfacev2.ChainStateOperation, addr fiel
 		return fmt.Errorf("amount can not to store")
 	}
 	//addrrr, _ := base58check.Encode(addr)
-	//fmt.Println( "DoAddBalanceFromChainState: ++++++++++ ", addr.ToReadable(), amtsave.ToFinString() )
+	//fmt.Println( "DoAddBalanceFromChainStateV2: ++++++++++ ", addr.ToReadable(), amtsave.ToFinString() )
 	blssto.Hacash = *amtsave
 	bserr := state.BalanceSet(addr, blssto)
 	if bserr != nil {
@@ -158,7 +158,7 @@ func DoAddBalanceFromChainState(state interfacev2.ChainStateOperation, addr fiel
 }
 
 // Net balance
-func DoSubBalanceFromChainState(state interfacev2.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
+func DoSubBalanceFromChainStateV2(state interfacev2.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
 	blssto, e := state.Balance(addr)
 	if e != nil {
 		return e
@@ -199,7 +199,7 @@ func DoSubBalanceFromChainState(state interfacev2.ChainStateOperation, addr fiel
 //////////////////////////////////////////////////////////
 
 // HAC transfer
-func DoSimpleTransferFromChainStateV3(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, amt fields.Amount) error {
+func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 fields.Address, addr2 fields.Address, amt fields.Amount) error {
 
 	isTrsToMySelf := addr1.Equal(addr2)
 
@@ -316,7 +316,7 @@ func DoSimpleTransferFromChainStateV3(state interfaces.ChainStateOperation, addr
 }
 
 // Simply increase balance
-func DoAddBalanceFromChainStateV3(state interfaces.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
+func DoAddBalanceFromChainState(state interfaces.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
 	blssto, e := state.Balance(addr)
 	if e != nil {
 		return e
@@ -338,7 +338,7 @@ func DoAddBalanceFromChainStateV3(state interfaces.ChainStateOperation, addr fie
 		return fmt.Errorf("amount can not to store")
 	}
 	//addrrr, _ := base58check.Encode(addr)
-	//fmt.Println( "DoAddBalanceFromChainState: ++++++++++ ", addr.ToReadable(), amtsave.ToFinString() )
+	//fmt.Println( "DoAddBalanceFromChainStateV2: ++++++++++ ", addr.ToReadable(), amtsave.ToFinString() )
 	blssto.Hacash = *amtsave
 	bserr := state.BalanceSet(addr, blssto)
 	if bserr != nil {
@@ -348,7 +348,7 @@ func DoAddBalanceFromChainStateV3(state interfaces.ChainStateOperation, addr fie
 }
 
 // Net balance
-func DoSubBalanceFromChainStateV3(state interfaces.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
+func DoSubBalanceFromChainState(state interfaces.ChainStateOperation, addr fields.Address, amt fields.Amount) error {
 	blssto, e := state.Balance(addr)
 	if e != nil {
 		return e

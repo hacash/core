@@ -78,7 +78,7 @@ func (act *Action_1_SimpleToTransfer) WriteInChainState(state interfaces.ChainSt
 		return fmt.Errorf("Amount is not positive.")
 	}
 	// transfer
-	return DoSimpleTransferFromChainStateV3(state, act.belong_trs_v3.GetAddress(), act.ToAddress, act.Amount)
+	return DoSimpleTransferFromChainState(state, act.belong_trs_v3.GetAddress(), act.ToAddress, act.Amount)
 }
 
 func (act *Action_1_SimpleToTransfer) WriteinChainState(state interfacev2.ChainStateOperation) error {
@@ -94,7 +94,7 @@ func (act *Action_1_SimpleToTransfer) WriteinChainState(state interfacev2.ChainS
 		return fmt.Errorf("Amount is not positive.")
 	}
 	// transfer
-	return DoSimpleTransferFromChainState(state, act.belong_trs.GetAddress(), act.ToAddress, act.Amount)
+	return DoSimpleTransferFromChainStateV2(state, act.belong_trs.GetAddress(), act.ToAddress, act.Amount)
 }
 
 func (act *Action_1_SimpleToTransfer) RecoverChainState(state interfacev2.ChainStateOperation) error {
@@ -105,7 +105,7 @@ func (act *Action_1_SimpleToTransfer) RecoverChainState(state interfacev2.ChainS
 		panic("Action belong to transaction not be nil !")
 	}
 	// Fallback
-	return DoSimpleTransferFromChainState(state, act.ToAddress, act.belong_trs.GetAddress(), act.Amount)
+	return DoSimpleTransferFromChainStateV2(state, act.ToAddress, act.belong_trs.GetAddress(), act.Amount)
 }
 
 // Set belongs to long_ trs
@@ -204,7 +204,7 @@ func (act *Action_13_FromTransfer) WriteInChainState(state interfaces.ChainState
 		return fmt.Errorf("Amount is not positive.")
 	}
 	// transfer
-	return DoSimpleTransferFromChainStateV3(state, act.FromAddress, act.belong_trs_v3.GetAddress(), act.Amount)
+	return DoSimpleTransferFromChainState(state, act.FromAddress, act.belong_trs_v3.GetAddress(), act.Amount)
 }
 
 func (act *Action_13_FromTransfer) WriteinChainState(state interfacev2.ChainStateOperation) error {
@@ -222,7 +222,7 @@ func (act *Action_13_FromTransfer) WriteinChainState(state interfacev2.ChainStat
 		return fmt.Errorf("Amount is not positive.")
 	}
 	// transfer
-	return DoSimpleTransferFromChainState(state, act.FromAddress, act.belong_trs.GetAddress(), act.Amount)
+	return DoSimpleTransferFromChainStateV2(state, act.FromAddress, act.belong_trs.GetAddress(), act.Amount)
 }
 
 func (act *Action_13_FromTransfer) RecoverChainState(state interfacev2.ChainStateOperation) error {
@@ -230,7 +230,7 @@ func (act *Action_13_FromTransfer) RecoverChainState(state interfacev2.ChainStat
 		panic("Action belong to transaction not be nil !")
 	}
 	// Fallback
-	return DoSimpleTransferFromChainState(state, act.belong_trs.GetAddress(), act.FromAddress, act.Amount)
+	return DoSimpleTransferFromChainStateV2(state, act.belong_trs.GetAddress(), act.FromAddress, act.Amount)
 }
 
 // Set belongs to long_ trs
@@ -333,7 +333,7 @@ func (act *Action_14_FromToTransfer) WriteInChainState(state interfaces.ChainSta
 		return fmt.Errorf("Amount is not positive.")
 	}
 	// transfer
-	return DoSimpleTransferFromChainStateV3(state, act.FromAddress, act.ToAddress, act.Amount)
+	return DoSimpleTransferFromChainState(state, act.FromAddress, act.ToAddress, act.Amount)
 }
 
 func (act *Action_14_FromToTransfer) WriteinChainState(state interfacev2.ChainStateOperation) error {
@@ -351,7 +351,7 @@ func (act *Action_14_FromToTransfer) WriteinChainState(state interfacev2.ChainSt
 		return fmt.Errorf("Amount is not positive.")
 	}
 	// transfer
-	return DoSimpleTransferFromChainState(state, act.FromAddress, act.ToAddress, act.Amount)
+	return DoSimpleTransferFromChainStateV2(state, act.FromAddress, act.ToAddress, act.Amount)
 }
 
 func (act *Action_14_FromToTransfer) RecoverChainState(state interfacev2.ChainStateOperation) error {
@@ -359,7 +359,7 @@ func (act *Action_14_FromToTransfer) RecoverChainState(state interfacev2.ChainSt
 		panic("Action belong to transaction not be nil !")
 	}
 	// Fallback
-	return DoSimpleTransferFromChainState(state, act.ToAddress, act.FromAddress, act.Amount)
+	return DoSimpleTransferFromChainStateV2(state, act.ToAddress, act.FromAddress, act.Amount)
 }
 
 // Set belongs to long_ trs

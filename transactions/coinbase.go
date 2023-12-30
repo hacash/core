@@ -317,7 +317,7 @@ func (trs *Transaction_0_Coinbase) WriteInChainState(state interfaces.ChainState
 		if e != nil {
 			return e
 		}
-		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningFeeTotal, burnamt.ToMei())
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningTotal, burnamt.ToMei())
 	}
 	// update total supply
 	e3 := state.UpdateSetTotalSupply(totalsupply)
@@ -328,7 +328,7 @@ func (trs *Transaction_0_Coinbase) WriteInChainState(state interfaces.ChainState
 	rwd_and_txfee, _ := trs.Reward.Add(&trs.TotalFeeMinerReceived)
 	// addr, _ := base58check.Encode(trs.Address)
 	// fmt.Printf("coinbase.ChangeChainState,  %s  +=  %s\n", addr, rwd.ToFinString())
-	return actions.DoAddBalanceFromChainStateV3(state, trs.Address, *rwd_and_txfee)
+	return actions.DoAddBalanceFromChainState(state, trs.Address, *rwd_and_txfee)
 }
 
 // 修改 / 恢复 状态数据库
@@ -348,7 +348,7 @@ func (trs *Transaction_0_Coinbase) WriteinChainState(state interfacev2.ChainStat
 		if e != nil {
 			return e
 		}
-		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningFeeTotal, burnamt.ToMei())
+		totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningTotal, burnamt.ToMei())
 	}
 	// update total supply
 	e3 := state.UpdateSetTotalSupply(totalsupply)
@@ -359,7 +359,7 @@ func (trs *Transaction_0_Coinbase) WriteinChainState(state interfacev2.ChainStat
 	rwd_and_txfee, _ := trs.Reward.Add(&trs.TotalFeeMinerReceived)
 	// addr, _ := base58check.Encode(trs.Address)
 	// fmt.Printf("coinbase.ChangeChainState,  %s  +=  %s\n", addr, rwd.ToFinString())
-	return actions.DoAddBalanceFromChainState(state, trs.Address, *rwd_and_txfee)
+	return actions.DoAddBalanceFromChainStateV2(state, trs.Address, *rwd_and_txfee)
 }
 
 func (trs *Transaction_0_Coinbase) RecoverChainState(state interfacev2.ChainStateOperation) error {
@@ -380,7 +380,7 @@ func (trs *Transaction_0_Coinbase) RecoverChainState(state interfacev2.ChainStat
 		if e != nil {
 			return e
 		}
-		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBurningFeeTotal, burnamt.ToMei())
+		totalsupply.DoSub(stores.TotalSupplyStoreTypeOfBurningTotal, burnamt.ToMei())
 	}
 	// update total supply
 	e3 := state.UpdateSetTotalSupply(totalsupply)
@@ -389,7 +389,7 @@ func (trs *Transaction_0_Coinbase) RecoverChainState(state interfacev2.ChainStat
 	}
 	// Address balance
 	rwd_and_txfee, _ := trs.Reward.Add(&trs.TotalFeeMinerReceived)
-	return actions.DoSubBalanceFromChainState(state, trs.Address, *rwd_and_txfee)
+	return actions.DoSubBalanceFromChainStateV2(state, trs.Address, *rwd_and_txfee)
 }
 
 func (trs *Transaction_0_Coinbase) FeePurity() uint64 {

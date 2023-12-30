@@ -256,7 +256,7 @@ func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteInChainState(s
 	fromAddr := act.ExchangeEvidence.OnchainTransferFromAndMustSignAddresses[0]
 	toAddr := act.ExchangeEvidence.OnChainTranferToAddress
 	trsAmt := act.ExchangeEvidence.OnChainTranferAmount
-	return DoSimpleTransferFromChainStateV3(state, fromAddr, toAddr, trsAmt)
+	return DoSimpleTransferFromChainState(state, fromAddr, toAddr, trsAmt)
 }
 
 func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteinChainState(state interfacev2.ChainStateOperation) error {
@@ -309,7 +309,7 @@ func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) WriteinChainState(s
 	fromAddr := act.ExchangeEvidence.OnchainTransferFromAndMustSignAddresses[0]
 	toAddr := act.ExchangeEvidence.OnChainTranferToAddress
 	trsAmt := act.ExchangeEvidence.OnChainTranferAmount
-	return DoSimpleTransferFromChainState(state, fromAddr, toAddr, trsAmt)
+	return DoSimpleTransferFromChainStateV2(state, fromAddr, toAddr, trsAmt)
 }
 
 func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) RecoverChainState(state interfacev2.ChainStateOperation) error {
@@ -322,7 +322,7 @@ func (act *Action_25_PaymantChannelAndOnchainAtomicExchange) RecoverChainState(s
 	fromAddr := act.ExchangeEvidence.OnchainTransferFromAndMustSignAddresses[0]
 	toAddr := act.ExchangeEvidence.OnChainTranferToAddress
 	trsAmt := act.ExchangeEvidence.OnChainTranferAmount
-	return DoSimpleTransferFromChainState(state, toAddr, fromAddr, trsAmt)
+	return DoSimpleTransferFromChainStateV2(state, toAddr, fromAddr, trsAmt)
 }
 
 func (elm *Action_25_PaymantChannelAndOnchainAtomicExchange) SetBelongTransaction(t interfacev2.Transaction) {

@@ -127,7 +127,7 @@ func (act *Action_32_DiamondsEngraved) WriteInChainState(state interfaces.ChainS
 	var e error = nil
 	for i := 0; i < dianum; i++ {
 		var dia = dias[i]
-		cost, e := handleEngravedOneDiamond(&mainAddr, dia, state)
+		cost, e := handleEngravedOneDiamond(&mainAddr, dia, &act.EngravedContent, state)
 		if e != nil {
 			return fmt.Errorf("handleEngravedOneDiamond %s error: %s", dia.Name(), e)
 		}
@@ -144,7 +144,7 @@ func (act *Action_32_DiamondsEngraved) WriteInChainState(state interfaces.ChainS
 	}
 
 	// sub main addr balance
-	e = DoSubBalanceFromChainStateV3(state, mainAddr, act.TotalCost)
+	e = DoSubBalanceFromChainState(state, mainAddr, act.TotalCost)
 	if e != nil {
 		return fmt.Errorf("Engraved Diamond main address balance need %s but not enough",
 			act.TotalCost.ToFinString())
@@ -155,8 +155,9 @@ func (act *Action_32_DiamondsEngraved) WriteInChainState(state interfaces.ChainS
 	if e2 != nil {
 		return e2
 	}
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfDiamondEngravedBurning, act.TotalCost.ToMei()) // Engraved burning
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningFeeTotal, act.TotalCost.ToMei())        // Total burning
+	totalsupply.DoAddUint(stores.TotalSupplyStoreTypeOfDiamondEngravedOperateCount, uint64(act.DiamondList.Count)) //
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfDiamondEngravedBurning, act.TotalCost.ToMei())                  // Engraved burning
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningTotal, act.TotalCost.ToMei())                            // Total burning
 	// update total supply
 	e7 := state.UpdateSetTotalSupply(totalsupply)
 	if e7 != nil {
@@ -219,8 +220,8 @@ func (act *Action_32_DiamondsEngraved) IsBurning90PersentTxFees() bool {
 // Diamond engraved recovery
 type Action_33_DiamondsEngravedRecovery struct {
 	//
-	DiamondList  fields.DiamondListMaxLen200
-	TotalCostMei fields.VarUint2 // HAC mei number for burning
+	DiamondList fields.DiamondListMaxLen200
+	TotalCost   fields.Amount // HAC number for burning
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
@@ -247,7 +248,7 @@ func (elm *Action_33_DiamondsEngravedRecovery) Serialize() ([]byte, error) {
 	if e != nil {
 		return nil, e
 	}
-	b2, e := elm.TotalCostMei.Serialize()
+	b2, e := elm.TotalCost.Serialize()
 	if e != nil {
 		return nil, e
 	}
@@ -262,7 +263,7 @@ func (elm *Action_33_DiamondsEngravedRecovery) Parse(buf []byte, seek uint32) (u
 	if e != nil {
 		return 0, e
 	}
-	seek, e = elm.TotalCostMei.Parse(buf, seek)
+	seek, e = elm.TotalCost.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -272,7 +273,7 @@ func (elm *Action_33_DiamondsEngravedRecovery) Parse(buf []byte, seek uint32) (u
 func (elm *Action_33_DiamondsEngravedRecovery) Size() uint32 {
 	return 2 +
 		elm.DiamondList.Size() +
-		elm.TotalCostMei.Size()
+		elm.TotalCost.Size()
 }
 
 func (*Action_33_DiamondsEngravedRecovery) RequestSignAddresses() []fields.Address {
@@ -303,26 +304,26 @@ func (act *Action_33_DiamondsEngravedRecovery) WriteInChainState(state interface
 		var dia = dias[i]
 		costmei, e := handleRecoveryEngravedOneDiamond(&mainAddr, dia, state)
 		if e != nil {
-			return fmt.Errorf("handleEngravedOneDiamond %s error: %s", dia.Name(), e)
+			return fmt.Errorf("handleRecoveryEngravedOneDiamond %s error: %s", dia.Name(), e)
 		}
 		ttcostmei += costmei
 		if e != nil {
-			return fmt.Errorf("handleEngravedOneDiamond %s error: %s", dia.Name(), e)
+			return fmt.Errorf("handleRecoveryEngravedOneDiamond %s error: %s", dia.Name(), e)
 		}
 	}
+	ttcost := fields.NewAmountByUnitMei(int64(ttcostmei))
 
 	// check cost
-	if uint16(act.TotalCostMei) < ttcostmei {
-		return fmt.Errorf("Engraved Diamond cost error need %d but got %d",
-			ttcostmei, act.TotalCostMei)
+	if act.TotalCost.LessThan(ttcost) {
+		return fmt.Errorf("Engraved Diamond cost error need %s but got %s",
+			ttcost.ToFinString(), act.TotalCost.ToFinString())
 	}
 
 	// sub main addr balance
-	var actttcost = fields.NewAmountByUnit248(int64(act.TotalCostMei))
-	e = DoSubBalanceFromChainStateV3(state, mainAddr, *actttcost)
+	e = DoSubBalanceFromChainState(state, mainAddr, *ttcost)
 	if e != nil {
 		return fmt.Errorf("Engraved Diamond main address balance need %s but not enough",
-			actttcost.ToFinString())
+			ttcost.ToFinString())
 	}
 
 	// Total supply statistics
@@ -330,8 +331,8 @@ func (act *Action_33_DiamondsEngravedRecovery) WriteInChainState(state interface
 	if e2 != nil {
 		return e2
 	}
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfDiamondEngravedBurning, actttcost.ToMei()) // Engraved burning
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningFeeTotal, actttcost.ToMei())        // Total burning
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfDiamondEngravedBurning, ttcost.ToMei()) // Engraved burning
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningTotal, ttcost.ToMei())           // Total burning
 	// update total supply
 	e7 := state.UpdateSetTotalSupply(totalsupply)
 	if e7 != nil {
@@ -392,9 +393,43 @@ func (act *Action_33_DiamondsEngravedRecovery) IsBurning90PersentTxFees() bool {
 /*
 return total cost
 */
-func handleEngravedOneDiamond(mainAddr *fields.Address, diamond fields.DiamondName, state interfaces.ChainStateOperation) (*fields.Amount, error) {
+func handleEngravedOneDiamond(mainAddr *fields.Address, diamond fields.DiamondName, content *fields.StringMax255, state interfaces.ChainStateOperation) (*fields.Amount, error) {
 
-	return nil, nil
+	var store = state.BlockStore()
+
+	cost := fields.NewEmptyAmount()
+
+	// load diamond
+	dia, err := state.Diamond(diamond)
+	if err != nil {
+		return nil, err
+	}
+	// check belong and status
+	err = CheckDiamondStatusNormalAndBelong(&diamond, dia, mainAddr)
+	if err != nil {
+		return nil, err
+	}
+	diaslt, err := store.ReadDiamond(diamond)
+	if err != nil {
+		return nil, err
+	}
+	engsz := diaslt.EngravedContents.Size()
+	if engsz >= 100 {
+		return nil, fmt.Errorf("The maximum number of inscriptions is 100")
+	}
+	if engsz >= 10 {
+		// burning cost bid fee 1/10
+		cost = fields.NewAmountByUnit(int64(diaslt.AverageBidBurnPrice), 247) // 1/10
+	}
+	// do engraved
+	diaslt.EngravedContents.Append(content)
+	// save
+	err = store.SaveDiamond(diaslt)
+	if err != nil {
+		return nil, err
+	}
+	// ok
+	return cost, nil
 }
 
 /*
@@ -402,5 +437,29 @@ return total cost
 */
 func handleRecoveryEngravedOneDiamond(mainAddr *fields.Address, diamond fields.DiamondName, state interfaces.ChainStateOperation) (uint16, error) {
 
-	return 0, nil
+	var store = state.BlockStore()
+
+	// load diamond
+	dia, err := state.Diamond(diamond)
+	if err != nil {
+		return 0, err
+	}
+	// check belong and status
+	err = CheckDiamondStatusNormalAndBelong(&diamond, dia, mainAddr)
+	if err != nil {
+		return 0, err
+	}
+	diaslt, err := store.ReadDiamond(diamond)
+	if err != nil {
+		return 0, err
+	}
+	// do recovery engraved
+	diaslt.EngravedContents = fields.CreateEmptyStringMax255List255() // set empty
+	// save
+	err = store.SaveDiamond(diaslt)
+	if err != nil {
+		return 0, err
+	}
+	// ok
+	return uint16(diaslt.AverageBidBurnPrice), nil
 }

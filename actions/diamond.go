@@ -510,7 +510,7 @@ func (act *Action_4_DiamondCreate) WriteinChainState(state interfacev2.ChainStat
 		diamondstore.AverageBidBurnPrice = 10 // Fixed to 10
 	} else {
 		bsnum := uint32(act.Number) - DiamondCreateBurning90PercentTxFeesAboveNumber
-		burnhac := totalsupply.Get(stores.TotalSupplyStoreTypeOfBurningFeeTotal)
+		burnhac := totalsupply.Get(stores.TotalSupplyStoreTypeOfBurningTotal)
 		bidprice := uint64(burnhac/float64(bsnum) + 0.99999999) // up 1
 		setprice := fields.VarUint2(bidprice)
 		if setprice < 1 {
@@ -941,13 +941,10 @@ func (act *Action_5_DiamondTransfer) WriteInChainState(state interfaces.ChainSta
 		return fmt.Errorf("Diamond <%s> not exist.", string(act.Diamond))
 	}
 	item := diaitem
-	// Check whether it is mortgaged and whether it can be transferred
-	if diaitem.Status != stores.DiamondStatusNormal {
-		return fmt.Errorf("Diamond <%s> has been mortgaged and cannot be transferred.", string(act.Diamond))
-	}
-	// Check which
-	if bytes.Compare(item.Address, trsMainAddress) != 0 {
-		return fmt.Errorf("Diamond <%s> not belong to belong_trs address.", string(act.Diamond))
+	// check belong and status
+	ckerr := CheckDiamondStatusNormalAndBelong(&act.Diamond, diaitem, &trsMainAddress)
+	if ckerr != nil {
+		return ckerr
 	}
 	// Transfer diamond
 	item.Address = act.ToAddress
@@ -1153,13 +1150,10 @@ func (act *Action_6_OutfeeQuantityDiamondTransfer) WriteInChainState(state inter
 			return fmt.Errorf("Quantity Diamond <%s> not exist.", string(diamond))
 		}
 		item := diaitem
-		// Check whether it is mortgaged and whether it can be transferred
-		if diaitem.Status != stores.DiamondStatusNormal {
-			return fmt.Errorf("Diamond <%s> has been mortgaged and cannot be transferred.", string(diamond))
-		}
-		// Check which
-		if bytes.Compare(item.Address, act.FromAddress) != 0 {
-			return fmt.Errorf("Diamond <%s> not belong to address '%s'", string(diamond), act.FromAddress.ToReadable())
+		// check belong and status
+		ckerr := CheckDiamondStatusNormalAndBelong(&diamond, diaitem, &act.FromAddress)
+		if ckerr != nil {
+			return ckerr
 		}
 		// Transfer diamond
 		item.Address = act.ToAddress
@@ -1282,3 +1276,14 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) GetDiamondNamesSplitByComma()
 }
 
 ///////////////////////////////////////////////////////////////////////
+
+func CheckDiamondStatusNormalAndBelong(name *fields.DiamondName, diaobj *stores.Diamond, belong *fields.Address) error {
+	if diaobj.Status != stores.DiamondStatusNormal {
+		return fmt.Errorf("Diamond %s status error: must be normal", name.Name())
+	}
+	if diaobj.Address.NotEqual(*belong) {
+		return fmt.Errorf("Diamond %s not belong to %s", name.Name(), belong.ToReadable())
+	}
+	// ok
+	return nil
+}

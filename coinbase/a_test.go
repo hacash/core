@@ -32,7 +32,7 @@ func Test1(t *testing.T) {
 func Test2(t *testing.T) {
 
 	mainaddr, _ := fields.CheckReadableAddress("1MzNY1oA3kfgYi75zquj3SRUPYztzXHzK9")
-	loan := fields.NewAmountByUnit248(100)
+	loan := fields.NewAmountByUnitMei(100)
 
 	for i := uint64(0); i < 210; i++ {
 		pdhei := i + 1

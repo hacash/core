@@ -201,13 +201,13 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteInChainState(state interf
 	}
 
 	// Deduct prepaid interest
-	e5 := DoSubBalanceFromChainStateV3(state, feeAddr, act.PreBurningInterestAmount)
+	e5 := DoSubBalanceFromChainState(state, feeAddr, act.PreBurningInterestAmount)
 	if e5 != nil {
 		return e5 // Insufficient bitcoin balance
 	}
 
 	// Increase lending quantity to balance
-	e6 := DoAddBalanceFromChainStateV3(state, feeAddr, act.LoanTotalAmount)
+	e6 := DoAddBalanceFromChainState(state, feeAddr, act.LoanTotalAmount)
 	if e6 != nil {
 		return e6
 	}
@@ -343,13 +343,13 @@ func (act *Action_17_BitcoinsSystemLendingCreate) WriteinChainState(state interf
 	}
 
 	// Deduct prepaid interest
-	e5 := DoSubBalanceFromChainState(state, feeAddr, act.PreBurningInterestAmount)
+	e5 := DoSubBalanceFromChainStateV2(state, feeAddr, act.PreBurningInterestAmount)
 	if e5 != nil {
 		return e5 // Insufficient bitcoin balance
 	}
 
 	// Increase lending quantity to balance
-	e6 := DoAddBalanceFromChainState(state, feeAddr, act.LoanTotalAmount)
+	e6 := DoAddBalanceFromChainStateV2(state, feeAddr, act.LoanTotalAmount)
 	if e6 != nil {
 		return e6
 	}
@@ -437,13 +437,13 @@ func (act *Action_17_BitcoinsSystemLendingCreate) RecoverChainState(state interf
 	}
 
 	// Increase in prepaid interest refunded
-	e = DoAddBalanceFromChainState(state, feeAddr, act.PreBurningInterestAmount)
+	e = DoAddBalanceFromChainStateV2(state, feeAddr, act.PreBurningInterestAmount)
 	if e != nil {
 		return e
 	}
 
 	// Decrease in return balance
-	e = DoSubBalanceFromChainState(state, feeAddr, act.LoanTotalAmount)
+	e = DoSubBalanceFromChainStateV2(state, feeAddr, act.LoanTotalAmount)
 	if e != nil {
 		return e
 	}
@@ -631,7 +631,7 @@ func (act *Action_18_BitcoinsSystemLendingRansom) WriteInChainState(state interf
 	}
 
 	// Redemption operation, deducting HAC balance (so as to check whether the balance is sufficient first)
-	e2 := DoSubBalanceFromChainStateV3(state, feeAddr, act.RansomAmount)
+	e2 := DoSubBalanceFromChainState(state, feeAddr, act.RansomAmount)
 	if e2 != nil {
 		return e2
 	}
@@ -735,7 +735,7 @@ func (act *Action_18_BitcoinsSystemLendingRansom) WriteinChainState(state interf
 	}
 
 	// Redemption operation, deducting HAC balance (so as to check whether the balance is sufficient first)
-	e2 := DoSubBalanceFromChainState(state, feeAddr, act.RansomAmount)
+	e2 := DoSubBalanceFromChainStateV2(state, feeAddr, act.RansomAmount)
 	if e2 != nil {
 		return e2
 	}
@@ -804,7 +804,7 @@ func (act *Action_18_BitcoinsSystemLendingRansom) RecoverChainState(state interf
 	}
 
 	// Back out redemption operation and increase HAC balance
-	e2 := DoAddBalanceFromChainState(state, feeAddr, act.RansomAmount)
+	e2 := DoAddBalanceFromChainStateV2(state, feeAddr, act.RansomAmount)
 	if e2 != nil {
 		return e2
 	}

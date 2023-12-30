@@ -206,7 +206,7 @@ func (act *Action_15_DiamondsSystemLendingCreate) WriteInChainState(state interf
 	}
 
 	// Total HAC pieces lent
-	totalAmt := fields.NewAmountByUnit248(totalLoanHAC)
+	totalAmt := fields.NewAmountByUnitMei(totalLoanHAC)
 	// Verification quantity
 	if totalAmt.NotEqual(&act.LoanTotalAmount) {
 		return fmt.Errorf("LoanTotalAmountMei must %s but got %s", totalAmt.ToFinString(), act.LoanTotalAmount.ToFinString())
@@ -219,7 +219,7 @@ func (act *Action_15_DiamondsSystemLendingCreate) WriteInChainState(state interf
 	}
 
 	// Mortgage successful, HAC balance issued
-	e10 := DoAddBalanceFromChainStateV3(state, feeAddr, act.LoanTotalAmount)
+	e10 := DoAddBalanceFromChainState(state, feeAddr, act.LoanTotalAmount)
 	if e10 != nil {
 		return e10
 	}
@@ -347,7 +347,7 @@ func (act *Action_15_DiamondsSystemLendingCreate) WriteinChainState(state interf
 	}
 
 	// Total HAC pieces lent
-	totalAmt := fields.NewAmountByUnit248(totalLoanHAC)
+	totalAmt := fields.NewAmountByUnitMei(totalLoanHAC)
 	// Verification quantity
 	if totalAmt.NotEqual(&act.LoanTotalAmount) {
 		return fmt.Errorf("LoanTotalAmountMei must %s but got %s", totalAmt.ToFinString(), act.LoanTotalAmount.ToFinString())
@@ -360,7 +360,7 @@ func (act *Action_15_DiamondsSystemLendingCreate) WriteinChainState(state interf
 	}
 
 	// Mortgage successful, HAC balance issued
-	e10 := DoAddBalanceFromChainState(state, feeAddr, act.LoanTotalAmount)
+	e10 := DoAddBalanceFromChainStateV2(state, feeAddr, act.LoanTotalAmount)
 	if e10 != nil {
 		return e10
 	}
@@ -442,7 +442,7 @@ func (act *Action_15_DiamondsSystemLendingCreate) RecoverChainState(state interf
 	}
 
 	// Retrieve HAC balance
-	e10 := DoSubBalanceFromChainState(state, feeAddr, act.LoanTotalAmount)
+	e10 := DoSubBalanceFromChainStateV2(state, feeAddr, act.LoanTotalAmount)
 	if e10 != nil {
 		return e10
 	}
@@ -621,7 +621,7 @@ func (act *Action_16_DiamondsSystemLendingRansom) WriteInChainState(state interf
 	}
 
 	// Redemption operation, deducting HAC balance (so as to check whether the balance is sufficient first)
-	e2 := DoSubBalanceFromChainStateV3(state, feeAddr, act.RansomAmount)
+	e2 := DoSubBalanceFromChainState(state, feeAddr, act.RansomAmount)
 	if e2 != nil {
 		return e2
 	}
@@ -753,7 +753,7 @@ func (act *Action_16_DiamondsSystemLendingRansom) WriteinChainState(state interf
 	}
 
 	// Redemption operation, deducting HAC balance (so as to check whether the balance is sufficient first)
-	e2 := DoSubBalanceFromChainState(state, feeAddr, act.RansomAmount)
+	e2 := DoSubBalanceFromChainStateV2(state, feeAddr, act.RansomAmount)
 	if e2 != nil {
 		return e2
 	}
@@ -878,7 +878,7 @@ func (act *Action_16_DiamondsSystemLendingRansom) RecoverChainState(state interf
 	}
 
 	// Withdrawal of HAc balance for redemption
-	e10 := DoAddBalanceFromChainState(state, feeAddr, act.RansomAmount)
+	e10 := DoAddBalanceFromChainStateV2(state, feeAddr, act.RansomAmount)
 	if e10 != nil {
 		return e10
 	}

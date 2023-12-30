@@ -10,7 +10,7 @@ import (
 
 const (
 	typeSizeMax   int = 32
-	typeSizeValid int = 21 // Currently available
+	typeSizeValid int = 22 // Currently available
 	// Diamonds
 	TotalSupplyStoreTypeOfDiamond uint8 = 0 // Number of diamonds excavated
 	// BTC
@@ -24,7 +24,7 @@ const (
 	TotalSupplyStoreTypeOfLocatedSATInChannel uint8 = 6 // Number of SATs currently effectively locked in the channel
 	TotalSupplyStoreTypeOfChannelOfOpening    uint8 = 7 // Number of channels currently on
 	// Destruction fee
-	TotalSupplyStoreTypeOfBurningFeeTotal uint8 = 8 // Handling charge combustion destruction HAC accumulation
+	TotalSupplyStoreTypeOfBurningTotal uint8 = 8 // Handling charge combustion destruction HAC accumulation
 	// Diamond lending
 	TotalSupplyStoreTypeOfSystemLendingDiamondCurrentMortgageCount      uint8 = 9  // Real time statistics of loan and mortgage amount of diamond system
 	TotalSupplyStoreTypeOfSystemLendingDiamondCumulationLoanHacAmount   uint8 = 10 // HAC daily flow quantity of diamond system mortgage cumulative lending
@@ -41,6 +41,7 @@ const (
 	TotalSupplyStoreTypeOfUsersLendingBurningOnePercentInterestHacAmount uint8 = 19 // 1% interest statistics of inter user loan system destruction
 	TotalSupplyStoreTypeOfDiamondBidBurningZhu                           uint8 = 20 // Diamond bidding fee burning part (unit:zhu)
 	TotalSupplyStoreTypeOfDiamondEngravedBurning                         uint8 = 21 // Diamond Engraved burning
+	TotalSupplyStoreTypeOfDiamondEngravedOperateCount                    uint8 = 22 // Diamond Engraved to do count
 
 	// TotalSupplyStoreTypeOfUsersLendingLendersInterestHacAmountCumulation uint8 = ... // 用户间借贷贷出方赚取的利息流水累计
 

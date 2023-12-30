@@ -480,7 +480,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteInChainState(state interfaces
 		}
 	}
 	// Deduct handling charges
-	return actions.DoSubBalanceFromChainStateV3(state, trs.Address, trs.Fee)
+	return actions.DoSubBalanceFromChainState(state, trs.Address, trs.Fee)
 }
 
 // 修改 / 恢复 状态数据库
@@ -504,7 +504,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) WriteinChainState(state interfacev
 		}
 	}
 	// Deduct handling charges
-	return actions.DoSubBalanceFromChainState(state, trs.Address, trs.Fee)
+	return actions.DoSubBalanceFromChainStateV2(state, trs.Address, trs.Fee)
 }
 
 func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RecoverChainState(state interfacev2.ChainStateOperation) error {
@@ -520,7 +520,7 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RecoverChainState(state interfacev
 		}
 	}
 	// Refund service charge
-	return actions.DoAddBalanceFromChainState(state, trs.Address, trs.Fee)
+	return actions.DoAddBalanceFromChainStateV2(state, trs.Address, trs.Fee)
 }
 
 // Service charge content: how many tokens per byte

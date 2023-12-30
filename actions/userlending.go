@@ -304,13 +304,13 @@ func (act *Action_19_UsersLendingCreate) WriteInChainState(state interfaces.Chai
 	}
 
 	// Interest on destruction, paid by the Lender
-	e10 := DoSubBalanceFromChainStateV3(state, act.LenderAddress, act.PreBurningInterestAmount)
+	e10 := DoSubBalanceFromChainState(state, act.LenderAddress, act.PreBurningInterestAmount)
 	if e10 != nil {
 		return e10 // Insufficient interest balance destroyed
 	}
 
 	// Mortgage succeeded, transfer balance: lender - > mortgage Borrower
-	e11 := DoSimpleTransferFromChainStateV3(state, act.LenderAddress, act.MortgagorAddress, act.LoanTotalAmount)
+	e11 := DoSimpleTransferFromChainState(state, act.LenderAddress, act.MortgagorAddress, act.LoanTotalAmount)
 	if e11 != nil {
 		return e11 // Insufficient lender balance
 	}
@@ -502,13 +502,13 @@ func (act *Action_19_UsersLendingCreate) WriteinChainState(state interfacev2.Cha
 	}
 
 	// Interest on destruction, paid by the Lender
-	e10 := DoSubBalanceFromChainState(state, act.LenderAddress, act.PreBurningInterestAmount)
+	e10 := DoSubBalanceFromChainStateV2(state, act.LenderAddress, act.PreBurningInterestAmount)
 	if e10 != nil {
 		return e10 // Insufficient interest balance destroyed
 	}
 
 	// Mortgage succeeded, transfer balance: lender - > mortgage Borrower
-	e11 := DoSimpleTransferFromChainState(state, act.LenderAddress, act.MortgagorAddress, act.LoanTotalAmount)
+	e11 := DoSimpleTransferFromChainStateV2(state, act.LenderAddress, act.MortgagorAddress, act.LoanTotalAmount)
 	if e11 != nil {
 		return e11 // Insufficient lender balance
 	}
@@ -619,10 +619,10 @@ func (act *Action_19_UsersLendingCreate) RecoverChainState(state interfacev2.Cha
 	}
 
 	// Increase in interest for rollback destruction
-	DoAddBalanceFromChainState(state, act.LenderAddress, act.PreBurningInterestAmount)
+	DoAddBalanceFromChainStateV2(state, act.LenderAddress, act.PreBurningInterestAmount)
 
 	// Mortgage succeeded, transfer balance: refund the lender < - Mortgage Borrower
-	DoSimpleTransferFromChainState(state, act.MortgagorAddress, act.LenderAddress, act.LoanTotalAmount)
+	DoSimpleTransferFromChainStateV2(state, act.MortgagorAddress, act.LenderAddress, act.LoanTotalAmount)
 
 	// Delete mortgage loan contract
 	state.UserLendingDelete(act.LendingID)
@@ -839,7 +839,7 @@ func (act *Action_20_UsersLendingRansom) WriteInChainState(state interfaces.Chai
 	} else {
 		// Redemption by mortgagor or third party
 		// Transfer HAC and pay ransom
-		e2 := DoSimpleTransferFromChainStateV3(state, feeAddr, usrlendObj.LenderAddress, act.RansomAmount)
+		e2 := DoSimpleTransferFromChainState(state, feeAddr, usrlendObj.LenderAddress, act.RansomAmount)
 		if e2 != nil {
 			return e2
 		}
@@ -986,7 +986,7 @@ func (act *Action_20_UsersLendingRansom) WriteinChainState(state interfacev2.Cha
 	} else {
 		// Redemption by mortgagor or third party
 		// Transfer HAC and pay ransom
-		e2 := DoSimpleTransferFromChainState(state, feeAddr, usrlendObj.LenderAddress, act.RansomAmount)
+		e2 := DoSimpleTransferFromChainStateV2(state, feeAddr, usrlendObj.LenderAddress, act.RansomAmount)
 		if e2 != nil {
 			return e2
 		}
@@ -1082,7 +1082,7 @@ func (act *Action_20_UsersLendingRansom) RecoverChainState(state interfacev2.Cha
 		// The lender is not required to pay any ransom
 	} else {
 		// Transfer HAC fallback HAC
-		DoSimpleTransferFromChainState(state, usrlendObj.LenderAddress, usrlendObj.MortgagorAddress, act.RansomAmount)
+		DoSimpleTransferFromChainStateV2(state, usrlendObj.LenderAddress, usrlendObj.MortgagorAddress, act.RansomAmount)
 	}
 
 	// Operational redemption or seizure

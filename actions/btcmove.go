@@ -203,7 +203,7 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 	}
 
 	// Additional issuance of HAC
-	totaladdhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount))
+	totaladdhacamt := fields.NewAmountByUnitMei(int64(act.AdditionalTotalHacAmount))
 	// The lock time shall be calculated according to the first one
 	// Judge whether to lock the warehouse to lockbls linearly
 	lockweek, weekhei := moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
@@ -227,7 +227,7 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 		lockbls.LinearBlockNumber = fields.VarUint3(weekhei) // 2000
 		lockbls.TotalLockAmount = *totaladdhacamt            // General lock
 		lockbls.BalanceAmount = *totaladdhacamt              // balance
-		wklkhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount) / int64(lockweek))
+		wklkhacamt := fields.NewAmountByUnitMei(int64(act.AdditionalTotalHacAmount) / int64(lockweek))
 		lockbls.LinearReleaseAmount = *wklkhacamt // Coins that can be unlocked every week
 		// stores
 		// Create linear lock
@@ -239,7 +239,7 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 	} else {
 
 		// Do not lock the position, and directly transfer to the balance
-		e1 := DoAddBalanceFromChainStateV3(state, act.OriginAddress, *totaladdhacamt)
+		e1 := DoAddBalanceFromChainState(state, act.OriginAddress, *totaladdhacamt)
 		if e1 != nil {
 			return e1
 		}
@@ -342,7 +342,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfacev2.ChainSta
 			return err
 		}
 	*/
-	totaladdhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount))
+	totaladdhacamt := fields.NewAmountByUnitMei(int64(act.AdditionalTotalHacAmount))
 	// The lock time shall be calculated according to the first one
 	// Judge whether to lock the warehouse to lockbls linearly
 	lockweek, weekhei := moveBtcLockWeekByIdx(int64(act.BitcoinEffectiveGenesis) + 1)
@@ -366,7 +366,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfacev2.ChainSta
 		lockbls.LinearBlockNumber = fields.VarUint3(weekhei) // 2000
 		lockbls.TotalLockAmount = *totaladdhacamt            // General lock
 		lockbls.BalanceAmount = *totaladdhacamt              // balance
-		wklkhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount) / int64(lockweek))
+		wklkhacamt := fields.NewAmountByUnitMei(int64(act.AdditionalTotalHacAmount) / int64(lockweek))
 		lockbls.LinearReleaseAmount = *wklkhacamt // Coins that can be unlocked every week
 		// stores
 		// Create linear lock
@@ -375,7 +375,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfacev2.ChainSta
 	} else {
 
 		// Do not lock the position, and directly transfer to the balance
-		e1 := DoAddBalanceFromChainState(state, act.OriginAddress, *totaladdhacamt)
+		e1 := DoAddBalanceFromChainStateV2(state, act.OriginAddress, *totaladdhacamt)
 		if e1 != nil {
 			return e1
 		}
@@ -434,8 +434,8 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfacev2.ChainSta
 				return err
 			}
 		*/
-		addhacamt := fields.NewAmountByUnit248(int64(act.AdditionalTotalHacAmount))
-		e1 := DoSubBalanceFromChainState(state, act.OriginAddress, *addhacamt)
+		addhacamt := fields.NewAmountByUnitMei(int64(act.AdditionalTotalHacAmount))
+		e1 := DoSubBalanceFromChainStateV2(state, act.OriginAddress, *addhacamt)
 		if e1 != nil {
 			return e1
 		}

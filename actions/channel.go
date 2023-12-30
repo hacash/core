@@ -193,11 +193,11 @@ func (act *Action_2_OpenPaymentChannel) WriteInChainState(state interfaces.Chain
 			storeItem.ArbitrationLockBlock = fields.VarUint2(uint16(20))
 		}
 		// Deduction balance
-		e = DoSubBalanceFromChainStateV3(state, act.LeftAddress, act.LeftAmount)
+		e = DoSubBalanceFromChainState(state, act.LeftAddress, act.LeftAmount)
 		if e != nil {
 			return e
 		}
-		e = DoSubBalanceFromChainStateV3(state, act.RightAddress, act.RightAmount)
+		e = DoSubBalanceFromChainState(state, act.RightAddress, act.RightAmount)
 		if e != nil {
 			return e
 		}
@@ -307,11 +307,11 @@ func (act *Action_2_OpenPaymentChannel) WriteinChainState(state interfacev2.Chai
 		storeItem.ArbitrationLockBlock = fields.VarUint2(uint16(20))
 	}
 	// Deduction balance
-	e = DoSubBalanceFromChainState(state, act.LeftAddress, act.LeftAmount)
+	e = DoSubBalanceFromChainStateV2(state, act.LeftAddress, act.LeftAmount)
 	if e != nil {
 		return e
 	}
-	e = DoSubBalanceFromChainState(state, act.RightAddress, act.RightAmount)
+	e = DoSubBalanceFromChainStateV2(state, act.RightAddress, act.RightAmount)
 	if e != nil {
 		return e
 	}
@@ -354,8 +354,8 @@ func (act *Action_2_OpenPaymentChannel) RecoverChainState(state interfacev2.Chai
 	}
 
 	// Restore balance
-	DoAddBalanceFromChainState(state, act.LeftAddress, act.LeftAmount)
-	DoAddBalanceFromChainState(state, act.RightAddress, act.RightAmount)
+	DoAddBalanceFromChainStateV2(state, act.LeftAddress, act.LeftAmount)
+	DoAddBalanceFromChainStateV2(state, act.RightAddress, act.RightAmount)
 	// Total supply statistics
 	totalsupply, e2 := state.ReadTotalSupply()
 	if e2 != nil {
@@ -1114,11 +1114,11 @@ func (act *Action_31_OpenPaymentChannelWithSatoshi) WriteinChainState(state inte
 			storeItem.ArbitrationLockBlock = fields.VarUint2(uint16(20))
 		}
 		// Deduction balance
-		e = DoSubBalanceFromChainState(state, act.LeftAddress, act.LeftAmount)
+		e = DoSubBalanceFromChainStateV2(state, act.LeftAddress, act.LeftAmount)
 		if e != nil {
 			return e
 		}
-		e = DoSubBalanceFromChainState(state, act.RightAddress, act.RightAmount)
+		e = DoSubBalanceFromChainStateV2(state, act.RightAddress, act.RightAmount)
 		if e != nil {
 			return e
 		}
@@ -1283,14 +1283,14 @@ func openPaymentChannelWriteinChainState(state interfaces.ChainStateOperation,
 	}
 	// Deduction balance
 	if leftAmount.IsPositive() {
-		e = DoSubBalanceFromChainStateV3(state, leftAddress, leftAmount)
+		e = DoSubBalanceFromChainState(state, leftAddress, leftAmount)
 		if e != nil {
 			return e
 		}
 
 	}
 	if rightAmount.IsPositive() {
-		e = DoSubBalanceFromChainStateV3(state, rightAddress, rightAmount)
+		e = DoSubBalanceFromChainState(state, rightAddress, rightAmount)
 		if e != nil {
 			return e
 		}
@@ -1381,11 +1381,11 @@ func closePaymentChannelWriteinChainState(state interfacev2.ChainStateOperation,
 	}
 	// Increase the balance (withdraw the locked amount and interest from the channel)
 	// HAC
-	e = DoAddBalanceFromChainState(state, paychan.LeftAddress, *leftAmount)
+	e = DoAddBalanceFromChainStateV2(state, paychan.LeftAddress, *leftAmount)
 	if e != nil {
 		return e
 	}
-	e = DoAddBalanceFromChainState(state, paychan.RightAddress, *rightAmount)
+	e = DoAddBalanceFromChainStateV2(state, paychan.RightAddress, *rightAmount)
 	if e != nil {
 		return e
 	}
@@ -1488,11 +1488,11 @@ func closePaymentChannelRecoverChainState_deprecated(state interfacev2.ChainStat
 		return e11
 	}
 	// Deduct the balance (put the amount back into the channel)
-	e = DoSubBalanceFromChainState(state, paychan.LeftAddress, *leftAmount)
+	e = DoSubBalanceFromChainStateV2(state, paychan.LeftAddress, *leftAmount)
 	if e != nil {
 		return e
 	}
-	e = DoSubBalanceFromChainState(state, paychan.RightAddress, *rightAmount)
+	e = DoSubBalanceFromChainStateV2(state, paychan.RightAddress, *rightAmount)
 	if e != nil {
 		return e
 	}
@@ -1602,11 +1602,11 @@ func closePaymentChannelWriteinChainStateV3(state interfaces.ChainStateOperation
 	}
 	// Increase the balance (withdraw the locked amount and interest from the channel)
 	// HAC
-	e = DoAddBalanceFromChainStateV3(state, paychan.LeftAddress, *leftAmount)
+	e = DoAddBalanceFromChainState(state, paychan.LeftAddress, *leftAmount)
 	if e != nil {
 		return e
 	}
-	e = DoAddBalanceFromChainStateV3(state, paychan.RightAddress, *rightAmount)
+	e = DoAddBalanceFromChainState(state, paychan.RightAddress, *rightAmount)
 	if e != nil {
 		return e
 	}

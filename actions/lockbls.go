@@ -166,7 +166,7 @@ func (act *Action_9_LockblsCreate) WriteInChainState(state interfaces.ChainState
 	lockbls.BalanceAmount = act.TotalStockAmount
 	lockbls.LinearReleaseAmount = act.LinearReleaseAmount
 	// Deduct payment
-	e1 := DoSubBalanceFromChainStateV3(state, act.PaymentAddress, act.TotalStockAmount)
+	e1 := DoSubBalanceFromChainState(state, act.PaymentAddress, act.TotalStockAmount)
 	if e1 != nil {
 		return e1
 	}
@@ -235,7 +235,7 @@ func (act *Action_9_LockblsCreate) WriteinChainState(state interfacev2.ChainStat
 	lockbls.BalanceAmount = act.TotalStockAmount
 	lockbls.LinearReleaseAmount = act.LinearReleaseAmount
 	// Deduct payment
-	e1 := DoSubBalanceFromChainState(state, act.PaymentAddress, act.TotalStockAmount)
+	e1 := DoSubBalanceFromChainStateV2(state, act.PaymentAddress, act.TotalStockAmount)
 	if e1 != nil {
 		return e1
 	}
@@ -255,7 +255,7 @@ func (act *Action_9_LockblsCreate) RecoverChainState(state interfacev2.ChainStat
 		panic("Action belong to transaction not be nil !")
 	}
 	// Fallback HAC
-	e1 := DoAddBalanceFromChainState(state, act.PaymentAddress, act.TotalStockAmount)
+	e1 := DoAddBalanceFromChainStateV2(state, act.PaymentAddress, act.TotalStockAmount)
 	if e1 != nil {
 		return e1
 	}
@@ -431,7 +431,7 @@ func (act *Action_10_LockblsRelease) WriteInChainState(state interfaces.ChainSta
 		}
 	}
 	// Plus balance
-	return DoAddBalanceFromChainStateV3(state, lockbls.MasterAddress, act.ReleaseAmount)
+	return DoAddBalanceFromChainState(state, lockbls.MasterAddress, act.ReleaseAmount)
 }
 
 func (act *Action_10_LockblsRelease) WriteinChainState(state interfacev2.ChainStateOperation) error {
@@ -524,7 +524,7 @@ func (act *Action_10_LockblsRelease) WriteinChainState(state interfacev2.ChainSt
 		}
 	}
 	// Plus balance
-	return DoAddBalanceFromChainState(state, lockbls.MasterAddress, act.ReleaseAmount)
+	return DoAddBalanceFromChainStateV2(state, lockbls.MasterAddress, act.ReleaseAmount)
 }
 
 func (act *Action_10_LockblsRelease) RecoverChainState(state interfacev2.ChainStateOperation) error {
@@ -565,7 +565,7 @@ func (act *Action_10_LockblsRelease) RecoverChainState(state interfacev2.ChainSt
 		}
 	}
 	// Return balance
-	return DoSubBalanceFromChainState(state, lockbls.MasterAddress, act.ReleaseAmount)
+	return DoSubBalanceFromChainStateV2(state, lockbls.MasterAddress, act.ReleaseAmount)
 }
 
 // Set belongs to long_ trs
