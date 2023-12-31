@@ -271,7 +271,6 @@ func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainState
 		Nonce:                act.Nonce,
 		CustomMessage:        act.GetRealCustomMessage(),
 		LifeGene:             lifeGene,
-		EngravedContents:     fields.CreateEmptyStringMax255List255(),
 	}
 
 	// Write service charge quotation

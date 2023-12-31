@@ -20,7 +20,7 @@ import (
 type Action_32_DiamondsEngraved struct {
 	//
 	DiamondList     fields.DiamondListMaxLen200
-	EngravedType    fields.VarUint1 //  0:String  1:CompressedDict  2:MD5  3:SHA256 ....
+	EngravedType    fields.VarUint1 //  0:String  1:CompressedDict  128:MD5  129:SHA256 ....
 	EngravedContent fields.StringMax255
 	TotalCost       fields.Amount // HAC amount for burning
 
@@ -113,6 +113,19 @@ func (act *Action_32_DiamondsEngraved) WriteInChainState(state interfaces.ChainS
 
 	if act.TotalCost.Size() > 4 {
 		return fmt.Errorf("TotalCost amount size cannot over 4 bytes")
+	}
+
+	var content_type = uint8(act.EngravedType)
+	var content = act.EngravedContent.Str
+	var content_len = len(content)
+	// check String and Visible
+	if content_len > 64 {
+		return fmt.Errorf("EngravedContent max size is 64")
+	}
+	if content_type < 128 {
+		if !fields.IsValidVisibleString(content) {
+			return fmt.Errorf("EngravedContent must be visible string")
+		}
 	}
 
 	mainAddr := act.belong_trs_v3.GetAddress()
@@ -413,21 +426,22 @@ func handleEngravedOneDiamond(mainAddr *fields.Address, diamond fields.DiamondNa
 	if err != nil {
 		return nil, err
 	}
-	engsz := diaslt.EngravedContents.Size()
-	if engsz >= 100 {
-		return nil, fmt.Errorf("The maximum number of inscriptions is 100")
+	engsz := int(dia.EngravedContents.Count)
+	if engsz >= 200 {
+		return nil, fmt.Errorf("The maximum number of inscriptions is 200")
 	}
 	if engsz >= 10 {
 		// burning cost bid fee 1/10
 		cost = fields.NewAmountByUnit(int64(diaslt.AverageBidBurnPrice), 247) // 1/10
 	}
 	// do engraved
-	diaslt.EngravedContents.Append(content)
+	dia.EngravedContents.Append(content)
 	// save
-	err = store.SaveDiamond(diaslt)
+	err = state.DiamondSet(diamond, dia)
 	if err != nil {
 		return nil, err
 	}
+
 	// ok
 	return cost, nil
 }
@@ -454,9 +468,9 @@ func handleRecoveryEngravedOneDiamond(mainAddr *fields.Address, diamond fields.D
 		return 0, err
 	}
 	// do recovery engraved
-	diaslt.EngravedContents = fields.CreateEmptyStringMax255List255() // set empty
+	dia.EngravedContents = fields.CreateEmptyStringMax255List255() // set empty
 	// save
-	err = store.SaveDiamond(diaslt)
+	err = state.DiamondSet(diamond, dia)
 	if err != nil {
 		return 0, err
 	}

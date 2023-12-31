@@ -14,6 +14,7 @@ import (
 
 // Global development test tag
 var TestDebugLocalDevelopmentMark bool = false
+var NotCheckBlockDifficultyForMiner = false
 var TransactionSystemCheckChainID uint64 = 0 // fork or test chain ID
 
 type Inicnf struct {

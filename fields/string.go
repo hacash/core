@@ -3,6 +3,7 @@ package fields
 import (
 	"bytes"
 	"fmt"
+	"unicode/utf8"
 )
 
 // max length = 255
@@ -177,4 +178,20 @@ func (elm *StringMax16777215) Parse(buf []byte, seek uint32) (uint32, error) {
 		seek = end
 	}
 	return seek, nil
+}
+
+///////////////////////////////////////////////////////
+
+func IsValidVisibleString(str string) bool {
+	ok := utf8.ValidString(str)
+	if !ok {
+		return false
+	}
+	for i := 0; i < len(str); i++ {
+		a := str[i]
+		if a < 32 || a > 126 {
+			return false // not can show
+		}
+	}
+	return true
 }
