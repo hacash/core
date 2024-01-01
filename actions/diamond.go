@@ -139,10 +139,22 @@ func (elm *Action_4_DiamondCreate) RequestSignAddresses() []fields.Address {
 	return []fields.Address{} // no sign
 }
 
+//var test_dia_bid_burning float64 = 0.0
+
 func (act *Action_4_DiamondCreate) WriteInChainState(state interfaces.ChainStateOperation) error {
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
+
+	/* // test get burning
+	pdhei := state.GetPendingBlockHeight()
+	if pdhei > 408170 {
+		test_dia_bid_burning += act.belong_trs_v3.GetFee().ToMei()
+		if pdhei % 1000 == 0 || pdhei > 509700 {
+			fmt.Println("- - - - dia_bid_burning:", test_dia_bid_burning)
+		}
+	}
+	*/
 
 	blockstore := state.BlockStore()
 
