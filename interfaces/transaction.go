@@ -18,6 +18,7 @@ type Transaction interface {
 	// hash data
 	Hash() fields.Hash        // Hash without service charge
 	HashWithFee() fields.Hash // inclued fee amount
+	ClearHash()
 
 	// Addresses that need to verify signatures
 	RequestSignAddresses(appends []fields.Address, dropfeeaddr bool) ([]fields.Address, error)

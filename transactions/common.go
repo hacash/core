@@ -6,15 +6,16 @@ import (
 	"github.com/hacash/core/account"
 	"github.com/hacash/core/actions"
 	"github.com/hacash/core/fields"
+	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
 	"strings"
 )
 
 // Take out the action created by the diamond
-func CheckoutAction_4_DiamondCreateFromTx(tx interfacev2.Transaction) *actions.Action_4_DiamondCreate {
+func CheckoutAction_4_DiamondCreateFromTx(tx interfaces.Transaction) *actions.Action_4_DiamondCreate {
 
 	// do add is diamond ?
-	for _, act := range tx.GetActions() {
+	for _, act := range tx.GetActionList() {
 		if dcact, ok := act.(*actions.Action_4_DiamondCreate); ok {
 			// is diamond create trs
 			return dcact // successfully !
