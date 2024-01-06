@@ -410,12 +410,17 @@ func handleEngravedOneDiamond(mainAddr *fields.Address, diamond fields.DiamondNa
 
 	var store = state.BlockStore()
 
+	curblkhei := state.GetPendingBlockHeight()
 	cost := fields.NewEmptyAmount()
 
 	// load diamond
 	dia, err := state.Diamond(diamond)
 	if err != nil {
 		return nil, err
+	}
+	if 1000+uint64(dia.EngravedPrevBlockHeight) > curblkhei &&
+		false == sys.TestDebugLocalDevelopmentMark {
+		return nil, fmt.Errorf("Only one inscription can be made every 1000 blocks")
 	}
 	// check belong and status
 	err = CheckDiamondStatusNormalAndBelong(&diamond, dia, mainAddr)
@@ -427,7 +432,7 @@ func handleEngravedOneDiamond(mainAddr *fields.Address, diamond fields.DiamondNa
 		return nil, err
 	}
 	engsz := int(dia.EngravedContents.Count)
-	if engsz >= 200 {
+	if engsz > 200 {
 		return nil, fmt.Errorf("The maximum number of inscriptions is 200")
 	}
 	if engsz >= 10 {
@@ -435,6 +440,7 @@ func handleEngravedOneDiamond(mainAddr *fields.Address, diamond fields.DiamondNa
 		cost = fields.NewAmountByUnit(int64(diaslt.AverageBidBurnPrice), 247) // 1/10
 	}
 	// do engraved
+	dia.EngravedPrevBlockHeight = fields.BlockHeight(curblkhei)
 	dia.EngravedContents.Append(content)
 	// save
 	err = state.DiamondSet(diamond, dia)
@@ -468,6 +474,7 @@ func handleRecoveryEngravedOneDiamond(mainAddr *fields.Address, diamond fields.D
 		return 0, err
 	}
 	// do recovery engraved
+	dia.EngravedPrevBlockHeight = fields.BlockHeight(0)            // reset
 	dia.EngravedContents = fields.CreateEmptyStringMax255List255() // set empty
 	// save
 	err = state.DiamondSet(diamond, dia)
