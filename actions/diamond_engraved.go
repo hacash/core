@@ -118,7 +118,7 @@ func (act *Action_32_DiamondsEngraved) WriteInChainState(state interfaces.ChainS
 	if content_len > 64 {
 		return fmt.Errorf("EngravedContent max size is 64")
 	}
-	if content_type < 128 {
+	if content_type <= 50 {
 		if !fields.IsValidVisibleString(content) {
 			return fmt.Errorf("EngravedContent must be visible string")
 		}
@@ -305,7 +305,7 @@ func (act *Action_33_DiamondsEngravedRecovery) WriteInChainState(state interface
 	if dianum > 200 {
 		return fmt.Errorf("Diamonds cannot over 200")
 	}
-	var ttcostmei uint16 = 0
+	var ttcostmei uint32 = 0
 	var e error = nil
 	for i := 0; i < dianum; i++ {
 		var dia = dias[i]
@@ -428,7 +428,7 @@ func handleEngravedOneDiamond(mainAddr *fields.Address, diamond fields.DiamondNa
 		return nil, err
 	}
 	engsz := int(dia.EngravedContents.Count)
-	if engsz > 200 {
+	if engsz >= 200 {
 		return nil, fmt.Errorf("The maximum number of inscriptions is 200")
 	}
 	if engsz >= 10 {
@@ -451,7 +451,7 @@ func handleEngravedOneDiamond(mainAddr *fields.Address, diamond fields.DiamondNa
 /*
 return total cost
 */
-func handleRecoveryEngravedOneDiamond(mainAddr *fields.Address, diamond fields.DiamondName, state interfaces.ChainStateOperation) (uint16, error) {
+func handleRecoveryEngravedOneDiamond(mainAddr *fields.Address, diamond fields.DiamondName, state interfaces.ChainStateOperation) (uint32, error) {
 
 	var store = state.BlockStore()
 
@@ -459,6 +459,9 @@ func handleRecoveryEngravedOneDiamond(mainAddr *fields.Address, diamond fields.D
 	dia, err := state.Diamond(diamond)
 	if err != nil {
 		return 0, err
+	}
+	if dia.EngravedContents.Count <= 0 {
+		return 0, fmt.Errorf("cannot find any inscriptions in HACD %s", diamond.Name())
 	}
 	// check belong and status
 	err = CheckDiamondStatusNormalAndBelong(&diamond, dia, mainAddr)
@@ -478,5 +481,5 @@ func handleRecoveryEngravedOneDiamond(mainAddr *fields.Address, diamond fields.D
 		return 0, err
 	}
 	// ok
-	return uint16(diaslt.AverageBidBurnPrice), nil
+	return uint32(diaslt.AverageBidBurnPrice), nil
 }
