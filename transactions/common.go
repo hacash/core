@@ -147,9 +147,9 @@ func CreateOneTxOfHACDEngraved(mainacc *account.Account, hacdlistsplitcomma stri
 		}
 	} else {
 		if eng_len == 16 {
-			eng_type = 128 // MD5
+			eng_type = 51 // MD5
 		} else if eng_len == 32 {
-			eng_type = 129 // SHA256
+			eng_type = 52 // SHA256
 		}
 	}
 	if eng_len == -1 {

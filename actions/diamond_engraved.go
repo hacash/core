@@ -21,7 +21,7 @@ type Action_32_DiamondsEngraved struct {
 	//
 	DiamondList     fields.DiamondListMaxLen200
 	ProtocolCost    fields.Amount   // HAC amount for burning
-	EngravedType    fields.VarUint1 //  0:String  1:CompressedDict  128:MD5  129:SHA256 ....
+	EngravedType    fields.VarUint1 //  0:String  1:CompressedDict  51:MD5  52:SHA256 ....
 	EngravedContent fields.StringMax255
 
 	// data ptr
