@@ -161,9 +161,9 @@ func CreateOneTxOfHACDEngraved(mainacc *account.Account, hacdlistsplitcomma stri
 	newTrs.Fee = *fee                                          // set fee
 	tranact := &actions.Action_32_DiamondsEngraved{
 		DiamondList:     *diamonds,
+		ProtocolCost:    *insfee,
 		EngravedType:    fields.VarUint1(eng_type),
 		EngravedContent: fields.CreateStringMax255(content),
-		TotalCost:       *insfee,
 	}
 	e9 := newTrs.AppendAction(tranact)
 	if e9 != nil {
@@ -194,8 +194,8 @@ func CreateOneTxOfHACDEngravedRecovery(mainacc *account.Account, hacdlistsplitco
 	newTrs.Timestamp = fields.BlockTxTimestamp(timestamp)      // Use timestamp
 	newTrs.Fee = *fee                                          // set fee
 	tranact := &actions.Action_33_DiamondsEngravedRecovery{
-		DiamondList: *diamonds,
-		TotalCost:   *insfee,
+		DiamondList:  *diamonds,
+		ProtocolCost: *insfee,
 	}
 	e9 := newTrs.AppendAction(tranact)
 	if e9 != nil {

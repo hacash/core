@@ -20,9 +20,9 @@ import (
 type Action_32_DiamondsEngraved struct {
 	//
 	DiamondList     fields.DiamondListMaxLen200
+	ProtocolCost    fields.Amount   // HAC amount for burning
 	EngravedType    fields.VarUint1 //  0:String  1:CompressedDict  128:MD5  129:SHA256 ....
 	EngravedContent fields.StringMax255
-	TotalCost       fields.Amount // HAC amount for burning
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
@@ -49,15 +49,15 @@ func (elm *Action_32_DiamondsEngraved) Serialize() ([]byte, error) {
 	if e != nil {
 		return nil, e
 	}
-	b2, e := elm.EngravedType.Serialize()
+	b2, e := elm.ProtocolCost.Serialize()
 	if e != nil {
 		return nil, e
 	}
-	b3, e := elm.EngravedContent.Serialize()
+	b3, e := elm.EngravedType.Serialize()
 	if e != nil {
 		return nil, e
 	}
-	b4, e := elm.TotalCost.Serialize()
+	b4, e := elm.EngravedContent.Serialize()
 	if e != nil {
 		return nil, e
 	}
@@ -74,15 +74,15 @@ func (elm *Action_32_DiamondsEngraved) Parse(buf []byte, seek uint32) (uint32, e
 	if e != nil {
 		return 0, e
 	}
+	seek, e = elm.ProtocolCost.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
 	seek, e = elm.EngravedType.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
 	seek, e = elm.EngravedContent.Parse(buf, seek)
-	if e != nil {
-		return 0, e
-	}
-	seek, e = elm.TotalCost.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -92,9 +92,9 @@ func (elm *Action_32_DiamondsEngraved) Parse(buf []byte, seek uint32) (uint32, e
 func (elm *Action_32_DiamondsEngraved) Size() uint32 {
 	return 2 +
 		elm.DiamondList.Size() +
+		elm.ProtocolCost.Size() +
 		elm.EngravedType.Size() +
-		elm.EngravedContent.Size() +
-		elm.TotalCost.Size()
+		elm.EngravedContent.Size()
 }
 
 func (*Action_32_DiamondsEngraved) RequestSignAddresses() []fields.Address {
@@ -103,16 +103,12 @@ func (*Action_32_DiamondsEngraved) RequestSignAddresses() []fields.Address {
 
 func (act *Action_32_DiamondsEngraved) WriteInChainState(state interfaces.ChainStateOperation) error {
 
-	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // Waiting for review is not enabled yet
-	}
-
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
 
-	if act.TotalCost.Size() > 4 {
-		return fmt.Errorf("TotalCost amount size cannot over 4 bytes")
+	if act.ProtocolCost.Size() > 4 {
+		return fmt.Errorf("ProtocolCost amount size cannot over 4 bytes")
 	}
 
 	var content_type = uint8(act.EngravedType)
@@ -151,16 +147,18 @@ func (act *Action_32_DiamondsEngraved) WriteInChainState(state interfaces.ChainS
 	}
 
 	// check cost
-	if act.TotalCost.LessThan(ttcost) {
+	if act.ProtocolCost.LessThan(ttcost) {
 		return fmt.Errorf("Engraved Diamond cost error need %s but got %s",
-			ttcost.ToFinString(), act.TotalCost.ToFinString())
+			ttcost.ToFinString(), act.ProtocolCost.ToFinString())
 	}
 
 	// sub main addr balance
-	e = DoSubBalanceFromChainState(state, mainAddr, act.TotalCost)
-	if e != nil {
-		return fmt.Errorf("Engraved Diamond main address balance need %s but not enough",
-			act.TotalCost.ToFinString())
+	if act.ProtocolCost.IsNotEmpty() {
+		e = DoSubBalanceFromChainState(state, mainAddr, act.ProtocolCost)
+		if e != nil {
+			return fmt.Errorf("Engraved Diamond main address balance need %s but not enough",
+				act.ProtocolCost.ToFinString())
+		}
 	}
 
 	// Total supply statistics
@@ -169,8 +167,8 @@ func (act *Action_32_DiamondsEngraved) WriteInChainState(state interfaces.ChainS
 		return e2
 	}
 	totalsupply.DoAddUint(stores.TotalSupplyStoreTypeOfDiamondEngravedOperateCount, uint64(act.DiamondList.Count)) //
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfDiamondEngravedBurning, act.TotalCost.ToMei())                  // Engraved burning
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningTotal, act.TotalCost.ToMei())                            // Total burning
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfDiamondEngravedBurning, act.ProtocolCost.ToMei())               // Engraved burning
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningTotal, act.ProtocolCost.ToMei())                         // Total burning
 	// update total supply
 	e7 := state.UpdateSetTotalSupply(totalsupply)
 	if e7 != nil {
@@ -233,8 +231,8 @@ func (act *Action_32_DiamondsEngraved) IsBurning90PersentTxFees() bool {
 // Diamond engraved recovery
 type Action_33_DiamondsEngravedRecovery struct {
 	//
-	DiamondList fields.DiamondListMaxLen200
-	TotalCost   fields.Amount // HAC number for burning
+	DiamondList  fields.DiamondListMaxLen200
+	ProtocolCost fields.Amount // HAC number for burning
 
 	// data ptr
 	belong_trs    interfacev2.Transaction
@@ -261,7 +259,7 @@ func (elm *Action_33_DiamondsEngravedRecovery) Serialize() ([]byte, error) {
 	if e != nil {
 		return nil, e
 	}
-	b2, e := elm.TotalCost.Serialize()
+	b2, e := elm.ProtocolCost.Serialize()
 	if e != nil {
 		return nil, e
 	}
@@ -276,7 +274,7 @@ func (elm *Action_33_DiamondsEngravedRecovery) Parse(buf []byte, seek uint32) (u
 	if e != nil {
 		return 0, e
 	}
-	seek, e = elm.TotalCost.Parse(buf, seek)
+	seek, e = elm.ProtocolCost.Parse(buf, seek)
 	if e != nil {
 		return 0, e
 	}
@@ -286,7 +284,7 @@ func (elm *Action_33_DiamondsEngravedRecovery) Parse(buf []byte, seek uint32) (u
 func (elm *Action_33_DiamondsEngravedRecovery) Size() uint32 {
 	return 2 +
 		elm.DiamondList.Size() +
-		elm.TotalCost.Size()
+		elm.ProtocolCost.Size()
 }
 
 func (*Action_33_DiamondsEngravedRecovery) RequestSignAddresses() []fields.Address {
@@ -294,10 +292,6 @@ func (*Action_33_DiamondsEngravedRecovery) RequestSignAddresses() []fields.Addre
 }
 
 func (act *Action_33_DiamondsEngravedRecovery) WriteInChainState(state interfaces.ChainStateOperation) error {
-
-	if !sys.TestDebugLocalDevelopmentMark {
-		return fmt.Errorf("mainnet not yet") // Waiting for review is not enabled yet
-	}
 
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
@@ -327,16 +321,18 @@ func (act *Action_33_DiamondsEngravedRecovery) WriteInChainState(state interface
 	ttcost := fields.NewAmountByUnitMei(int64(ttcostmei))
 
 	// check cost
-	if act.TotalCost.LessThan(ttcost) {
+	if act.ProtocolCost.LessThan(ttcost) {
 		return fmt.Errorf("Engraved Diamond cost error need %s but got %s",
-			ttcost.ToFinString(), act.TotalCost.ToFinString())
+			ttcost.ToFinString(), act.ProtocolCost.ToFinString())
 	}
 
 	// sub main addr balance
-	e = DoSubBalanceFromChainState(state, mainAddr, *ttcost)
-	if e != nil {
-		return fmt.Errorf("Engraved Diamond main address balance need %s but not enough",
-			ttcost.ToFinString())
+	if act.ProtocolCost.IsNotEmpty() {
+		e = DoSubBalanceFromChainState(state, mainAddr, act.ProtocolCost)
+		if e != nil {
+			return fmt.Errorf("Engraved Diamond main address balance need %s but not enough",
+				act.ProtocolCost.ToFinString())
+		}
 	}
 
 	// Total supply statistics
@@ -344,8 +340,8 @@ func (act *Action_33_DiamondsEngravedRecovery) WriteInChainState(state interface
 	if e2 != nil {
 		return e2
 	}
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfDiamondEngravedBurning, ttcost.ToMei()) // Engraved burning
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningTotal, ttcost.ToMei())           // Total burning
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfDiamondEngravedBurning, act.ProtocolCost.ToMei()) // Engraved burning
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningTotal, act.ProtocolCost.ToMei())           // Total burning
 	// update total supply
 	e7 := state.UpdateSetTotalSupply(totalsupply)
 	if e7 != nil {
