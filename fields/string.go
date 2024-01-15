@@ -2,6 +2,7 @@ package fields
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"unicode/utf8"
 )
@@ -79,6 +80,13 @@ func CreateStringMax65535(str string) StringMax65535 {
 		Len: VarUint2(l),
 		Str: str,
 	}
+}
+
+func (elm StringMax255) ShowString() string {
+	if IsValidVisibleString(elm.Str) {
+		return elm.Str
+	}
+	return hex.EncodeToString([]byte(elm.Str))
 }
 
 func (elm StringMax65535) Value() string {
