@@ -166,9 +166,10 @@ func (act *Action_32_DiamondsEngraved) WriteInChainState(state interfaces.ChainS
 	if e2 != nil {
 		return e2
 	}
+	var costmei = act.ProtocolCost.ToMei()
 	totalsupply.DoAddUint(stores.TotalSupplyStoreTypeOfDiamondEngravedOperateCount, uint64(act.DiamondList.Count)) //
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfDiamondEngravedBurning, act.ProtocolCost.ToMei())               // Engraved burning
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningTotal, act.ProtocolCost.ToMei())                         // Total burning
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfDiamondEngravedBurning, costmei)                                // Engraved burning
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningTotal, costmei)                                          // Total burning
 	// update total supply
 	e7 := state.UpdateSetTotalSupply(totalsupply)
 	if e7 != nil {
@@ -340,8 +341,9 @@ func (act *Action_33_DiamondsEngravedRecovery) WriteInChainState(state interface
 	if e2 != nil {
 		return e2
 	}
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfDiamondEngravedBurning, act.ProtocolCost.ToMei()) // Engraved burning
-	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningTotal, act.ProtocolCost.ToMei())           // Total burning
+	var costmei = act.ProtocolCost.ToMei()
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfDiamondEngravedBurning, costmei) // Engraved burning
+	totalsupply.DoAdd(stores.TotalSupplyStoreTypeOfBurningTotal, costmei)           // Total burning
 	// update total supply
 	e7 := state.UpdateSetTotalSupply(totalsupply)
 	if e7 != nil {
@@ -414,9 +416,12 @@ func handleEngravedOneDiamond(mainAddr *fields.Address, diamond fields.DiamondNa
 	if err != nil {
 		return nil, err
 	}
-	if 1000+uint64(dia.EngravedPrevBlockHeight) > curblkhei &&
-		false == sys.TestDebugLocalDevelopmentMark {
-		return nil, fmt.Errorf("Only one inscription can be made every 1000 blocks")
+	var overcheckblknum uint64 = 1000
+	if sys.TestDebugLocalDevelopmentMark {
+		overcheckblknum /= 100 // 10 blk for test
+	}
+	if overcheckblknum+uint64(dia.EngravedPrevBlockHeight) > curblkhei {
+		return nil, fmt.Errorf("Only one inscription can be made every %d blocks", overcheckblknum)
 	}
 	// check belong and status
 	err = CheckDiamondStatusNormalAndBelong(&diamond, dia, mainAddr)
