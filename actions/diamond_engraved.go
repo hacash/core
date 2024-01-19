@@ -107,6 +107,11 @@ func (act *Action_32_DiamondsEngraved) WriteInChainState(state interfaces.ChainS
 		panic("Action belong to transaction not be nil !")
 	}
 
+	// 518000 start open
+	if false == sys.TestDebugLocalDevelopmentMark && state.GetPendingBlockHeight() < 518000 {
+		return fmt.Errorf("HIP-15 is effective starting at block 518000")
+	}
+
 	if act.ProtocolCost.Size() > 4 {
 		return fmt.Errorf("ProtocolCost amount size cannot over 4 bytes")
 	}
