@@ -526,7 +526,7 @@ func (trs *Transaction_2_Simple) WriteInChainState(state interfaces.ChainStateOp
 				break
 			}
 		}
-		if !isHaveCheckChainIDAction {
+		if !isHaveCheckChainIDAction && !sys.NotCheckBlockDifficultyForMiner {
 			return fmt.Errorf("TransactionSystemCheckChainID set <%d> but not find <SupportDistinguishForkChainID> action in transaction", sys.TransactionSystemCheckChainID)
 		}
 	}

@@ -60,9 +60,11 @@ func (act *Action_30_SupportDistinguishForkChainID) WriteInChainState(state inte
 	}
 
 	// chain ID check
-	if sys.TransactionSystemCheckChainID != uint64(act.CheckChainID) {
+	var cid = sys.TransactionSystemCheckChainID
+	var tarid = uint64(act.CheckChainID)
+	if tarid > 0 && cid != tarid && !sys.NotCheckBlockDifficultyForMiner {
 		return fmt.Errorf("Transaction System Check Chain ID need <%d> but got <%d>",
-			sys.TransactionSystemCheckChainID, uint64(act.CheckChainID))
+			cid, tarid)
 	}
 
 	// submit time check ok pass
