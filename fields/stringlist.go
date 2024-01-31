@@ -51,10 +51,10 @@ func (this *StringMax255List255) Parse(buf []byte, seek uint32) (uint32, error) 
 	if e != nil {
 		return 0, e
 	}
+	this.Lists = make([]StringMax255, int(this.Count))
 	if this.Count == 0 {
 		return seek, nil // List is empty
 	}
-	this.Lists = make([]StringMax255, int(this.Count))
 	for i := 0; i < int(this.Count); i++ {
 		this.Lists[i] = CreateStringMax255("")
 		seek, e = this.Lists[i].Parse(buf, seek)
