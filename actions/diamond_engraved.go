@@ -406,6 +406,44 @@ func (act *Action_33_DiamondsEngravedRecovery) IsBurning90PersentTxFees() bool {
 
 ////////////////////////////////////////////
 
+func RequestProtocolCostForDiamondList(state interfaces.ChainStateOperationRead,
+	dialist *fields.DiamondListMaxLen200, checkaddr *fields.Address) (*fields.Amount, error) {
+	var store = state.BlockStoreRead()
+	var resamt = fields.NewEmptyAmount()
+	dias := dialist.Diamonds
+	for i := 0; i < len(dias); i++ {
+		var dia = dias[i]
+		diasto, e := state.Diamond(dia)
+		if e != nil {
+			return nil, e
+		}
+		// if check belong address
+		if checkaddr != nil {
+			e = CheckDiamondStatusNormalAndBelong(&dia, diasto, checkaddr)
+			if e != nil {
+				return nil, e
+			}
+		}
+		diaslt, e := store.ReadDiamond(dia)
+		if e != nil {
+			return nil, e
+		}
+		// inscription
+		insnum := diasto.EngravedContents.Count
+		if insnum >= 200 {
+			return nil, fmt.Errorf("%s inscription too much", dia.Name())
+		}
+		if insnum >= 10 {
+			// append cost fee of 1/10 AverageBidBurnPrice
+			one_cost := fields.NewAmountByUnit(int64(diaslt.AverageBidBurnPrice), 247)
+			resamt, e = resamt.Add(one_cost)
+		}
+		// next
+	}
+	// ok
+	return resamt, nil
+}
+
 /*
 return total cost
 */

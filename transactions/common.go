@@ -120,16 +120,7 @@ func CreateOneTxOfOutfeeQuantityHACDTransfer(payacc *account.Account, toaddr fie
 
 ////////////////////////////////////////////////////
 
-// Create a hacd in transaction
-func CreateOneTxOfHACDEngraved(mainacc *account.Account, hacdlistsplitcomma string, content string, insfee *fields.Amount, fee *fields.Amount, timestamp int64) (*Transaction_2_Simple, error) {
-
-	// Diamond Watch
-	var diamonds = fields.NewEmptyDiamondListMaxLen200()
-	e0 := diamonds.ParseHACDlistBySplitCommaFromString(hacdlistsplitcomma)
-	if e0 != nil {
-		return nil, e0
-	}
-
+func CreateOneActionOfHACDEngraved(diamonds *fields.DiamondListMaxLen200, content string, insfee *fields.Amount) (*actions.Action_32_DiamondsEngraved, error) {
 	var eng_type = -1
 	var eng_visible = fields.IsValidVisibleString(content)
 	var eng_len = len(content)
@@ -155,16 +146,37 @@ func CreateOneTxOfHACDEngraved(mainacc *account.Account, hacdlistsplitcomma stri
 	if eng_len == -1 {
 		return nil, fmt.Errorf("Unsupported inscription content")
 	}
-	// Create transaction
-	newTrs, _ := NewEmptyTransaction_2_Simple(mainacc.Address) // 使用手续费地址为主地址
-	newTrs.Timestamp = fields.BlockTxTimestamp(timestamp)      // Use timestamp
-	newTrs.Fee = *fee                                          // set fee
+	//
+	// set fee
 	tranact := &actions.Action_32_DiamondsEngraved{
 		DiamondList:     *diamonds,
 		ProtocolCost:    *insfee,
 		EngravedType:    fields.VarUint1(eng_type),
 		EngravedContent: fields.CreateStringMax255(content),
 	}
+	// ok
+	return tranact, nil
+}
+
+// Create a hacd in transaction
+func CreateOneTxOfHACDEngraved(mainacc *account.Account, hacdlistsplitcomma string, content string, insfee *fields.Amount, fee *fields.Amount, timestamp int64) (*Transaction_2_Simple, error) {
+
+	// Diamond Watch
+	var diamonds = fields.NewEmptyDiamondListMaxLen200()
+	e := diamonds.ParseHACDlistBySplitCommaFromString(hacdlistsplitcomma)
+	if e != nil {
+		return nil, e
+	}
+
+	tranact, e := CreateOneActionOfHACDEngraved(diamonds, content, insfee)
+	if e != nil {
+		return nil, e
+	}
+
+	// Create transaction
+	newTrs, _ := NewEmptyTransaction_2_Simple(mainacc.Address) // 使用手续费地址为主地址
+	newTrs.Timestamp = fields.BlockTxTimestamp(timestamp)      // Use timestamp
+	newTrs.Fee = *fee
 	e9 := newTrs.AppendAction(tranact)
 	if e9 != nil {
 		return nil, e9
