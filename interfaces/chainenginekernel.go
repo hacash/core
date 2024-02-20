@@ -12,6 +12,7 @@ type ChainEngine interface {
 
 	InsertBlock(Block, string) error
 	GetRecentArrivedBlocks() []Block
+	GetLatestAverageFeePurity() uint32
 
 	StateRead() ChainStateOperationRead // Read-only status
 	CurrentState() ChainState           // Latest status

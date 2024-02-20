@@ -392,7 +392,7 @@ func (trs *Transaction_0_Coinbase) RecoverChainState(state interfacev2.ChainStat
 	return actions.DoSubBalanceFromChainStateV2(state, trs.Address, *rwd_and_txfee)
 }
 
-func (trs *Transaction_0_Coinbase) FeePurity() uint64 {
+func (trs *Transaction_0_Coinbase) FeePurity() uint32 {
 	panic("cannot GetFeePurity for Transaction_0_Coinbase")
 }
 

@@ -38,7 +38,7 @@ type Transaction interface {
 	WriteInChainState(ChainStateOperation) error
 
 	// fee
-	FeePurity() uint64 // fee purity
+	FeePurity() uint32 // fee purity
 
 	// get something
 	GetAddress() fields.Address

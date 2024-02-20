@@ -524,8 +524,9 @@ func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) RecoverChainState(state interfacev
 }
 
 // Service charge content: how many tokens per byte
-func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) FeePurity() uint64 {
-	return CalculateFeePurity(&trs.Fee, trs.Size())
+func (trs *Transaction_1_DO_NOT_USE_WITH_BUG) FeePurity() uint32 {
+	realfee := trs.GetFeeOfMinerRealReceived()
+	return CalculateFeePurity(realfee, trs.Size())
 }
 
 // query

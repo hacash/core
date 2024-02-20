@@ -34,3 +34,11 @@ func Test_t1(t *testing.T) {
 	fmt.Println(tx1.Size(), tx1.FeePurity())
 
 }
+
+func Test_t2(t *testing.T) {
+
+	var fee = fields.NewAmountByUnit(1, 244)
+	var feepur = CalculateFeePurity(fee, 200)
+	fmt.Println(fee.ToMeiString(), feepur)
+
+}
