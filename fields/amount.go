@@ -206,6 +206,9 @@ func (bill Amount) IsPositive() bool {
 	if bill.Dist <= 0 {
 		return false
 	}
+	if len(bill.Numeral) == 0 {
+		return false
+	}
 	// Meet requirements
 	return true
 }
