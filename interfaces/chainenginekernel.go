@@ -23,5 +23,7 @@ type ChainEngine interface {
 	SubscribeValidatedBlockOnInsert(chan Block)
 	SubscribeDiamondOnCreate(chan *stores.DiamondSmelt)
 
+	SetConfirmTxIndexer(ConfirmTxIndexer)
+
 	//RollbackToBlockHeight(uint64) (uint64, error)
 }
