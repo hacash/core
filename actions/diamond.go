@@ -1286,6 +1286,229 @@ func (elm *Action_6_OutfeeQuantityDiamondTransfer) GetDiamondNamesSplitByComma()
 	return elm.DiamondList.SerializeHACDlistToCommaSplitString()
 }
 
+///////////////////////////////////////////////////////////////
+
+// Bulk transfer of diamonds
+type Action_7_MultipleDiamondTransfer struct {
+	ToAddress   fields.Address              // receive address
+	DiamondList fields.DiamondListMaxLen200 // Diamond list
+
+	// Data pointer
+	// Transaction
+	belong_trs    interfacev2.Transaction
+	belong_trs_v3 interfaces.Transaction
+}
+
+func (elm *Action_7_MultipleDiamondTransfer) Kind() uint16 {
+	return 7
+}
+
+func (elm *Action_7_MultipleDiamondTransfer) Size() uint32 {
+	return 2 +
+		elm.ToAddress.Size() +
+		elm.DiamondList.Size() // Each diamond is 6 digits long
+}
+
+// json api
+func (elm *Action_7_MultipleDiamondTransfer) Describe() map[string]interface{} {
+	var data = map[string]interface{}{}
+	return data
+}
+
+func (elm *Action_7_MultipleDiamondTransfer) Serialize() ([]byte, error) {
+	var kindByte = make([]byte, 2)
+	binary.BigEndian.PutUint16(kindByte, elm.Kind())
+	var addrBytes, _ = elm.ToAddress.Serialize()
+	var diaBytes, e = elm.DiamondList.Serialize()
+	if e != nil {
+		return nil, e
+	}
+	var buffer bytes.Buffer
+	buffer.Write(kindByte)
+	buffer.Write(addrBytes)
+	buffer.Write(diaBytes)
+	return buffer.Bytes(), nil
+}
+
+func (elm *Action_7_MultipleDiamondTransfer) Parse(buf []byte, seek uint32) (uint32, error) {
+	var e error = nil
+	seek, e = elm.ToAddress.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	seek, e = elm.DiamondList.Parse(buf, seek)
+	if e != nil {
+		return 0, e
+	}
+	return seek, nil
+}
+
+func (elm *Action_7_MultipleDiamondTransfer) RequestSignAddresses() []fields.Address {
+	reqs := make([]fields.Address, 0) // ed from address sign
+	return reqs
+}
+
+func (act *Action_7_MultipleDiamondTransfer) WriteInChainState(state interfaces.ChainStateOperation) error {
+	if act.belong_trs_v3 == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+	fromAddress := act.belong_trs_v3.GetAddress()
+	// Quantity check
+	dianum := int(act.DiamondList.Count)
+	if dianum == 0 || dianum != len(act.DiamondList.Diamonds) {
+		return fmt.Errorf("Diamonds quantity error")
+	}
+	if dianum > 200 {
+		return fmt.Errorf("Diamonds quantity cannot over 200")
+	}
+	// annot trs to self
+	if bytes.Compare(fromAddress, act.ToAddress) == 0 {
+		return fmt.Errorf("Cannot transfer to self.")
+	}
+	// Bulk transfer of diamonds
+	for i := 0; i < len(act.DiamondList.Diamonds); i++ {
+		diamond := act.DiamondList.Diamonds[i]
+
+		//fmt.Println("Action_6_OutfeeQuantityDiamondTransfer:", act.FromAddress.ToReadable(), act.ToAddress.ToReadable(), string(diamond))
+
+		// fmt.Println("--- " + string(diamond))
+		// Query whether the diamond already exists
+		diaitem, e := state.Diamond(diamond)
+		if e != nil {
+			return e
+		}
+		if diaitem == nil {
+			//panic("Quantity Diamond <%s> not exist. " + string(diamond))
+			return fmt.Errorf("Quantity Diamond <%s> not exist.", string(diamond))
+		}
+		item := diaitem
+		// check belong and status
+		ckerr := CheckDiamondStatusNormalAndBelong(&diamond, diaitem, &fromAddress)
+		if ckerr != nil {
+			return ckerr
+		}
+		// Transfer diamond
+		item.Address = act.ToAddress
+		e5 := state.DiamondSet(diamond, item)
+		if e5 != nil {
+			return e5
+		}
+	}
+	// Transfer diamond balance
+	e9 := DoSimpleDiamondTransferFromChainStateV3(state, fromAddress, act.ToAddress, fields.DiamondNumber(dianum))
+	if e9 != nil {
+		return e9
+	}
+	return nil
+}
+
+func (act *Action_7_MultipleDiamondTransfer) WriteinChainState(state interfacev2.ChainStateOperation) error {
+	if act.belong_trs == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+	// Quantity check
+	dianum := int(act.DiamondList.Count)
+	fromAddress := act.belong_trs.GetAddress() // main address
+	if dianum == 0 || dianum != len(act.DiamondList.Diamonds) {
+		return fmt.Errorf("Diamonds quantity error")
+	}
+	if dianum > 200 {
+		return fmt.Errorf("Diamonds quantity cannot over 200")
+	}
+	// cannot trs to self
+	if bytes.Compare(fromAddress, act.ToAddress) == 0 {
+		return fmt.Errorf("Cannot transfer to self.")
+	}
+	// Bulk transfer of diamonds
+	for i := 0; i < len(act.DiamondList.Diamonds); i++ {
+		diamond := act.DiamondList.Diamonds[i]
+
+		//fmt.Println("Action_6_OutfeeQuantityDiamondTransfer:", act.FromAddress.ToReadable(), act.ToAddress.ToReadable(), string(diamond))
+
+		// fmt.Println("--- " + string(diamond))
+		// Query whether the diamond already exists
+		diaitem, e := state.Diamond(diamond)
+		if e != nil {
+			return e
+		}
+		if diaitem == nil {
+			//panic("Quantity Diamond <%s> not exist. " + string(diamond))
+			return fmt.Errorf("Quantity Diamond <%s> not exist.", string(diamond))
+		}
+		item := diaitem
+		// Check whether it is mortgaged and whether it can be transferred
+		if diaitem.Status != stores.DiamondStatusNormal {
+			return fmt.Errorf("Diamond <%s> has been mortgaged and cannot be transferred.", string(diamond))
+		}
+		// Check which
+		if bytes.Compare(item.Address, fromAddress) != 0 {
+			return fmt.Errorf("Diamond <%s> not belong to address '%s'", string(diamond), fromAddress.ToReadable())
+		}
+		// Transfer diamond
+		item.Address = act.ToAddress
+		e5 := state.DiamondSet(diamond, item)
+		if e5 != nil {
+			return e5
+		}
+	}
+	// Transfer diamond balance
+	e9 := DoSimpleDiamondTransferFromChainState(state, fromAddress, act.ToAddress, fields.DiamondNumber(dianum))
+	if e9 != nil {
+		return e9
+	}
+	return nil
+}
+
+func (act *Action_7_MultipleDiamondTransfer) RecoverChainState(state interfacev2.ChainStateOperation) error {
+	if act.belong_trs == nil {
+		panic("Action belong to transaction not be nil !")
+	}
+	// Batch return of diamonds
+	fromAddress := act.belong_trs.GetAddress() // main address
+	for i := 0; i < len(act.DiamondList.Diamonds); i++ {
+		diamond := act.DiamondList.Diamonds[i]
+		// get diamond
+		diaitem, e := state.Diamond(diamond)
+		if e != nil {
+			return e
+		}
+		if diaitem == nil {
+			return fmt.Errorf("Diamond <%s> not exist.", string(diamond))
+		}
+		item := diaitem
+		// Back off diamond
+		item.Address = fromAddress
+		err := state.DiamondSet(diamond, item)
+		if err != nil {
+			return err
+		}
+	}
+	// Return diamond balance
+	e9 := DoSimpleDiamondTransferFromChainState(state, act.ToAddress, fromAddress, fields.DiamondNumber(act.DiamondList.Count))
+	if e9 != nil {
+		return e9
+	}
+	return nil
+}
+
+func (elm *Action_7_MultipleDiamondTransfer) SetBelongTransaction(t interfacev2.Transaction) {
+	elm.belong_trs = t
+}
+
+func (elm *Action_7_MultipleDiamondTransfer) SetBelongTrs(t interfaces.Transaction) {
+	elm.belong_trs_v3 = t
+}
+
+// burning fees  // IsBurning 90 PersentTxFees
+func (act *Action_7_MultipleDiamondTransfer) IsBurning90PersentTxFees() bool {
+	return false
+}
+
+// Get the name list of block diamonds
+func (elm *Action_7_MultipleDiamondTransfer) GetDiamondNamesSplitByComma() string {
+	return elm.DiamondList.SerializeHACDlistToCommaSplitString()
+}
+
 ///////////////////////////////////////////////////////////////////////
 
 func CheckDiamondStatusNormalAndBelong(name *fields.DiamondName, diaobj *stores.Diamond, belong *fields.Address) error {

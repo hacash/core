@@ -417,6 +417,9 @@ func RequestProtocolCostForDiamondList(state interfaces.ChainStateOperationRead,
 		if e != nil {
 			return nil, e
 		}
+		if diasto == nil {
+			return nil, fmt.Errorf(`not find diamond %s`, dia.Name())
+		}
 		// if check belong address
 		if checkaddr != nil {
 			e = CheckDiamondStatusNormalAndBelong(&dia, diasto, checkaddr)

@@ -13,13 +13,13 @@ import (
 	"time"
 )
 
-type Action_7_SatoshiGenesis struct {
+type Action_34_SatoshiGenesis struct {
 	TransferNo               fields.VarUint4         // Transfer serial number
 	BitcoinBlockHeight       fields.VarUint4         // Height of bitcoin block transferred
 	BitcoinBlockTimestamp    fields.BlockTxTimestamp // Bitcoin block timestamp of transfer
 	BitcoinEffectiveGenesis  fields.VarUint4         // The number of bitcoins successfully transferred before this
 	BitcoinQuantity          fields.VarUint4         // Number of bitcoins transferred in this transaction (unit: piece)
-	AdditionalTotalHacAmount fields.VarUint4         // 本次转账[总共]应该增发的 hac 数量 （单位：枚）
+	AdditionalTotalHacAmount fields.VarUint4         // The amount of additional HAC that should be issued in this transfer [in total] (unit: pieces)
 	OriginAddress            fields.Address          // Bitcoin source address transferred out
 	BitcoinTransferHash      fields.Hash             // Bitcoin transfer transaction hash
 
@@ -28,15 +28,15 @@ type Action_7_SatoshiGenesis struct {
 	belong_trs_v3 interfaces.Transaction
 }
 
-func NewAction_7_SatoshiGenesis() *Action_7_SatoshiGenesis {
-	return &Action_7_SatoshiGenesis{}
+func NewAction_34_SatoshiGenesis() *Action_34_SatoshiGenesis {
+	return &Action_34_SatoshiGenesis{}
 }
 
-func (elm *Action_7_SatoshiGenesis) Kind() uint16 {
-	return 7
+func (elm *Action_34_SatoshiGenesis) Kind() uint16 {
+	return 34
 }
 
-func (elm *Action_7_SatoshiGenesis) Size() uint32 {
+func (elm *Action_34_SatoshiGenesis) Size() uint32 {
 	return 2 +
 		elm.TransferNo.Size() +
 		elm.BitcoinBlockHeight.Size() +
@@ -49,12 +49,12 @@ func (elm *Action_7_SatoshiGenesis) Size() uint32 {
 }
 
 // json api
-func (elm *Action_7_SatoshiGenesis) Describe() map[string]interface{} {
+func (elm *Action_34_SatoshiGenesis) Describe() map[string]interface{} {
 	var data = map[string]interface{}{}
 	return data
 }
 
-func (elm *Action_7_SatoshiGenesis) Serialize() ([]byte, error) {
+func (elm *Action_34_SatoshiGenesis) Serialize() ([]byte, error) {
 	var kindByte = make([]byte, 2)
 	binary.BigEndian.PutUint16(kindByte, elm.Kind())
 	var b1, _ = elm.TransferNo.Serialize()
@@ -78,7 +78,7 @@ func (elm *Action_7_SatoshiGenesis) Serialize() ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func (elm *Action_7_SatoshiGenesis) Parse(buf []byte, seek uint32) (uint32, error) {
+func (elm *Action_34_SatoshiGenesis) Parse(buf []byte, seek uint32) (uint32, error) {
 	var e error = nil
 	seek, e = elm.TransferNo.Parse(buf, seek)
 	if e != nil {
@@ -115,11 +115,11 @@ func (elm *Action_7_SatoshiGenesis) Parse(buf []byte, seek uint32) (uint32, erro
 	return seek, nil
 }
 
-func (*Action_7_SatoshiGenesis) RequestSignAddresses() []fields.Address {
+func (*Action_34_SatoshiGenesis) RequestSignAddresses() []fields.Address {
 	return []fields.Address{} // not sign
 }
 
-func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStateOperation) error {
+func (act *Action_34_SatoshiGenesis) WriteInChainState(state interfaces.ChainStateOperation) error {
 	if act.belong_trs_v3 == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -163,7 +163,7 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 				act.AdditionalTotalHacAmount != checkact.AdditionalTotalHacAmount ||
 				bytes.Compare(act.OriginAddress, checkact.OriginAddress) != 0 ||
 				bytes.Compare(act.BitcoinTransferHash, checkact.BitcoinTransferHash) != 0 {
-				return fmt.Errorf("Action_7_SatoshiGenesis act and check act is mismatch.")
+				return fmt.Errorf("Action_34_SatoshiGenesis act and check act is mismatch.")
 			}
 			// Verification data (transfer 10000 ~ 10000 bitcoins)
 			if act.BitcoinQuantity < 1 && act.BitcoinQuantity > 10000 {
@@ -261,7 +261,7 @@ func (act *Action_7_SatoshiGenesis) WriteInChainState(state interfaces.ChainStat
 	return DoAddSatoshiFromChainStateV3(state, act.OriginAddress, fields.Satoshi(satBTC))
 }
 
-func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfacev2.ChainStateOperation) error {
+func (act *Action_34_SatoshiGenesis) WriteinChainState(state interfacev2.ChainStateOperation) error {
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -298,7 +298,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfacev2.ChainSta
 			act.AdditionalTotalHacAmount != checkact.AdditionalTotalHacAmount ||
 			bytes.Compare(act.OriginAddress, checkact.OriginAddress) != 0 ||
 			bytes.Compare(act.BitcoinTransferHash, checkact.BitcoinTransferHash) != 0 {
-			return fmt.Errorf("Action_7_SatoshiGenesis act and check act is mismatch.")
+			return fmt.Errorf("Action_34_SatoshiGenesis act and check act is mismatch.")
 		}
 		// Verification data (transfer 10000 ~ 10000 bitcoins)
 		if act.BitcoinQuantity < 1 && act.BitcoinQuantity > 10000 {
@@ -397,7 +397,7 @@ func (act *Action_7_SatoshiGenesis) WriteinChainState(state interfacev2.ChainSta
 	return DoAddSatoshiFromChainState(state, act.OriginAddress, fields.Satoshi(satBTC))
 }
 
-func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfacev2.ChainStateOperation) error {
+func (act *Action_34_SatoshiGenesis) RecoverChainState(state interfacev2.ChainStateOperation) error {
 	if act.belong_trs == nil {
 		panic("Action belong to transaction not be nil !")
 	}
@@ -457,15 +457,15 @@ func (act *Action_7_SatoshiGenesis) RecoverChainState(state interfacev2.ChainSta
 }
 
 // Set belongs to long_ trs
-func (act *Action_7_SatoshiGenesis) SetBelongTransaction(trs interfacev2.Transaction) {
+func (act *Action_34_SatoshiGenesis) SetBelongTransaction(trs interfacev2.Transaction) {
 	act.belong_trs = trs
 }
-func (act *Action_7_SatoshiGenesis) SetBelongTrs(trs interfaces.Transaction) {
+func (act *Action_34_SatoshiGenesis) SetBelongTrs(trs interfaces.Transaction) {
 	act.belong_trs_v3 = trs
 }
 
-// burning fees  // 是否销毁本笔交易的 90% 的交易费用
-func (act *Action_7_SatoshiGenesis) IsBurning90PersentTxFees() bool {
+// if burning 90% fees
+func (act *Action_34_SatoshiGenesis) IsBurning90PersentTxFees() bool {
 	return false
 }
 

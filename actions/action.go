@@ -24,7 +24,7 @@ func NewActionByKind(kind uint16) (interfaces.Action, error) {
 	case 6:
 		return new(Action_6_OutfeeQuantityDiamondTransfer), nil
 	case 7:
-		return new(Action_7_SatoshiGenesis), nil
+		return new(Action_7_MultipleDiamondTransfer), nil
 	case 8:
 		return new(Action_8_SimpleSatoshiTransfer), nil
 	case 9:
@@ -77,7 +77,8 @@ func NewActionByKind(kind uint16) (interfaces.Action, error) {
 		return new(Action_32_DiamondsEngraved), nil
 	case 33:
 		return new(Action_33_DiamondsEngravedRecovery), nil
-
+	case 34:
+		return new(Action_34_SatoshiGenesis), nil
 	}
 	////////////////////    END      ////////////////////
 	return nil, fmt.Errorf("Cannot find Action kind of %d.", +kind)
