@@ -529,8 +529,8 @@ func (bill *Amount) CompressForMainNumLen(numlen int, enlarge bool) (*Amount, bo
 }
 
 // Omit the decimal part in order to save it in the 11 bit space
-func (bill *Amount) EllipsisDecimalFor11SizeStore() (*Amount, bool, error) {
-	maxnumlen := 11 - 1 - 1
+func (bill *Amount) EllipsisDecimalFor12SizeStore() (*Amount, bool, error) {
+	maxnumlen := 12 - 1 - 1
 	if len(bill.Numeral) <= maxnumlen {
 		return bill, false, nil // Data unchanged
 	}

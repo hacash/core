@@ -93,8 +93,8 @@ func DoSimpleTransferFromChainStateV2(state interfacev2.ChainStateOperation, add
 		return e2
 	}
 	//fmt.Println("EllipsisDecimalFor23SizeStore: ")
-	amtsub_1, ischg1, ederr1 := amtsub.EllipsisDecimalFor11SizeStore()
-	amtadd_1, ischg2, ederr2 := amtadd.EllipsisDecimalFor11SizeStore()
+	amtsub_1, ischg1, ederr1 := amtsub.EllipsisDecimalFor12SizeStore()
+	amtadd_1, ischg2, ederr2 := amtadd.EllipsisDecimalFor12SizeStore()
 	if ederr1 != nil {
 		return ederr1
 	}
@@ -140,7 +140,7 @@ func DoAddBalanceFromChainStateV2(state interfacev2.ChainStateOperation, addr fi
 	if e1 != nil {
 		return e1
 	}
-	amtsave, ischg, ec1 := amtnew.EllipsisDecimalFor11SizeStore()
+	amtsave, ischg, ec1 := amtnew.EllipsisDecimalFor12SizeStore()
 	if ec1 != nil {
 		return ec1
 	}
@@ -179,7 +179,7 @@ func DoSubBalanceFromChainStateV2(state interfacev2.ChainStateOperation, addr fi
 	if e1 != nil {
 		return e1
 	}
-	amtnew1, ischg, ec1 := amtnew.EllipsisDecimalFor11SizeStore()
+	amtnew1, ischg, ec1 := amtnew.EllipsisDecimalFor12SizeStore()
 	if ec1 != nil {
 		return ec1
 	}
@@ -283,8 +283,8 @@ func DoSimpleTransferFromChainState(state interfaces.ChainStateOperation, addr1 
 		return e2
 	}
 	//fmt.Println("EllipsisDecimalFor23SizeStore: ")
-	amtsub_1, ischg1, ederr1 := amtsub.EllipsisDecimalFor11SizeStore()
-	amtadd_1, ischg2, ederr2 := amtadd.EllipsisDecimalFor11SizeStore()
+	amtsub_1, ischg1, ederr1 := amtsub.EllipsisDecimalFor12SizeStore()
+	amtadd_1, ischg2, ederr2 := amtadd.EllipsisDecimalFor12SizeStore()
 	if ederr1 != nil {
 		return ederr1
 	}
@@ -330,12 +330,12 @@ func DoAddBalanceFromChainState(state interfaces.ChainStateOperation, addr field
 	if e1 != nil {
 		return e1
 	}
-	amtsave, ischg, ec1 := amtnew.EllipsisDecimalFor11SizeStore()
+	amtsave, ischg, ec1 := amtnew.EllipsisDecimalFor12SizeStore()
 	if ec1 != nil {
 		return ec1
 	}
 	if ischg {
-		return fmt.Errorf("amount can not to store")
+		return fmt.Errorf("[DoAdd] amount can not to store")
 	}
 	//addrrr, _ := base58check.Encode(addr)
 	//fmt.Println( "DoAddBalanceFromChainStateV2: ++++++++++ ", addr.ToReadable(), amtsave.ToFinString() )
@@ -369,12 +369,12 @@ func DoSubBalanceFromChainState(state interfaces.ChainStateOperation, addr field
 	if e1 != nil {
 		return e1
 	}
-	amtnew1, ischg, ec1 := amtnew.EllipsisDecimalFor11SizeStore()
+	amtnew1, ischg, ec1 := amtnew.EllipsisDecimalFor12SizeStore()
 	if ec1 != nil {
 		return ec1
 	}
 	if ischg {
-		return fmt.Errorf("amount can not to store")
+		return fmt.Errorf("[DoSub] amount can not to store")
 	}
 	//fmt.Println("amtnew1: " + amtnew1.ToFinString())
 	blssto.Hacash = *amtnew1

@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hacash/core/actions"
 	"github.com/hacash/core/fields"
 	"github.com/hacash/core/interfaces"
 	"github.com/hacash/core/interfacev2"
@@ -455,6 +456,23 @@ func (block *Block_v1) WriteInChainState(blockstate interfaces.ChainStateOperati
 	txlen := len(block.Transactions)
 	totalfeeuserpay := fields.NewEmptyAmount()
 	totalfeeminergot := fields.NewEmptyAmount()
+	// coinbase
+	if txlen < 1 {
+		return fmt.Errorf("not find coinbase tx")
+	}
+	tx0 := block.Transactions[0]
+	if tx0.Type() != 0 {
+		return fmt.Errorf("transaction[0] not coinbase tx")
+	}
+	coinbase, ok := tx0.(*transactions.Transaction_0_Coinbase)
+	if !ok {
+		return fmt.Errorf("transaction[0] not coinbase tx")
+	}
+	// fix buf to do add
+	e5 := actions.DoAddBalanceFromChainState(blockstate, coinbase.Address, coinbase.Reward)
+	if e5 != nil {
+		return e5
+	}
 	// The first transaction is a coinbase transaction, and the customer transaction starts from the second one
 	for i := 1; i < txlen; i++ {
 		tx := block.Transactions[i]
@@ -489,18 +507,6 @@ func (block *Block_v1) WriteInChainState(blockstate interfaces.ChainStateOperati
 		if e != nil {
 			return e // Validation failed
 		}
-	}
-	// coinbase
-	if txlen < 1 {
-		return fmt.Errorf("not find coinbase tx")
-	}
-	tx0 := block.Transactions[0]
-	if tx0.Type() != 0 {
-		return fmt.Errorf("transaction[0] not coinbase tx")
-	}
-	coinbase, ok := tx0.(*transactions.Transaction_0_Coinbase)
-	if !ok {
-		return fmt.Errorf("transaction[0] not coinbase tx")
 	}
 	coinbase.TotalFeeUserPayed = *totalfeeuserpay      // Payment of total service charge
 	coinbase.TotalFeeMinerReceived = *totalfeeminergot // Total service charge received

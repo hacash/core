@@ -49,7 +49,7 @@ func Test_t2(t *testing.T) {
 	fmt.Println(amount.Serialize())
 	fmt.Println(amount.ToFinString())
 
-	new_amount, ischg, err := amount.EllipsisDecimalFor11SizeStore()
+	new_amount, ischg, err := amount.EllipsisDecimalFor12SizeStore()
 	fmt.Println(new_amount, ischg, err)
 
 	if new_amount != nil {

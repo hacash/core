@@ -325,10 +325,10 @@ func (trs *Transaction_0_Coinbase) WriteInChainState(state interfaces.ChainState
 		return e3
 	}
 	// fmt.Printf("trs.TotalFee = %s\n", trs.TotalFee.ToFinString())
-	rwd_and_txfee, _ := trs.Reward.Add(&trs.TotalFeeMinerReceived)
+	realtxfee := trs.TotalFeeMinerReceived
 	// addr, _ := base58check.Encode(trs.Address)
 	// fmt.Printf("coinbase.ChangeChainState,  %s  +=  %s\n", addr, rwd.ToFinString())
-	return actions.DoAddBalanceFromChainState(state, trs.Address, *rwd_and_txfee)
+	return actions.DoAddBalanceFromChainState(state, trs.Address, realtxfee)
 }
 
 // 修改 / 恢复 状态数据库
